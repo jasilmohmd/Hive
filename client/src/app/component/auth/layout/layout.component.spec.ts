@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LayoutComponent } from './layout.component';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 
 describe('LayoutComponent', () => {
   let component: LayoutComponent;
@@ -8,7 +11,8 @@ describe('LayoutComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LayoutComponent]
+      imports: [LayoutComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     })
     .compileComponents();
 

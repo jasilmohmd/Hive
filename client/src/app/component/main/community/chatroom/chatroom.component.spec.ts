@@ -21,6 +21,12 @@ describe('ChatroomComponent', () => {
 
     const incomingMessage$ = new Subject();
     const chatError$ = new Subject();
+    const messageEdited$ = new Subject();
+    const messageDeleted$ = new Subject();
+    const reactionUpdated$ = new Subject();
+    const pollUpdated$ = new Subject();
+    // ChatroomComponent renders ChannelChatPanelComponent, which subscribes to
+    // every one of these streams on init — an incomplete mock fails at construction.
     const chatMock: Pick<
       ChatService,
       | 'getMessageHistory'
@@ -30,6 +36,10 @@ describe('ChatroomComponent', () => {
       | 'sendImageMessage'
       | 'incomingMessage$'
       | 'chatError$'
+      | 'messageEdited$'
+      | 'messageDeleted$'
+      | 'reactionUpdated$'
+      | 'pollUpdated$'
     > = {
       getMessageHistory: jasmine.createSpy('getMessageHistory').and.returnValue(of([])),
       joinChat: jasmine.createSpy('joinChat'),
@@ -38,6 +48,10 @@ describe('ChatroomComponent', () => {
       sendImageMessage: jasmine.createSpy('sendImageMessage'),
       incomingMessage$: incomingMessage$ as ChatService['incomingMessage$'],
       chatError$: chatError$ as ChatService['chatError$'],
+      messageEdited$: messageEdited$ as ChatService['messageEdited$'],
+      messageDeleted$: messageDeleted$ as ChatService['messageDeleted$'],
+      reactionUpdated$: reactionUpdated$ as ChatService['reactionUpdated$'],
+      pollUpdated$: pollUpdated$ as ChatService['pollUpdated$'],
     };
 
     const authSpy = jasmine.createSpyObj<UserAuthService>('UserAuthService', ['getUserDetails']);

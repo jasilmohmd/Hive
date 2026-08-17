@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { OtpComponent } from './otp.component';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 
 describe('OtpComponent', () => {
   let component: OtpComponent;
@@ -8,7 +11,8 @@ describe('OtpComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [OtpComponent]
+      imports: [OtpComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     })
     .compileComponents();
 

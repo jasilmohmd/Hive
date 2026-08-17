@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { ReplaySubject, Subject, of } from 'rxjs';
 
@@ -17,6 +19,12 @@ describe('DirectMessageComponent', () => {
 
     const incomingMessage$ = new Subject();
     const chatError$ = new Subject();
+    const messageEdited$ = new Subject();
+    const messageDeleted$ = new Subject();
+    const reactionUpdated$ = new Subject();
+    const pollUpdated$ = new Subject();
+    // The component subscribes to every one of these streams on init — an
+    // incomplete mock fails at construction.
     const chatMock: Pick<
       ChatService,
       | 'getMessageHistory'
@@ -24,16 +32,31 @@ describe('DirectMessageComponent', () => {
       | 'disconnect'
       | 'sendMessage'
       | 'sendImageMessage'
+      | 'connectRealtime'
+      | 'onSocketReady'
       | 'incomingMessage$'
       | 'chatError$'
+      | 'messageEdited$'
+      | 'messageDeleted$'
+      | 'reactionUpdated$'
+      | 'pollUpdated$'
     > = {
       getMessageHistory: jasmine.createSpy('getMessageHistory').and.returnValue(of([])),
       joinChat: jasmine.createSpy('joinChat'),
       disconnect: jasmine.createSpy('disconnect'),
       sendMessage: jasmine.createSpy('sendMessage'),
       sendImageMessage: jasmine.createSpy('sendImageMessage'),
+      connectRealtime: jasmine
+        .createSpy('connectRealtime')
+        .and.returnValue(Promise.resolve({} as never)),
+      // CallService registers a socket listener as soon as it is constructed.
+      onSocketReady: jasmine.createSpy('onSocketReady'),
       incomingMessage$: incomingMessage$ as ChatService['incomingMessage$'],
       chatError$: chatError$ as ChatService['chatError$'],
+      messageEdited$: messageEdited$ as ChatService['messageEdited$'],
+      messageDeleted$: messageDeleted$ as ChatService['messageDeleted$'],
+      reactionUpdated$: reactionUpdated$ as ChatService['reactionUpdated$'],
+      pollUpdated$: pollUpdated$ as ChatService['pollUpdated$'],
     };
 
     const authSpy = jasmine.createSpyObj<UserAuthService>('UserAuthService', ['getUserDetails']);
@@ -62,6 +85,9 @@ describe('DirectMessageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [DirectMessageComponent],
       providers: [
+        // CallService (and friends) resolve HttpClient through the injector.
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: ActivatedRoute,
           useValue: {

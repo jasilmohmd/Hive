@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ImageCropperModalComponent } from './image-cropper-modal.component';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 
 describe('ImageCropperModalComponent', () => {
   let component: ImageCropperModalComponent;
@@ -8,7 +11,8 @@ describe('ImageCropperModalComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ImageCropperModalComponent]
+      imports: [ImageCropperModalComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     })
     .compileComponents();
 

@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ComunityLayoutComponent } from './layout.component';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 
 describe('ComunityLayoutComponent', () => {
   let component: ComunityLayoutComponent;
@@ -8,7 +11,8 @@ describe('ComunityLayoutComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ComunityLayoutComponent]
+      imports: [ComunityLayoutComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     })
     .compileComponents();
 

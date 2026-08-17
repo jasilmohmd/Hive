@@ -1,0 +1,31 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_controller_1 = __importDefault(require("../../controller/auth.controller"));
+const auth_usecase_1 = __importDefault(require("../../usecase/auth.usecase"));
+const auth_repository_1 = __importDefault(require("../../repositories/auth.repository"));
+const hashing_service_1 = __importDefault(require("../utils/hashing.service"));
+const jwt_service_1 = __importDefault(require("../utils/jwt.service"));
+const auth_middleware_1 = __importDefault(require("../middlewares/auth.middleware"));
+const authRouter = (0, express_1.Router)();
+const jwtService = new jwt_service_1.default();
+const hashingService = new hashing_service_1.default();
+// auth middleware
+const authMiddleware = new auth_middleware_1.default(jwtService);
+const authRepository = new auth_repository_1.default();
+const authUsecase = new auth_usecase_1.default(authRepository, hashingService, jwtService);
+const authController = new auth_controller_1.default(authUsecase);
+authRouter.route("/register").post(authController.register.bind(authController));
+authRouter.route("/login").post(authController.login.bind(authController));
+authRouter.route("/logout").post(authMiddleware.isAuthenticated.bind(authMiddleware), authController.logoutUser.bind(authController));
+authRouter.route("/isUserAuthenticated").post(authController.isUserAuthenticated.bind(authController));
+authRouter.route("/realtime-token").get(authController.getRealtimeToken.bind(authController));
+authRouter.route("/send-otp").post(authController.sendVerificationOTP.bind(authController));
+authRouter.route("/otp_verify").post(authController.verifyOTP.bind(authController));
+authRouter.route("/set_new_password").post(authController.setNewPassword.bind(authController));
+authRouter.route("/details").get(authMiddleware.isAuthenticated.bind(authMiddleware), authController.getUserDetails.bind(authController));
+authRouter.route("/userDetails/:id").get(authMiddleware.isAuthenticated.bind(authMiddleware), authController.getUserDetailsById.bind(authController));
+exports.default = authRouter;

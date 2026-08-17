@@ -1,0 +1,11 @@
+<div class="fixed inset-0 z-40 bg-black/40 sm:absolute sm:inset-auto sm:bottom-full sm:left-0 sm:right-0 sm:mb-2 sm:bg-transparent" (click)="dismiss.emit()" role="presentation">
+  <div class="absolute bottom-0 left-0 right-0 max-h-[50vh] overflow-y-auto rounded-t-2xl border border-zinc-700 bg-zinc-900 p-3 shadow-xl sm:relative sm:rounded-2xl" (click)="$event.stopPropagation()">
+    <h3 class="mb-2 text-sm font-medium">Share contact</h3>
+    <p *ngIf="loading" class="text-sm text-zinc-500">Loading…</p>
+    <p *ngIf="error" class="text-sm text-red-400">{{ error }}</p>
+    <button *ngFor="let f of friends" type="button" class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-zinc-800" (click)="picked.emit(f)">
+      <span class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-700 text-xs">{{ f.userName.slice(0,2).toUpperCase() }}</span>
+      {{ f.userName }}
+    </button>
+  </div>
+</div>

@@ -1,0 +1,112 @@
+<div class="bg-black m-0 min-h-screen overflow-y-auto flex flex-col md:flex-row">
+
+  <app-incoming-call-modal></app-incoming-call-modal>
+
+  <create-community-layout *ngIf="showCommunityCreateModal" (close)="toggleCommunityCreateModal()"></create-community-layout>
+
+  <!-- Mobile bottom nav -->
+  <nav
+    class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-zinc-800 bg-zinc-900 px-2 py-2 md:hidden"
+    aria-label="Primary"
+  >
+    <a
+      routerLink="/main/friends_section/friends"
+      routerLinkActive="opacity-100 ring-2 ring-brand"
+      [routerLinkActiveOptions]="{ exact: false }"
+      class="rounded-full p-2 opacity-90"
+      [attr.aria-label]="'Friends and messages'"
+    >
+      <img src="assets/images/Logo-bg-white.png" alt="" class="h-10 w-10 rounded-full object-cover" />
+    </a>
+    <a
+      routerLink="/main/discover"
+      routerLinkActive="opacity-100 ring-2 ring-brand"
+      class="rounded-full bg-surface-700 p-3"
+      aria-label="Discover communities"
+    >
+      <img src="assets/Icons/compass-fill.png" alt="" class="h-8 w-8" />
+    </a>
+    <button
+      type="button"
+      (click)="toggleCommunityCreateModal()"
+      class="rounded-full bg-surface-700 p-3 hover:bg-gray-700 focus-visible:ring-2 focus-visible:ring-brand"
+      aria-label="Create community"
+    >
+      <img src="assets/Icons/plus.png" alt="" class="h-8 w-8" />
+    </button>
+  </nav>
+
+  <!-- Vertical Navigation Bar (tablet+) -->
+  <nav class="hidden md:flex bg-zinc-900 max-w-20 max-h-screen p-3 mx-3 my-4 rounded-3xl overflow-y-auto box-border flex-col" aria-label="Primary">
+    <div class="flex flex-col justify-between h-full">
+      <ul class="text-white space-y-4">
+        <li>
+          <div class="mt-2 flex justify-center">
+            <a
+              routerLink="/main/friends_section/friends"
+              routerLinkActive="ring-2 ring-brand rounded-full"
+              [routerLinkActiveOptions]="{ exact: false }"
+              class="rounded-full"
+              [attr.aria-label]="'Friends'"
+            >
+              <img src="assets/images/Logo-bg-white.png" alt="" class="w-14 h-14 rounded-full flex items-center justify-center object-cover" />
+            </a>
+          </div>
+        </li>
+
+        <li *ngFor="let community of communities">
+          <div class="mt-2 flex justify-center">
+            <a [routerLink]="['/main','community', community._id]" routerLinkActive="ring-2 ring-brand rounded-full" class="rounded-full">
+              <img
+                [src]="getSafeUrl(community.imageUrl)"
+                [alt]="(community.name || 'Community') + ' icon'"
+                class="w-14 h-14 rounded-full flex items-center justify-center object-cover"
+              />
+            </a>
+          </div>
+        </li>
+
+        <li>
+          <div class="mt-2 flex justify-center">
+            <button
+              type="button"
+              (click)="toggleCommunityCreateModal()"
+              class="bg-surface-700 text-xs p-3 rounded-full flex items-center justify-center hover:bg-gray-700 hover:text-white focus-visible:ring-2 focus-visible:ring-brand"
+              aria-label="Create community"
+            >
+              <img src="assets/Icons/plus.png" alt="" class="w-8 h-8" />
+            </button>
+          </div>
+        </li>
+      </ul>
+
+      <div class="mt-4 flex justify-center">
+        <a
+          routerLink="/main/discover"
+          routerLinkActive="ring-2 ring-brand rounded-full"
+          class="bg-surface-700 text-xs p-3 rounded-full flex items-center justify-center hover:bg-gray-700 hover:text-white focus-visible:ring-2 focus-visible:ring-brand"
+          aria-label="Discover communities"
+        >
+          <img src="assets/Icons/compass-fill.png" alt="" class="w-8 h-8" />
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col pl-1 pr-4 py-4 pt-4 pb-20 md:pb-4 text-white overflow-hidden min-h-screen h-auto md:h-screen">
+    <header class="flex justify-between items-center h-20 p-3 shrink-0">
+      <h1 class="text-2xl md:text-3xl font-bold truncate">{{ pageTitle }}</h1>
+      <div class="flex items-center gap-4">
+        <span class="cursor-pointer hover:text-gray-300 hidden sm:inline">Settings</span>
+        <a routerLink="/main/profile" routerLinkActive="text-brand" class="cursor-pointer hover:text-gray-300 focus-visible:ring-2 focus-visible:ring-brand rounded px-1">
+          Profile
+        </a>
+      </div>
+    </header>
+
+    <div class="flex-1 rounded-2xl box-border overflow-hidden min-h-0">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

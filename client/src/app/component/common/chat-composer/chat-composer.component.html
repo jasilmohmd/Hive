@@ -1,0 +1,276 @@
+<ng-container [ngSwitch]="theme">
+
+  <div *ngSwitchCase="'dm'" class="w-full rounded-b-2xl border-t border-zinc-800 bg-surface-900 p-4">
+
+    <p *ngIf="attachError" class="mb-2 text-sm text-red-400">{{ attachError }}</p>
+    <div *ngIf="replyPreview" class="mb-2 flex items-center justify-between rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-2 text-xs">
+      <span class="truncate text-zinc-300">Replying: {{ replyPreview }}</span>
+      <button type="button" class="shrink-0 text-zinc-400 hover:text-white" (click)="cancelReply.emit()">×</button>
+    </div>
+    <div *ngIf="pendingFile" class="mb-2 flex items-center justify-between rounded-lg bg-zinc-800 px-3 py-2 text-sm">
+
+      <span class="truncate pr-3">
+
+        <span class="text-zinc-400">{{ pendingKindLabel() }} · </span>{{ pendingFile.name }}
+
+        <span class="text-zinc-500"> ({{ formatSize(pendingFile.size) }})</span>
+
+      </span>
+
+      <button type="button" (click)="removePending()" class="text-red-400 hover:text-red-300">Remove</button>
+
+    </div>
+
+    <div class="flex items-center gap-2">
+
+      <input
+
+        type="text"
+
+        [(ngModel)]="draft"
+
+        (keydown.enter)="send()"
+
+        [disabled]="disabled || busy || isUploading"
+
+        [placeholder]="placeholder"
+
+        class="min-w-0 flex-1 rounded-2xl bg-black px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+
+      />
+
+      <div class="flex shrink-0 items-center gap-1">
+
+        <button
+
+          type="button"
+
+          (click)="attachMenuRequested.emit()"
+
+          [disabled]="attachBlocked"
+
+          aria-label="Attach"
+
+          title="Attach"
+
+          class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+
+        >
+
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+
+          </svg>
+
+        </button>
+
+        <button
+
+          type="button"
+
+          (click)="gifPickRequested.emit()"
+
+          [disabled]="attachBlocked"
+
+          aria-label="GIF"
+
+          title="GIF"
+
+          class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+
+        >
+
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+
+            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25Z" />
+
+          </svg>
+
+        </button>
+
+        <button
+
+          type="button"
+
+          (click)="stickerPickRequested.emit()"
+
+          [disabled]="attachBlocked"
+
+          aria-label="Stickers"
+
+          title="Stickers"
+
+          class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+
+        >
+
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+
+          </svg>
+
+        </button>
+
+      </div>
+
+      <button
+
+        type="button"
+
+        (click)="send()"
+
+        [disabled]="sendBlocked"
+
+        class="shrink-0 rounded-2xl bg-green-500 px-4 py-2 text-white hover:bg-green-600 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+
+      >
+
+        {{ isUploading ? 'Uploading...' : 'Send' }}
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+
+  <div *ngSwitchCase="'channel'" class="border-t border-zinc-700 bg-zinc-800 p-4">
+
+    <p *ngIf="attachError" class="mb-2 text-sm text-red-400">{{ attachError }}</p>
+    <div *ngIf="replyPreview" class="mb-2 flex items-center justify-between rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-2 text-xs">
+      <span class="truncate text-zinc-300">Replying: {{ replyPreview }}</span>
+      <button type="button" class="shrink-0 text-zinc-400 hover:text-white" (click)="cancelReply.emit()">×</button>
+    </div>
+    <div *ngIf="pendingFile" class="mb-2 flex items-center justify-between rounded-lg bg-zinc-900 px-3 py-2 text-sm">
+
+      <span class="truncate pr-3">
+
+        <span class="text-zinc-400">{{ pendingKindLabel() }} · </span>{{ pendingFile.name }}
+
+        <span class="text-zinc-500"> ({{ formatSize(pendingFile.size) }})</span>
+
+      </span>
+
+      <button type="button" (click)="removePending()" class="text-red-400 hover:text-red-300">Remove</button>
+
+    </div>
+
+    <div class="flex items-center gap-2">
+
+      <input
+
+        type="text"
+
+        [(ngModel)]="draft"
+
+        (keydown.enter)="send()"
+
+        [disabled]="disabled || busy || isUploading"
+
+        [placeholder]="placeholder"
+
+        class="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+
+      />
+
+      <div class="flex shrink-0 items-center gap-1">
+
+        <button
+
+          type="button"
+
+          (click)="attachMenuRequested.emit()"
+
+          [disabled]="attachBlocked"
+
+          aria-label="Attach"
+
+          title="Attach"
+
+          class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-700 text-zinc-200 transition-colors hover:bg-zinc-600 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+
+        >
+
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+
+          </svg>
+
+        </button>
+
+        <button
+
+          type="button"
+
+          (click)="gifPickRequested.emit()"
+
+          [disabled]="attachBlocked"
+
+          aria-label="GIF"
+
+          title="GIF"
+
+          class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-700 text-zinc-200 transition-colors hover:bg-zinc-600 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+
+        >
+
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+
+            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25Z" />
+
+          </svg>
+
+        </button>
+
+        <button
+
+          type="button"
+
+          (click)="stickerPickRequested.emit()"
+
+          [disabled]="attachBlocked"
+
+          aria-label="Stickers"
+
+          title="Stickers"
+
+          class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-700 text-zinc-200 transition-colors hover:bg-zinc-600 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+
+        >
+
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+
+          </svg>
+
+        </button>
+
+      </div>
+
+      <button
+
+        type="button"
+
+        (click)="send()"
+
+        [disabled]="sendBlocked"
+
+        class="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-white transition-colors hover:bg-indigo-500 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+
+      >
+
+        {{ isUploading ? 'Uploading...' : 'Send' }}
+
+      </button>
+
+    </div>
+
+  </div>
+
+</ng-container>
+

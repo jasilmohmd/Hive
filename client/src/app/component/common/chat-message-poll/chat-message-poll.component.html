@@ -1,0 +1,31 @@
+<div class="min-w-[14rem] max-w-sm space-y-2">
+  <p class="text-sm font-medium">{{ poll.question }}</p>
+  <div class="space-y-1.5">
+    <button
+      *ngFor="let opt of poll.options; let i = index"
+      type="button"
+      class="flex w-full flex-col rounded-lg border px-3 py-2 text-left text-sm transition-colors"
+      [ngClass]="isSelected(i) ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-600'"
+      [disabled]="poll.myVotes.length > 0"
+      (click)="toggleOption(i)"
+    >
+      <span class="flex justify-between gap-2">
+        <span>{{ opt }}</span>
+        <span *ngIf="poll.myVotes.length > 0" class="text-xs text-zinc-400">{{ percent(poll.counts[i]) }}%</span>
+      </span>
+      <span *ngIf="poll.myVotes.length > 0" class="mt-1 block h-1 overflow-hidden rounded-full bg-zinc-700">
+        <span class="block h-full bg-indigo-500" [style.width]="percent(poll.counts[i]) + '%'"></span>
+      </span>
+    </button>
+  </div>
+  <button
+    *ngIf="poll.myVotes.length === 0"
+    type="button"
+    class="w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-500 disabled:opacity-50"
+    [disabled]="!selected.size"
+    (click)="submitVote()"
+  >
+    Vote
+  </button>
+  <p *ngIf="poll.myVotes.length > 0" class="text-xs text-zinc-500">{{ totalVotes() }} vote(s)</p>
+</div>

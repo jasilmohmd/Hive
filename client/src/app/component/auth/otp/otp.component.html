@@ -1,0 +1,56 @@
+<div class="flex flex-col items-center justify-center m-4 sm:m-8">
+  <app-error-alert [message]="errorMessage" variant="inline" *ngIf="errorMessage" />
+
+  <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 sm:mb-10 text-white text-center drop-shadow-md">Enter OTP</h2>
+  <div
+    class="h-auto sm:h-[60vh] w-[80vw] sm:w-[60vw] lg:w-[40vw] xl:w-[30vw] flex items-center justify-center shadow-lg rounded-2xl bg-gray-600/10 backdrop-blur-lg p-4 sm:p-0"
+  >
+    <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="w-full sm:w-3/4 max-w-sm flex flex-col">
+      <div class="mb-4">
+        <label for="otp" class="block text-base sm:text-lg md:text-xl font-light text-slate-50">OTP</label>
+        <input
+          type="string"
+          id="otp"
+          formControlName="otp"
+          class="mt-1 block w-full h-7 sm:h-10 p-2 bg-white/20 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-transparent"
+          required
+        />
+        <p
+          *ngIf="otpForm.get('otp')?.invalid && (otpForm.get('otp')?.touched || otpForm.get('otp')?.dirty)"
+          class="text-red-400 text-xs"
+        >
+          <span *ngIf="otpForm.get('otp')?.errors?.['required']">OTP is required</span>
+          <span *ngIf="otpForm.get('otp')?.errors?.['minlength']">OTP must be at least 6 digits</span>
+        </p>
+        <button
+          type="button"
+          (click)="resendOtp()"
+          [disabled]="countdown > 0 || isResending"
+          class="mt-3 w-full rounded-lg px-4 py-2 text-sm font-medium text-white transition-all duration-300 ease-in-out sm:text-base disabled:cursor-not-allowed disabled:opacity-50"
+          [ngClass]="
+            countdown === 0 && !isResending
+              ? 'cursor-pointer bg-brand hover:bg-brand-hover'
+              : 'cursor-not-allowed bg-gray-500 hover:bg-gray-400'
+          "
+        >
+          Resend OTP <span *ngIf="countdown > 0">({{ countdown }}s)</span>
+          <span *ngIf="isResending"> …</span>
+        </button>
+      </div>
+      <app-button
+        type="submit"
+        variant="primary"
+        size="lg"
+        [loading]="isSubmitting"
+        [disabled]="otpForm.invalid"
+        extraClass="w-3/4 sm:w-1/2 mx-auto drop-shadow-md transition-all duration-300 ease-in-out"
+      >
+        Submit
+      </app-button>
+      <p class="text-xs sm:text-sm md:text-base text-slate-100 font-thin mt-6 text-center">
+        Remember Password?
+        <a routerLink="/auth/login" class="text-gray-700 hover:text-blue-600 hover:cursor-pointer">Login</a>
+      </p>
+    </form>
+  </div>
+</div>

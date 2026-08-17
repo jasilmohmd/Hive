@@ -1,0 +1,24 @@
+<div
+  class="fixed inset-0 z-40 bg-black/40 sm:absolute sm:inset-auto sm:bottom-full sm:left-0 sm:right-0 sm:mb-2 sm:bg-transparent"
+  (click)="onBackdropClick()"
+  role="presentation"
+>
+  <div
+    class="absolute bottom-0 left-0 right-0 overflow-hidden rounded-t-2xl border border-zinc-700 shadow-xl sm:relative sm:bottom-auto sm:rounded-2xl"
+    [ngClass]="theme === 'channel' ? 'bg-zinc-900 text-zinc-200' : 'bg-surface-900 text-zinc-200 ring-1 ring-zinc-800'"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between border-b border-zinc-700 px-3 py-2">
+      <span class="text-sm font-medium">Attach</span>
+      <button type="button" class="rounded-lg px-2 py-1 text-sm text-zinc-400 hover:bg-zinc-800" (click)="onBackdropClick()">Close</button>
+    </div>
+    <div class="grid grid-cols-3 gap-2 p-3">
+      <button type="button" class="flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 py-3 text-xs hover:border-indigo-500" (click)="mediaRequested.emit()">Media</button>
+      <button type="button" class="flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 py-3 text-xs hover:border-indigo-500" (click)="documentRequested.emit()">Document</button>
+      <button type="button" class="flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 py-3 text-xs hover:border-indigo-500" (click)="locationRequested.emit()">Location</button>
+      <button type="button" class="flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 py-3 text-xs hover:border-indigo-500" (click)="voiceRequested.emit()">Voice</button>
+      <button type="button" class="flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 py-3 text-xs hover:border-indigo-500" (click)="contactRequested.emit()">Contact</button>
+      <button type="button" class="flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 py-3 text-xs hover:border-indigo-500" (click)="pollRequested.emit()">Poll</button>
+    </div>
+  </div>
+</div>

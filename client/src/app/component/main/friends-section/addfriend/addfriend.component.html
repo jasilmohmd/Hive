@@ -1,0 +1,59 @@
+<!-- Success/Error Modal at Top -->
+<div
+  *ngIf="successMessage || errorMessage"
+  class="fixed left-1/2 top-4 z-50 w-[90%] max-w-md -translate-x-1/2 transform rounded-md bg-opacity-90 px-4 py-2 text-center"
+  [ngClass]="{ 'bg-green-500 text-white': successMessage, 'bg-red-500 text-white': errorMessage }"
+>
+  {{ successMessage || errorMessage }}
+</div>
+
+<div class="flex min-h-0 flex-1 flex-col rounded-2xl bg-surface-900 p-4">
+  <h2 class="mb-2 text-xl font-semibold text-white">Add Friend</h2>
+  <p class="mb-4 text-sm text-gray-400">You can add friends using their Hive username.</p>
+
+  <div class="flex items-center space-x-3">
+    <input
+      type="text"
+      placeholder="Enter username..."
+      class="flex-1 rounded-2xl bg-surface-700 px-4 py-2 text-white placeholder-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      [(ngModel)]="searchTerm"
+      (input)="onSearchTermChange()"
+      aria-label="Search by username"
+    />
+  </div>
+
+  <div class="relative mt-4 flex min-h-0 flex-1 flex-col">
+    <div
+      *ngIf="isLoading"
+      class="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-black/40"
+    >
+      <div class="rounded-xl bg-black/50 p-4">
+        <div
+          class="h-16 w-16 animate-spin rounded-full border-8 border-green-500 border-t-transparent"
+        ></div>
+      </div>
+    </div>
+
+    <ng-container
+      *ngIf="hasSearched && !isLoading && searchResults.length === 0; else addfriendTable"
+    >
+      <div class="flex min-h-0 flex-1 items-center justify-center p-6">
+        <app-empty-state
+          [embedded]="true"
+          title="No users found"
+          description="Try another username."
+        />
+      </div>
+    </ng-container>
+    <ng-template #addfriendTable>
+      <app-common-table
+        [data]="searchResults"
+        [columns]="tableColumns"
+        [primaryActions]="primaryActions"
+        appearance="friends"
+        [showColumnHeaders]="false"
+      >
+      </app-common-table>
+    </ng-template>
+  </div>
+</div>

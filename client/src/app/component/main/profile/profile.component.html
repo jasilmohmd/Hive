@@ -1,0 +1,56 @@
+<div *ngIf="successMessage" class="fixed top-4 left-1/2 z-50 -translate-x-1/2 transform rounded-md bg-success px-4 py-2 text-white shadow-lg" role="status">
+  {{ successMessage }}
+</div>
+
+<div class="bg-surface-900 text-white rounded-2xl p-6 max-w-lg w-full mx-auto">
+  <div class="text-center mb-8">
+    <h2 class="text-3xl font-bold mb-2">Profile</h2>
+    <p class="text-gray-400">Manage your account details</p>
+  </div>
+
+  <div class="mb-8 flex justify-center">
+    <app-image-picker-menu
+      variant="avatar"
+      [src]="userData.imageUrl ?? null"
+      [editable]="true"
+      [allowRemove]="true"
+      [alt]="(userData.userName || 'User') + ' profile photo'"
+      [fallbackLabel]="avatarInitials"
+      avatarSizeClass="h-28 w-28"
+      (uploaded)="onAvatarUploaded($event)"
+      (removed)="onAvatarRemoved()"
+    />
+  </div>
+
+  <div class="space-y-6">
+    <div>
+      <h3 class="text-gray-400 text-sm">Username</h3>
+      <p class="text-lg font-medium">{{ userData.userName }}</p>
+    </div>
+    <div>
+      <h3 class="text-gray-400 text-sm">Email</h3>
+      <p class="text-lg font-medium">{{ userData.email }}</p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-3 mt-6">
+    <a
+      routerLink="/main/edit_profile"
+      class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-brand"
+    >
+      Edit Profile
+    </a>
+    <a
+      routerLink="/main/change_password"
+      class="rounded-md bg-surface-700 px-4 py-2 text-sm text-white hover:bg-surface-600 focus-visible:ring-2 focus-visible:ring-brand"
+    >
+      Change Password
+    </a>
+  </div>
+
+  <div class="mt-6">
+    <app-button variant="danger" [loading]="logoutSubmitting" (click)="logout()"> Logout </app-button>
+  </div>
+
+  <p *ngIf="errorMessage" class="mt-4 text-red-400 text-sm">{{ errorMessage }}</p>
+</div>

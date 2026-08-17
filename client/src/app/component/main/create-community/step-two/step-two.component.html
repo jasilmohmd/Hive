@@ -1,0 +1,112 @@
+<form [formGroup]="formGroup" class="space-y-6">
+  <!-- Image Upload Field -->
+  <div>
+    <label class="block text-gray-200 text-sm font-medium mb-3">Community Image</label>
+    <div class="relative group">
+      <div class="border-2 border-dashed border-zinc-600 rounded-lg p-4 transition-colors hover:border-zinc-500"
+        (click)="imageFileInput.click()">
+        <div class="flex flex-col items-center justify-center text-center" *ngIf="!imagePreview">
+          <svg class="w-8 h-8 text-zinc-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p class="text-zinc-400 text-sm">Click to upload image</p>
+          <p class="text-zinc-500 text-xs mt-1">Recommended size: 256x256px</p>
+        </div>
+        <div class="relative" *ngIf="imagePreview">
+          <img [src]="imagePreview" alt="Preview" class="max-w-full h-32 object-cover rounded-lg">
+          <button type="button" (click)="removeImage('image', $event)"
+            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <input #imageFileInput type="file" (change)="onFileChange($event, 'image')" class="hidden" accept="image/*">
+    </div>
+    <div *ngIf="formGroup.get('image')?.touched && formGroup.get('image')?.invalid"
+      class="text-red-400 text-sm mt-2 flex items-center">
+      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+          clip-rule="evenodd" />
+      </svg>
+      <span>Community image is required</span>
+    </div>
+  </div>
+
+  <!-- Cover Image Upload Field -->
+  <div>
+    <label class="block text-gray-200 text-sm font-medium mb-3">Cover Image</label>
+    <div class="relative group">
+      <div class="border-2 border-dashed border-zinc-600 rounded-lg p-4 transition-colors hover:border-zinc-500"
+        (click)="coverFileInput.click()">
+        <div class="flex flex-col items-center justify-center text-center" *ngIf="!coverPreview">
+          <svg class="w-8 h-8 text-zinc-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p class="text-zinc-400 text-sm">Click to upload cover image</p>
+          <p class="text-zinc-500 text-xs mt-1">Recommended size: 1500x300px</p>
+        </div>
+        <div class="relative" *ngIf="coverPreview">
+          <img [src]="coverPreview" alt="Cover Preview" class="max-w-full h-32 object-cover rounded-lg">
+          <button type="button" (click)="removeImage('coverImage', $event); $event.stopPropagation()"
+            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <input #coverFileInput type="file" (change)="onFileChange($event, 'coverImage')" class="hidden" accept="image/*">
+    </div>
+    <div *ngIf="formGroup.get('coverImage')?.touched && formGroup.get('coverImage')?.invalid"
+      class="text-red-400 text-sm mt-2 flex items-center">
+      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+          clip-rule="evenodd" />
+      </svg>
+      <span>Cover image is required</span>
+    </div>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="flex justify-between gap-4 border-t border-zinc-800 pt-6">
+    <button type="button" (click)="previousStep()"
+      class="px-6 py-2.5 rounded-lg font-medium text-white bg-zinc-700 hover:bg-zinc-600 transition-colors flex items-center">
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back
+    </button>
+    <button type="button" (click)="nextStep()"
+      class="px-6 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors flex items-center">
+      Next
+      <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </div>
+</form>
+
+
+<!-- Image Cropper Modal -->
+<app-image-cropper-modal *ngIf="showImageCropper"
+  [imageChangedEvent]="imageChangedEvent"
+  [aspectRatio]="1"
+  format="png"
+  (done)="handleCropDone($event, 'image')"
+  (cancel)="cancelCrop()">
+</app-image-cropper-modal>
+
+<!-- Cover Image Cropper Modal -->
+<app-image-cropper-modal *ngIf="showCoverCropper"
+  [imageChangedEvent]="imageChangedEvent"
+  [aspectRatio]="3/1"
+  format="png"
+  (done)="handleCropDone($event, 'cover')"
+  (cancel)="cancelCrop()">
+</app-image-cropper-modal>

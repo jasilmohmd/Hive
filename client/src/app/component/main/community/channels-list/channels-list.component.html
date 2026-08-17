@@ -1,0 +1,91 @@
+<!-- General Section -->
+<div class="rounded-xl bg-zinc-900 w-full mb-2 p-1.5">
+  <div class="text-zinc-400 font-medium px-2 py-1 text-sm">General</div>
+  <div class="flex-col items-center text-zinc-300 cursor-pointer">
+    <a [routerLink]="['/main','community', communityId, 'about']" class="flex items-center gap-1 hover:bg-zinc-800 rounded-lg w-full px-2 py-0.5">
+      <img src="/assets/Icons/hash.png" alt="" class="h-4 w-4">
+      <span class="text-sm">About</span>
+    </a>
+    <div *ngFor="let item of channels.info" class="flex items-center gap-1 hover:bg-zinc-800 rounded-lg w-full px-2 py-0.5">
+      <img src="/assets/Icons/hash.png" alt="" class="h-4 w-4">
+      <span class="text-sm">{{ item.name }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Rooms Section -->
+<div *ngIf="channels.chatroom?.length" class="rounded-xl bg-zinc-900 w-full mb-2 p-1.5">
+  <div class="text-zinc-400 font-medium px-2 py-1 text-sm">Chat Rooms</div>
+  <div *ngFor="let room of channels.chatroom" class="flex items-center text-zinc-300 cursor-pointer">
+    <a [routerLink]="['/main','community', communityId, 'chatroom', room._id ]" class="flex items-center gap-1 hover:bg-zinc-800 rounded-lg w-full px-2 py-0.5">
+      <img src="/assets/Icons/chat_fill.png" alt="" class="h-4 w-4">
+      <span class="text-sm truncate">{{ room.name }}</span>
+    </a>
+  </div>
+</div>
+
+<!-- Voice Rooms Section -->
+<div *ngIf="channels.voiceroom?.length" class="rounded-xl bg-zinc-900 w-full mb-2 flex-grow p-1.5">
+  <div class="text-zinc-400 font-medium px-2 py-1 text-sm">Voice Rooms</div>
+  <div *ngFor="let room of channels.voiceroom" class="mb-0.5">
+    <div class="flex items-center rounded-md hover:bg-zinc-800 w-full">
+      <a
+        [routerLink]="['/main','community', communityId, 'voiceroom', room._id ]"
+        class="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-zinc-300"
+      >
+        <img src="/assets/Icons/sound_max_fill.png" alt="" class="h-4 w-4 shrink-0">
+        <span class="truncate text-sm">{{ room.name }}</span>
+        <span
+          class="ml-auto shrink-0 rounded bg-zinc-800 px-1.5 py-px text-[10px] text-zinc-400"
+          [class.text-emerald-400]="presenceCount(room) > 0"
+        >
+          {{ presenceCount(room) }}/{{ room.maxParticipants ?? 6 }}
+        </span>
+      </a>
+      <button
+        type="button"
+        class="shrink-0 rounded p-1 hover:bg-zinc-700"
+        [attr.aria-expanded]="room.isOpen"
+        [attr.aria-label]="'Participants in ' + room.name"
+        (click)="toggleRoom(room, $event)"
+      >
+        <img
+          src="/assets/Icons/small-down-arrow.png"
+          alt=""
+          class="h-4 w-4 transition-transform duration-200"
+          [class.rotate-180]="room.isOpen"
+        />
+      </button>
+    </div>
+
+    <div *ngIf="room.isOpen" class="ml-3 mr-1 border-l border-zinc-700/80 pl-2">
+      <p *ngIf="presenceFor(room).length === 0" class="py-0.5 text-[10px] text-zinc-500">Empty</p>
+      <div
+        *ngFor="let participant of presenceFor(room)"
+        class="flex items-center gap-1.5 rounded py-0.5 pr-1 hover:bg-zinc-800/80"
+      >
+        <div class="h-6 w-6 shrink-0 overflow-hidden rounded-full bg-zinc-700">
+          <img
+            *ngIf="participant.imageUrl; else listInitials"
+            [src]="participant.imageUrl"
+            [alt]="participant.userName"
+            class="h-full w-full object-cover"
+          />
+          <ng-template #listInitials>
+            <span class="flex h-full w-full items-center justify-center text-[9px] font-medium text-zinc-300">
+              {{ initials(participant.userName) }}
+            </span>
+          </ng-template>
+        </div>
+        <span class="min-w-0 flex-1 truncate text-xs text-zinc-300">{{ participant.userName }}</span>
+        <app-voiceroom-media-icons
+          [muted]="participant.muted"
+          [cameraOn]="participant.cameraOn"
+          [screenOn]="participant.screenOn"
+          [showScreen]="participant.screenOn"
+          [compact]="true"
+        />
+      </div>
+    </div>
+  </div>
+</div>

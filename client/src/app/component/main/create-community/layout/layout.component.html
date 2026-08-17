@@ -1,0 +1,67 @@
+<!-- Modal backdrop -->
+<div class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="absolute inset-0 bg-black opacity-50"></div>
+
+
+
+
+  <!-- Modal content -->
+  <div class="relative bg-zinc-800 rounded-lg shadow-lg z-50 w-full max-w-lg p-6">
+
+    <app-loading-state *ngIf="isSubmitting" variant="overlay" [message]="overlayMessage" />
+
+    <h2 class="text-2xl font-semibold mb-4 text-white">Create Community</h2>
+
+    <div class="relative pt-2">
+      <div class="absolute inset-0 flex items-center" aria-hidden="true">
+        <div class="w-full border-t border-zinc-700"></div>
+      </div>
+      <div class="relative flex justify-center">
+        <span class="px-3 bg-zinc-800 text-sm text-zinc-400">
+          Step {{ currentStep }} of 3
+        </span>
+      </div>
+    </div>
+
+    <!-- Add to modal header -->
+    <div class="flex justify-center mt-3 mb-6">
+      <div class="flex items-center gap-2">
+        <div *ngFor="let step of [1,2,3]"
+          [class]="'w-3 h-3 rounded-full ' + (currentStep === step ? 'bg-blue-500' : 'bg-zinc-600')">
+        </div>
+      </div>
+    </div>
+
+    <!-- Multi-step wizard using ngIf -->
+    <div *ngIf="currentStep === 1">
+      <community-create-step-one [formGroup]="communityForm" (next)="goToStep(2)">
+      </community-create-step-one>
+    </div>
+
+    <div *ngIf="currentStep === 2">
+      <community-create-step-two [formGroup]="communityForm" (next)="goToStep(3)" (back)="goToStep(1)">
+      </community-create-step-two>
+    </div>
+
+    <div *ngIf="currentStep === 3">
+      <community-create-step-three [formGroup]="communityForm" (back)="goToStep(2)" (submit)="onSubmit()">
+      </community-create-step-three>
+    </div>
+
+
+    <!-- Cancel button visible on all steps -->
+    <div class="flex justify-end mt-4">
+      <button
+        type="button"
+        (click)="onCancel()"
+        [disabled]="isSubmitting"
+        aria-label="Close create community dialog"
+        class="absolute top-4 right-4 p-1 rounded hover:transition-transform duration-200 transform hover:scale-125 focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        <img src="/assets/Icons/Close_round_light.png" class="h-6" alt="" />
+      </button>
+
+    </div>
+
+  </div>
+</div>

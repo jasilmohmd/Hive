@@ -1,0 +1,11 @@
+<div
+  class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs"
+  [ngClass]="
+    missed
+      ? 'border-red-500/40 bg-red-500/10 text-red-300'
+      : 'border-zinc-600/60 bg-zinc-800/80 text-zinc-300'
+  "
+>
+  <span aria-hidden="true" class="text-sm">{{ isVideo ? '📹' : '📞' }}</span>
+  <span>{{ label }}</span>
+</div>

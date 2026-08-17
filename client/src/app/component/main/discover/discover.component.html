@@ -1,0 +1,42 @@
+<div class="min-h-full text-zinc-100 p-4 md:p-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-2">Discover communities</h1>
+    <p class="text-zinc-400 text-sm mb-6">
+      Browse public communities you can explore and join from community pages.
+    </p>
+
+    <app-loading-state *ngIf="loading" variant="spinner" message="Loading communities…" containerClass="py-4" />
+
+    <app-error-alert
+      *ngIf="errorMessage"
+      [message]="errorMessage"
+      variant="banner"
+      title="Could not load communities"
+    />
+
+    <ul *ngIf="!loading && communities.length" class="space-y-3">
+      <li
+        *ngFor="let c of communities; trackBy: trackCommunity"
+        class="rounded-xl bg-zinc-900 border border-zinc-800 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+      >
+        <div>
+          <h2 class="font-medium text-lg">{{ c.name }}</h2>
+          <p class="text-zinc-400 text-sm line-clamp-2">{{ c.description || 'No description' }}</p>
+          <span class="inline-block mt-2 text-xs uppercase tracking-wide text-zinc-500">{{ c.type }}</span>
+        </div>
+        <a
+          [routerLink]="['/main/community', c._id]"
+          class="shrink-0 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm text-center focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          Open
+        </a>
+      </li>
+    </ul>
+
+    <app-empty-state
+      *ngIf="!loading && !communities.length && !errorMessage"
+      title="No communities yet"
+      description="Create one from the sidebar plus button when you are ready."
+    />
+  </div>
+</div>

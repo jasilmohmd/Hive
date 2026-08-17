@@ -1,0 +1,39 @@
+<div
+  class="fixed inset-0 z-50 bg-black/20"
+  (click)="dismiss.emit()"
+  role="presentation"
+>
+  <div
+    role="menu"
+    class="fixed z-[51] min-w-[10.5rem] overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
+    [style.left.px]="menuLeft"
+    [style.top.px]="menuTop"
+    (click)="$event.stopPropagation()"
+  >
+    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-zinc-800" (click)="reply.emit()">
+      Reply
+    </button>
+    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-zinc-800" (click)="react.emit()">
+      React
+    </button>
+    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-zinc-800" (click)="forward.emit()">
+      Forward
+    </button>
+    <button
+      *ngIf="isMine && canEdit"
+      type="button"
+      class="block w-full px-4 py-2 text-left text-sm hover:bg-zinc-800"
+      (click)="edit.emit()"
+    >
+      Edit
+    </button>
+    <button
+      *ngIf="isMine"
+      type="button"
+      class="block w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-zinc-800"
+      (click)="delete.emit()"
+    >
+      Delete
+    </button>
+  </div>
+</div>

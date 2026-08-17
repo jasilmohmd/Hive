@@ -1,0 +1,26 @@
+<!-- Image Cropper Modal -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-4">
+  <div class="flex w-full max-w-3xl max-h-[92vh] flex-col overflow-hidden rounded-lg bg-zinc-900 p-3 sm:p-4">
+    <div class="min-h-0 flex-1 overflow-auto">
+      <image-cropper
+        #cropper
+        class="block w-full max-h-[68vh]"
+        [imageChangedEvent]="imageChangedEvent"
+        [maintainAspectRatio]="true"
+        [aspectRatio]="aspectRatio"
+        [format]="format"
+        (imageLoaded)="onImageLoaded()"
+        (cropperReady)="onCropperReady()"
+        (imageCropped)="onImageCropped($event)"
+      ></image-cropper>
+    </div>
+    <div class="mt-4 flex shrink-0 gap-2">
+      <button (click)="onCancel()" class="px-4 py-2 bg-zinc-700 rounded-lg hover:bg-zinc-600">
+        Cancel
+      </button>
+      <button (click)="onDone()" class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500">
+        Done
+      </button>
+    </div>
+  </div>
+</div>

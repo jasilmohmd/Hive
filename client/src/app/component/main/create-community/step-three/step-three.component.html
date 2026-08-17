@@ -1,0 +1,88 @@
+<form [formGroup]="formGroup" class="flex flex-col h-full">
+  <!-- Tags Section -->
+  <div class="flex-1">
+    <label class="block text-gray-200 text-sm font-medium mb-3">Add Relevant Tags</label>
+
+    <!-- Search Input -->
+    <div class="relative mb-4">
+      <input type="text" placeholder="Search tags..." [formControl]="searchControl"
+        class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-zinc-800 border border-zinc-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-800 text-white placeholder-zinc-400 transition-colors">
+      <svg class="absolute left-3 top-3.5 h-5 w-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    </div>
+
+    <!-- Tags Container -->
+    <div class="rounded-lg border border-zinc-700 bg-zinc-900">
+      <div class="overflow-y-auto max-h-60 pr-2 scrollbar-themed">
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="text-center py-4 text-zinc-400 animate-pulse">
+          Loading tags...
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && filteredTags.length === 0" class="text-center py-4 text-zinc-400">
+          No tags found matching your search
+        </div>
+
+        <!-- Tags Grid -->
+        <div class="flex flex-wrap gap-2 m-3">
+          <div *ngFor="let tag of filteredTags" (click)="toggleTag(tag)"
+            class="group relative inline-flex items-center transition-all duration-200 ease-out hover:z-10"
+            [class]="getTagClasses(tag)" role="button" tabindex="0">
+            <div class="flex items-center gap-2 px-4 py-2">
+              <!-- Tag Name -->
+              <span class="text-gray-200 font-medium break-words">{{ tag.name }}</span>
+
+              <!-- Checkbox -->
+              <div [class]="getCheckboxClasses(tag)" class="flex-shrink-0">
+                <svg *ngIf="isTagSelected(tag)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Validation & Counter -->
+    <div class="mt-3 flex justify-between items-center">
+      <div *ngIf="formGroup.get('tags')?.invalid && (formGroup.get('tags')?.touched || showTagError)"
+        class="text-red-400 text-sm flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+            clip-rule="evenodd" />
+        </svg>
+        At least one tag is required
+      </div>
+      <div class="text-sm text-zinc-400 ml-auto">
+        Selected: {{ selectedTagsCount }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="flex justify-between gap-4 border-t border-zinc-800 pt-6">
+    <button type="button" (click)="previousStep()"
+      class="px-6 py-2.5 rounded-lg font-medium text-white bg-zinc-700 hover:bg-zinc-600 transition-colors flex items-center">
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back
+    </button>
+    <button type="submit"
+      class="px-6 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors flex items-center"
+      [disabled]="formGroup.invalid">
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      Create Community
+    </button>
+  </div>
+</form>

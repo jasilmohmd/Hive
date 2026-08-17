@@ -1,0 +1,52 @@
+<div
+  *ngIf="connected"
+  class="voice-session-bar rounded-2xl border border-emerald-800/60 bg-emerald-950/50 p-2.5 text-zinc-200 shadow-lg"
+  role="region"
+  aria-label="Active voice room"
+>
+  <div class="flex items-center gap-2">
+    <a
+      [routerLink]="voiceroomLink"
+      class="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-0.5 hover:bg-emerald-900/40 focus-visible:ring-2 focus-visible:ring-brand"
+    >
+      <img
+        src="assets/Icons/sound_max_fill.png"
+        alt=""
+        class="h-5 w-5 shrink-0 opacity-90"
+        aria-hidden="true"
+      >
+      <div class="min-w-0">
+        <p class="text-[10px] font-medium uppercase tracking-wide text-emerald-400/90">
+          Voice connected
+        </p>
+        <p class="truncate text-sm font-semibold text-zinc-100">{{ channelName }}</p>
+      </div>
+    </a>
+
+    <div class="flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        class="rounded-lg p-1.5 hover:bg-emerald-900/50 focus-visible:ring-2 focus-visible:ring-brand"
+        [ngClass]="{ 'bg-red-900/40': localMuted }"
+        [attr.aria-label]="localMuted ? 'Unmute microphone' : 'Mute microphone'"
+        [attr.aria-pressed]="localMuted"
+        (click)="toggleMute()"
+      >
+        <img
+          src="assets/Icons/mic-fill.png"
+          alt=""
+          class="h-5 w-5"
+          [ngClass]="{ 'opacity-40': localMuted }"
+        >
+      </button>
+      <button
+        type="button"
+        class="rounded-lg p-1.5 hover:bg-red-900/50 focus-visible:ring-2 focus-visible:ring-red-500"
+        aria-label="Leave voice room"
+        (click)="leaveCall()"
+      >
+        <img src="assets/Icons/Close_round_light.png" alt="" class="h-5 w-5">
+      </button>
+    </div>
+  </div>
+</div>

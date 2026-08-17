@@ -1,0 +1,57 @@
+<div
+  class="fixed inset-0 z-40 bg-black/40 sm:absolute sm:inset-auto sm:bottom-full sm:left-0 sm:right-0 sm:mb-2 sm:bg-transparent"
+  (click)="onBackdropClick()"
+  role="presentation"
+>
+  <div
+    class="absolute bottom-0 left-0 right-0 max-h-[min(70vh,420px)] overflow-hidden rounded-t-2xl border border-zinc-700 shadow-xl sm:relative sm:bottom-auto sm:max-h-[min(50vh,380px)] sm:rounded-2xl"
+    [ngClass]="
+      theme === 'channel'
+        ? 'bg-zinc-900 text-zinc-200'
+        : 'bg-surface-900 text-zinc-200 ring-1 ring-zinc-800'
+    "
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between border-b border-zinc-700 px-3 py-2">
+      <span class="text-sm font-medium">{{ panelTitle }}</span>
+      <button
+        type="button"
+        class="rounded-lg px-2 py-1 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+        (click)="onBackdropClick()"
+      >
+        Close
+      </button>
+    </div>
+
+    <div class="border-b border-zinc-800 p-2">
+      <input
+        type="search"
+        class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+        [ngModel]="searchDraft"
+        (ngModelChange)="onSearchInput($event)"
+        [placeholder]="searchPlaceholder"
+        autocomplete="off"
+      />
+    </div>
+    <p *ngIf="error" class="px-4 py-2 text-center text-sm text-red-400">{{ error }}</p>
+    <div *ngIf="loading" class="px-4 py-8 text-center text-sm text-zinc-500">Loading…</div>
+    <div
+      *ngIf="!loading && !error && results.length"
+      class="grid max-h-[min(55vh,320px)] grid-cols-3 gap-1 overflow-y-auto p-2 sm:grid-cols-4"
+    >
+      <button
+        *ngFor="let url of results"
+        type="button"
+        class="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-zinc-800/90 ring-1 ring-zinc-700 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        (click)="pickMedia(url)"
+      >
+        <img
+          [src]="url"
+          alt=""
+          [ngClass]="mode === 'sticker' ? 'max-h-full max-w-full object-contain' : 'h-full w-full object-cover'"
+          loading="lazy"
+        />
+      </button>
+    </div>
+  </div>
+</div>

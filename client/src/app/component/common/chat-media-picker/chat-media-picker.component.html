@@ -1,0 +1,44 @@
+<div
+  class="fixed inset-0 z-40 bg-black/40 sm:absolute sm:inset-auto sm:bottom-full sm:left-0 sm:right-0 sm:mb-2 sm:bg-transparent"
+  (click)="onBackdropClick()"
+  role="presentation"
+>
+  <div
+    class="absolute bottom-0 left-0 right-0 overflow-hidden rounded-t-2xl border border-zinc-700 shadow-xl sm:relative sm:bottom-auto sm:rounded-2xl"
+    [ngClass]="theme === 'channel' ? 'bg-zinc-900 text-zinc-200' : 'bg-surface-900 text-zinc-200 ring-1 ring-zinc-800'"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between border-b border-zinc-700 px-3 py-2">
+      <span class="text-sm font-medium">Media</span>
+      <button
+        type="button"
+        class="rounded-lg px-2 py-1 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+        (click)="onBackdropClick()"
+      >
+        Close
+      </button>
+    </div>
+    <div class="grid grid-cols-2 gap-2 p-3">
+      <button
+        type="button"
+        class="flex flex-col items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-5 text-sm transition-colors hover:border-indigo-500 hover:bg-zinc-800"
+        (click)="photoRequested.emit()"
+      >
+        <svg class="h-7 w-7 text-sky-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Photo
+      </button>
+      <button
+        type="button"
+        class="flex flex-col items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-5 text-sm transition-colors hover:border-indigo-500 hover:bg-zinc-800"
+        (click)="videoRequested.emit()"
+      >
+        <svg class="h-7 w-7 text-violet-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25Z" />
+        </svg>
+        Video
+      </button>
+    </div>
+  </div>
+</div>

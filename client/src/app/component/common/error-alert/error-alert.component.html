@@ -1,0 +1,54 @@
+<div
+  *ngIf="message"
+  [ngClass]="{
+    'rounded-md px-3 py-2 text-sm': variant === 'inline',
+    'max-w-2xl mx-auto my-6 p-4 rounded-lg border border-red-200 bg-red-50': variant === 'banner'
+  }"
+  [class.text-red-100]="variant === 'inline'"
+  [class.bg-red-500]="variant === 'inline'"
+  role="alert"
+  aria-live="polite"
+>
+  <div *ngIf="variant === 'banner'" class="flex items-start gap-3 text-red-800">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-6 w-6 flex-none"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
+    </svg>
+    <div class="flex-1">
+      <h3 *ngIf="title" class="font-semibold">{{ title }}</h3>
+      <p [class.mt-1]="title" [class.pl-0]="variant === 'banner'" class="text-red-700">{{ message }}</p>
+    </div>
+    <button
+      *ngIf="dismissible"
+      type="button"
+      class="rounded p-1 text-red-800 hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-brand"
+      (click)="dismiss()"
+      aria-label="Dismiss error"
+    >
+      &times;
+    </button>
+  </div>
+  <div *ngIf="variant === 'inline'" class="flex items-center justify-between gap-2">
+    <span class="flex-1 text-center">{{ message }}</span>
+    <button
+      *ngIf="dismissible"
+      type="button"
+      class="shrink-0 rounded px-2 py-0.5 hover:bg-red-600 focus-visible:ring-2 focus-visible:ring-brand"
+      (click)="dismiss()"
+      aria-label="Dismiss error"
+    >
+      &times;
+    </button>
+  </div>
+</div>

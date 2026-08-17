@@ -1,0 +1,559 @@
+<div
+
+  class="relative flex h-full min-h-0 flex-1 flex-col rounded-2xl bg-surface-900 text-zinc-200"
+
+>
+
+  <app-chat-message-context-menu
+    *ngIf="contextMenuMsg"
+    [anchorX]="contextMenuAnchor.x"
+    [anchorY]="contextMenuAnchor.y"
+    [isMine]="isMine(contextMenuMsg)"
+    [canEdit]="canEditMessage(contextMenuMsg)"
+    (reply)="onContextReply()"
+    (react)="onContextReact()"
+    (forward)="onContextForward()"
+    (edit)="onContextEdit()"
+    (delete)="onContextDelete()"
+    (dismiss)="closeContextMenu()"
+  />
+
+  <div class="mb-3 flex shrink-0 items-center gap-3 rounded-2xl bg-surface-700 p-4">
+
+    <ng-container *ngIf="friendId">
+
+      <div
+
+        class="relative flex h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-white/10 bg-surface-600"
+
+      >
+
+        <img
+
+          *ngIf="friendImageUrl as hurl"
+
+          [src]="hurl"
+
+          [alt]="friendDisplayName || 'Friend'"
+
+          class="h-full w-full object-cover"
+
+        />
+
+        <div
+
+          *ngIf="!friendImageUrl"
+
+          class="flex h-full w-full items-center justify-center text-sm font-medium text-zinc-300"
+
+        >
+
+          {{ (friendDisplayName || friendId || '?').slice(0, 2).toUpperCase() }}
+
+        </div>
+
+      </div>
+
+      <div class="flex min-w-0 flex-1 flex-col">
+
+        <span class="truncate text-lg font-medium">{{
+
+          friendDisplayName || 'Friend ' + friendId.slice(-6)
+
+        }}</span>
+
+      </div>
+
+      <div class="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          (click)="startVoiceCall()"
+          class="rounded-full bg-surface-600 p-2.5 text-zinc-200 hover:bg-zinc-600 focus-visible:ring-2 focus-visible:ring-brand"
+          aria-label="Start voice call"
+          title="Voice call"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.21a1 1 0 0 0 .24-1.02A11.36 11.36 0 0 0 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          (click)="startVideoCall()"
+          class="rounded-full bg-surface-600 p-2.5 text-zinc-200 hover:bg-zinc-600 focus-visible:ring-2 focus-visible:ring-brand"
+          aria-label="Start video call"
+          title="Video call"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+          </svg>
+        </button>
+      </div>
+
+    </ng-container>
+
+    <ng-container *ngIf="!friendId">
+
+      <div class="flex min-w-0 flex-1 flex-col gap-1">
+
+        <span class="text-lg font-medium">Messages</span>
+
+        <span class="text-xs text-amber-400"
+
+          >Open this page from Friends → Message, or add ?friendId=… to the URL.</span
+
+        >
+
+      </div>
+
+    </ng-container>
+
+  </div>
+
+
+
+  <app-error-alert
+
+    *ngIf="uploadError || errorMessage"
+
+    [message]="uploadError || errorMessage || ''"
+
+    variant="inline"
+
+    containerClass="shrink-0 px-2"
+
+  />
+
+
+
+  <app-loading-state
+
+    *ngIf="loading"
+
+    variant="spinner"
+
+    message="Loading messages…"
+
+    containerClass="shrink-0 px-4 py-2"
+
+  />
+
+
+
+  <div class="flex min-h-0 flex-1 flex-col">
+
+    <div class="scrollbar-themed min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+
+      <ng-container *ngFor="let msg of messages; trackBy: trackByMsg">
+
+      <div *ngIf="isCallMessage(msg)" class="flex w-full justify-center py-1">
+
+        <app-chat-message-call [msg]="msg" [viewerId]="currentUserId" />
+
+      </div>
+
+      <div
+
+        *ngIf="isRegularMessage(msg)"
+
+        class="flex w-full py-1"
+
+        [class.justify-end]="isMine(msg)"
+
+        [class.justify-start]="!isMine(msg)"
+
+      >
+
+        <div
+
+          class="flex max-w-[85%] flex-col gap-0.5 sm:max-w-[75%]"
+
+          [class.items-end]="isMine(msg)"
+
+          [class.items-start]="!isMine(msg)"
+
+        >
+
+          <div
+
+            class="rounded-2xl px-4 py-2 whitespace-pre-wrap ring-1"
+
+            [ngClass]="
+
+              isMine(msg) ? 'text-zinc-200 ring-zinc-700/50' : 'text-zinc-100 ring-white/[0.06]'
+
+            "
+
+            [ngStyle]="messageBubbleStyle(msg)"
+
+            (contextmenu)="openContextMenu(msg, $event)"
+
+          >
+
+            <p *ngIf="hasForwardedLabel(msg.metadata)" class="mb-1 text-[10px] uppercase tracking-wide text-zinc-500">Forwarded</p>
+
+            <app-chat-message-reply *ngIf="msg.replyTo" [reply]="msg.replyTo" />
+
+            <ng-container *ngIf="isStickerMessage(msg); else dmRichMessage">
+
+              <img
+
+                [src]="msg.content"
+
+                alt="Sticker"
+
+                class="mx-auto max-h-32 w-auto max-w-[min(100%,12rem)] object-contain"
+
+                loading="lazy"
+
+              />
+
+            </ng-container>
+
+            <ng-template #dmRichMessage>
+
+              <ng-container *ngIf="isAudioMessage(msg); else dmVideoOrMore">
+
+                <app-chat-message-audio [src]="msg.content" />
+
+              </ng-container>
+
+              <ng-template #dmVideoOrMore>
+
+                <ng-container *ngIf="isVideoMessage(msg); else dmFileOrMedia">
+
+                  <app-chat-message-video [src]="msg.content" />
+
+                </ng-container>
+
+                <ng-template #dmFileOrMedia>
+
+                  <ng-container *ngIf="isFileMessage(msg) && fileMessageContent(msg) as file; else dmMediaOrLoc">
+
+                    <app-chat-message-file [file]="file" />
+
+                  </ng-container>
+
+                  <ng-template #dmMediaOrLoc>
+
+                    <ng-container *ngIf="isLocationMessage(msg) && locationMessageContent(msg) as loc; else dmContactOrMore">
+
+                      <app-chat-message-location [location]="loc" />
+
+                    </ng-container>
+
+                    <ng-template #dmContactOrMore>
+
+                      <ng-container *ngIf="isContactMessage(msg) && parseContactContent(msg.content) as contact; else dmPollOrMedia">
+
+                        <app-chat-message-contact [contact]="contact" />
+
+                      </ng-container>
+
+                      <ng-template #dmPollOrMedia>
+
+                        <ng-container *ngIf="isPollMessage(msg) && msg.poll; else dmGifOrImage">
+
+                          <app-chat-message-poll [poll]="msg.poll" (vote)="onVotePoll(msg, $event)" />
+
+                        </ng-container>
+
+                        <ng-template #dmGifOrImage>
+
+                          <ng-container *ngIf="isGifMessage(msg) || isImageMessage(msg); else textMessage">
+
+                            <app-chat-media
+
+                              [src]="msg.content"
+
+                              [alt]="isGifMessage(msg) ? 'GIF in conversation' : 'Shared image in conversation'"
+
+                            />
+
+                          </ng-container>
+
+                          <ng-template #textMessage>
+
+                            <span>{{ msg.content }}</span>
+
+                            <app-chat-link-preview *ngIf="metadataFor(msg).linkPreview as lp" [preview]="lp" />
+
+                            <span *ngIf="msg.edited" class="ml-1 text-[10px] text-zinc-500">(edited)</span>
+
+                          </ng-template>
+
+                        </ng-template>
+
+                      </ng-template>
+
+                    </ng-template>
+
+                  </ng-template>
+
+                </ng-template>
+
+              </ng-template>
+
+            </ng-template>
+
+          </div>
+
+          <app-chat-message-reactions
+
+            [reactions]="msg.reactions ?? []"
+
+            [showPicker]="reactionPickerMsgId === msg._id"
+
+            (react)="onReaction(msg, $event)"
+
+            (togglePicker)="reactionPickerMsgId = reactionPickerMsgId === msg._id ? null : (msg._id ?? null)"
+
+          />
+
+          <span class="px-1 text-[11px] text-zinc-500">{{
+
+            msg.timestamp | date : 'shortTime'
+
+          }}</span>
+
+        </div>
+
+      </div>
+
+      </ng-container>
+
+
+
+      <app-empty-state
+
+        *ngIf="!loading && friendId && messages.length === 0"
+
+        title="No messages yet"
+
+        description="Say hello to start the conversation."
+
+      />
+
+    </div>
+
+
+
+    <div class="relative shrink-0 border-t border-zinc-800/80">
+
+      <input
+
+        #imageInput
+
+        type="file"
+
+        accept="image/*"
+
+        class="hidden"
+
+        (change)="onImageFileSelected($event)"
+
+      />
+
+      <input
+
+        #videoInput
+
+        type="file"
+
+        accept="video/mp4,video/webm,video/quicktime"
+
+        class="hidden"
+
+        (change)="onVideoFileSelected($event)"
+
+      />
+
+      <input
+
+        #documentInput
+
+        type="file"
+
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
+
+        class="hidden"
+
+        (change)="onDocumentFileSelected($event)"
+
+      />
+
+      <app-chat-attach-menu
+
+        *ngIf="attachMenuOpen"
+
+        theme="dm"
+
+        (mediaRequested)="onAttachMediaRequested()"
+
+        (documentRequested)="onAttachDocumentRequested(documentInput)"
+
+        (locationRequested)="onAttachLocationRequested()"
+
+        (voiceRequested)="onAttachVoiceRequested()"
+
+        (contactRequested)="onAttachContactRequested()"
+
+        (pollRequested)="onAttachPollRequested()"
+
+        (dismiss)="attachMenuOpen = false"
+
+      />
+
+      <app-chat-voice-recorder *ngIf="voicePanelOpen" (recorded)="onVoiceRecorded($event)" (dismiss)="voicePanelOpen = false" />
+
+      <app-chat-poll-composer *ngIf="pollComposerOpen" (created)="onPollCreated($event)" (dismiss)="pollComposerOpen = false" />
+
+      <app-chat-contact-picker *ngIf="contactPickerOpen" (picked)="onContactPicked($event)" (dismiss)="contactPickerOpen = false" />
+
+      <app-chat-forward-picker
+        *ngIf="forwardMsg"
+        [currentUserId]="currentUserId"
+        [excludeChatId]="chatId"
+        (picked)="onForwardToChat($event)"
+        (dismiss)="forwardMsg = null"
+      />
+
+      <app-chat-media-picker
+
+        *ngIf="mediaPickerOpen"
+
+        theme="dm"
+
+        (photoRequested)="onMediaPhotoRequested(imageInput)"
+
+        (videoRequested)="onMediaVideoRequested(videoInput)"
+
+        (dismiss)="mediaPickerOpen = false"
+
+      />
+
+      <app-chat-location-picker
+
+        *ngIf="locationPickerOpen"
+
+        theme="dm"
+
+        (picked)="onLocationPicked($event)"
+
+        (dismiss)="locationPickerOpen = false"
+
+      />
+
+      <app-chat-gif-picker
+
+        *ngIf="gifPanelOpen"
+
+        theme="dm"
+
+        (picked)="onGifChosen($event)"
+
+        (dismiss)="gifPanelOpen = false"
+
+      />
+
+      <app-chat-gif-picker
+
+        *ngIf="stickerPanelOpen"
+
+        mode="sticker"
+
+        theme="dm"
+
+        (picked)="onStickerChosen($event)"
+
+        (dismiss)="stickerPanelOpen = false"
+
+      />
+
+      <app-chat-composer
+
+        theme="dm"
+
+        [disabled]="!chatId"
+
+        [busy]="loading"
+
+        [isUploading]="isUploading"
+
+        [resetNonce]="composerReset"
+
+        [pendingFile]="pendingFile"
+
+        [pendingUploadKind]="pendingUploadKind"
+
+        [attachError]="attachError"
+
+        [replyPreview]="replyPreviewText()"
+
+        (cancelReply)="cancelReply()"
+
+        (sendRequested)="onComposerSend($event)"
+
+        (gifPickRequested)="toggleGifPanel()"
+
+        (stickerPickRequested)="toggleStickerPanel()"
+
+        (attachMenuRequested)="toggleAttachMenu()"
+
+        (clearPendingFile)="clearPendingAttach()"
+
+      />
+
+    </div>
+
+  </div>
+
+
+
+  <div
+
+    *ngIf="editingMsg"
+
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+
+    role="dialog"
+
+    aria-modal="true"
+
+    aria-label="Edit message"
+
+  >
+
+    <div class="w-full max-w-md rounded-2xl border border-zinc-700 bg-surface-800 p-4 shadow-xl">
+
+      <h3 class="mb-3 text-sm font-medium text-zinc-200">Edit message</h3>
+
+      <textarea
+
+        class="mb-3 w-full resize-none rounded-lg border border-zinc-600 bg-surface-900 px-3 py-2 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none"
+
+        rows="4"
+
+        [value]="editDraft"
+
+        (input)="editDraft = $any($event.target).value"
+
+      ></textarea>
+
+      <div class="flex justify-end gap-2">
+
+        <button type="button" class="rounded-lg px-3 py-1.5 text-sm text-zinc-400 hover:bg-zinc-800" (click)="cancelEdit()">Cancel</button>
+
+        <button type="button" class="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-500" (click)="saveEdit()">Save</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <app-dm-call-overlay
+    [peerName]="friendDisplayName || 'Friend'"
+  ></app-dm-call-overlay>
+
+</div>
+

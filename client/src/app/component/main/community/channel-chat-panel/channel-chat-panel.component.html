@@ -1,0 +1,291 @@
+<div class="channel-chat-root relative flex h-full min-h-0 w-full flex-col bg-surface-900 text-zinc-300">
+  <app-chat-message-context-menu
+    *ngIf="contextMenuMsg"
+    [anchorX]="contextMenuAnchor.x"
+    [anchorY]="contextMenuAnchor.y"
+    [isMine]="isMine(contextMenuMsg)"
+    [canEdit]="canEditMessage(contextMenuMsg)"
+    (reply)="onContextReply()"
+    (react)="onContextReact()"
+    (forward)="onContextForward()"
+    (edit)="onContextEdit()"
+    (delete)="onContextDelete()"
+    (dismiss)="closeContextMenu()"
+  />
+  <div
+    *ngIf="showHeader"
+    class="flex shrink-0 items-center justify-between border-b border-surface-700 bg-surface-800 p-4"
+  >
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-full bg-surface-700">
+        <span class="text-lg text-brand">#</span>
+      </div>
+      <div>
+        <h2 class="font-semibold text-zinc-100">{{ channelTitle }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <div
+    *ngIf="!showHeader"
+    class="flex shrink-0 items-center justify-between border-b border-zinc-700 bg-zinc-800/90 px-3 py-2"
+  >
+    <div class="flex min-w-0 items-center gap-2">
+      <img src="assets/Icons/chat_fill.png" alt="" class="h-4 w-4 shrink-0 opacity-80" aria-hidden="true">
+      <h2 class="truncate text-sm font-semibold text-zinc-100">{{ channelTitle || 'Chat' }}</h2>
+    </div>
+    <button
+      type="button"
+      class="shrink-0 rounded p-1 hover:bg-zinc-700 focus-visible:ring-2 focus-visible:ring-brand"
+      aria-label="Close chat"
+      (click)="onClose()"
+    >
+      <img src="assets/Icons/Close_round_light.png" alt="" class="h-5 w-5">
+    </button>
+  </div>
+
+  <div class="px-4 pt-2 shrink-0">
+    <app-error-alert
+      *ngIf="uploadError || errorMessage"
+      [message]="uploadError || errorMessage || ''"
+      variant="inline"
+    />
+    <app-loading-state
+      *ngIf="loading"
+      variant="spinner"
+      message="Loading messages…"
+      containerClass="py-2"
+    />
+  </div>
+
+  <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 scrollbar-themed">
+    <div
+      *ngFor="let msg of messages; trackBy: trackByMsg"
+      class="flex w-full py-1"
+      [class.justify-end]="isMine(msg)"
+      [class.justify-start]="!isMine(msg)"
+    >
+      <div
+        class="flex max-w-[85%] gap-2 items-end sm:max-w-[75%]"
+        [class.flex-row-reverse]="isMine(msg)"
+      >
+        <div
+          class="relative flex h-10 w-10 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-white/10"
+        >
+          <img
+            *ngIf="senderImageUrl(msg) as url"
+            [src]="url"
+            [alt]="senderLabel(msg)"
+            class="h-full w-full object-cover"
+          />
+          <div
+            *ngIf="!senderImageUrl(msg)"
+            class="flex h-full w-full items-center justify-center text-xs font-medium"
+            [ngStyle]="senderAvatarStyle(msg)"
+          >
+            {{ avatarInitials(msg) }}
+          </div>
+        </div>
+
+        <div class="flex min-w-0 flex-col" [class.items-end]="isMine(msg)">
+          <div *ngIf="!isMine(msg)" class="mb-1 flex flex-wrap items-baseline gap-2 px-0.5">
+            <span class="text-sm font-medium" [ngStyle]="senderNameStyle(msg)">{{
+              senderName(msg) ?? 'Unknown user'
+            }}</span>
+            <span class="text-xs text-zinc-500">{{ msg.timestamp | date : 'shortTime' }}</span>
+          </div>
+
+          <div *ngIf="isMine(msg)" class="mb-1 flex justify-end px-0.5">
+            <span class="text-xs text-zinc-500">{{ msg.timestamp | date : 'shortTime' }}</span>
+          </div>
+
+          <div
+            class="rounded-2xl px-4 py-2 whitespace-pre-wrap ring-1"
+            [ngClass]="
+              isMine(msg) ? 'text-zinc-200 ring-zinc-700/50' : 'text-zinc-100 ring-white/[0.06]'
+            "
+            [ngStyle]="messageBubbleStyle(msg)"
+            (contextmenu)="openContextMenu(msg, $event)"
+          >
+            <p *ngIf="hasForwardedLabel(msg.metadata)" class="mb-1 text-[10px] uppercase tracking-wide text-zinc-500">Forwarded</p>
+            <app-chat-message-reply *ngIf="msg.replyTo" [reply]="msg.replyTo" />
+            <ng-container *ngIf="isStickerMessage(msg); else channelRichMessage">
+              <img
+                [src]="msg.content"
+                alt="Sticker"
+                class="mx-auto max-h-32 w-auto max-w-[min(100%,12rem)] object-contain"
+                loading="lazy"
+              />
+            </ng-container>
+            <ng-template #channelRichMessage>
+              <ng-container *ngIf="isAudioMessage(msg); else channelVideoOrMore">
+                <app-chat-message-audio [src]="msg.content" />
+              </ng-container>
+              <ng-template #channelVideoOrMore>
+              <ng-container *ngIf="isVideoMessage(msg); else channelFileOrMedia">
+                <app-chat-message-video [src]="msg.content" />
+              </ng-container>
+              <ng-template #channelFileOrMedia>
+                <ng-container *ngIf="isFileMessage(msg) && fileMessageContent(msg) as file; else channelMediaOrText">
+                  <app-chat-message-file [file]="file" />
+                </ng-container>
+                <ng-template #channelMediaOrText>
+                  <ng-container *ngIf="isLocationMessage(msg) && locationMessageContent(msg) as loc; else channelImageOrText">
+                    <app-chat-message-location [location]="loc" />
+                  </ng-container>
+                  <ng-template #channelImageOrText>
+                    <ng-container *ngIf="isContactMessage(msg) && parseContactContent(msg.content) as contact; else channelPollOrMedia">
+                      <app-chat-message-contact [contact]="contact" />
+                    </ng-container>
+                    <ng-template #channelPollOrMedia>
+                    <ng-container *ngIf="isPollMessage(msg) && msg.poll; else channelGifOrImage">
+                      <app-chat-message-poll [poll]="msg.poll" (vote)="onVotePoll(msg, $event)" />
+                    </ng-container>
+                    <ng-template #channelGifOrImage>
+                    <ng-container *ngIf="isGifMessage(msg) || isImageMessage(msg); else textMessage">
+                      <app-chat-media
+                        [src]="msg.content"
+                        [alt]="isGifMessage(msg) ? 'GIF in channel' : 'Shared image in channel'"
+                      />
+                    </ng-container>
+                    <ng-template #textMessage>
+                      <span>{{ msg.content }}</span>
+                      <app-chat-link-preview *ngIf="metadataFor(msg).linkPreview as lp" [preview]="lp" />
+                      <span *ngIf="msg.edited" class="ml-1 text-[10px] text-zinc-500">(edited)</span>
+                    </ng-template>
+                    </ng-template>
+                    </ng-template>
+                  </ng-template>
+                </ng-template>
+              </ng-template>
+            </ng-template>
+              </ng-template>
+          </div>
+          <app-chat-message-reactions
+            [reactions]="msg.reactions ?? []"
+            [showPicker]="reactionPickerMsgId === msg._id"
+            (react)="onReaction(msg, $event)"
+            (togglePicker)="reactionPickerMsgId = reactionPickerMsgId === msg._id ? null : (msg._id ?? null)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <app-empty-state
+      *ngIf="!loading && messages.length === 0"
+      title="No messages yet"
+      description="Say hello to start the conversation."
+    />
+  </div>
+
+  <div class="relative shrink-0">
+    <input
+      #imageInput
+      type="file"
+      accept="image/*"
+      class="hidden"
+      (change)="onImageFileSelected($event)"
+    />
+    <input
+      #videoInput
+      type="file"
+      accept="video/mp4,video/webm,video/quicktime"
+      class="hidden"
+      (change)="onVideoFileSelected($event)"
+    />
+    <input
+      #documentInput
+      type="file"
+      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
+      class="hidden"
+      (change)="onDocumentFileSelected($event)"
+    />
+    <app-chat-attach-menu
+      *ngIf="attachMenuOpen"
+      theme="channel"
+      (mediaRequested)="onAttachMediaRequested()"
+      (documentRequested)="onAttachDocumentRequested(documentInput)"
+      (locationRequested)="onAttachLocationRequested()"
+      (voiceRequested)="onAttachVoiceRequested()"
+      (contactRequested)="onAttachContactRequested()"
+      (pollRequested)="onAttachPollRequested()"
+      (dismiss)="attachMenuOpen = false"
+    />
+    <app-chat-voice-recorder *ngIf="voicePanelOpen" (recorded)="onVoiceRecorded($event)" (dismiss)="voicePanelOpen = false" />
+    <app-chat-poll-composer *ngIf="pollComposerOpen" (created)="onPollCreated($event)" (dismiss)="pollComposerOpen = false" />
+    <app-chat-contact-picker *ngIf="contactPickerOpen" (picked)="onContactPicked($event)" (dismiss)="contactPickerOpen = false" />
+    <app-chat-forward-picker
+      *ngIf="forwardMsg"
+      [currentUserId]="currentUserId"
+      [excludeChatId]="channelId"
+      (picked)="onForwardToChat($event)"
+      (dismiss)="forwardMsg = null"
+    />
+    <app-chat-media-picker
+      *ngIf="mediaPickerOpen"
+      theme="channel"
+      (photoRequested)="onMediaPhotoRequested(imageInput)"
+      (videoRequested)="onMediaVideoRequested(videoInput)"
+      (dismiss)="mediaPickerOpen = false"
+    />
+    <app-chat-location-picker
+      *ngIf="locationPickerOpen"
+      theme="channel"
+      (picked)="onLocationPicked($event)"
+      (dismiss)="locationPickerOpen = false"
+    />
+    <app-chat-gif-picker
+      *ngIf="gifPanelOpen"
+      theme="channel"
+      (picked)="onGifChosen($event)"
+      (dismiss)="gifPanelOpen = false"
+    />
+    <app-chat-gif-picker
+      *ngIf="stickerPanelOpen"
+      mode="sticker"
+      theme="channel"
+      (picked)="onStickerChosen($event)"
+      (dismiss)="stickerPanelOpen = false"
+    />
+    <app-chat-composer
+      theme="channel"
+      [disabled]="!channelId"
+      [busy]="loading"
+      [isUploading]="isUploading"
+      [resetNonce]="composerReset"
+      [pendingFile]="pendingFile"
+      [pendingUploadKind]="pendingUploadKind"
+      [attachError]="attachError"
+      [replyPreview]="replyPreviewText()"
+      placeholder="Write a message..."
+      (cancelReply)="cancelReply()"
+      (sendRequested)="onComposerSend($event)"
+      (gifPickRequested)="toggleGifPanel()"
+      (stickerPickRequested)="toggleStickerPanel()"
+      (attachMenuRequested)="toggleAttachMenu()"
+      (clearPendingFile)="clearPendingAttach()"
+    />
+  </div>
+
+  <div
+    *ngIf="editingMsg"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Edit message"
+  >
+    <div class="w-full max-w-md rounded-2xl border border-zinc-700 bg-surface-800 p-4 shadow-xl">
+      <h3 class="mb-3 text-sm font-medium text-zinc-200">Edit message</h3>
+      <textarea
+        class="mb-3 w-full resize-none rounded-lg border border-zinc-600 bg-surface-900 px-3 py-2 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none"
+        rows="4"
+        [value]="editDraft"
+        (input)="editDraft = $any($event.target).value"
+      ></textarea>
+      <div class="flex justify-end gap-2">
+        <button type="button" class="rounded-lg px-3 py-1.5 text-sm text-zinc-400 hover:bg-zinc-800" (click)="cancelEdit()">Cancel</button>
+        <button type="button" class="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-500" (click)="saveEdit()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>

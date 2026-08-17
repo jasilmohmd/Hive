@@ -1,0 +1,21 @@
+<a
+  [href]="preview.url"
+  target="_blank"
+  rel="noopener noreferrer"
+  class="mt-2 block overflow-hidden rounded-lg border border-zinc-600/50 bg-zinc-900/50 transition-colors hover:border-indigo-500/40"
+>
+  <img
+    *ngIf="preview.image"
+    [src]="preview.image"
+    alt=""
+    class="h-28 w-full object-cover"
+    loading="lazy"
+  />
+  <div class="px-3 py-2">
+    <p *ngIf="preview.title" class="truncate text-sm font-medium">{{ preview.title }}</p>
+    <p *ngIf="preview.description" class="mt-0.5 line-clamp-2 text-xs text-zinc-400">
+      {{ preview.description }}
+    </p>
+    <p class="mt-1 truncate text-[11px] text-zinc-500">{{ preview.url }}</p>
+  </div>
+</a>

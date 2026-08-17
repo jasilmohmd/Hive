@@ -1,0 +1,59 @@
+<app-common-modal
+  *ngIf="confirmModalVisible"
+  title="Confirmation"
+  variant="destructive"
+  [loading]="confirmLoading"
+  [message]="
+    pendingAction?.type === 'unfriend'
+      ? 'Are you sure you want to unfriend this user?'
+      : 'Are you sure you want to block this user?'
+  "
+  (confirmed)="handleConfirmation()"
+  (cancelled)="cancelConfirmation()"
+>
+</app-common-modal>
+
+<div
+  class="sticky top-0 z-10 bg-surface-900 transition-transform duration-300"
+  [ngClass]="{ '-translate-y-full opacity-0': !showSearchBar, 'translate-y-0 opacity-100': showSearchBar }"
+>
+  <div class="flex items-center p-2">
+    <input
+      type="text"
+      placeholder="Search friends..."
+      [(ngModel)]="searchTerm"
+      (input)="searchFriends()"
+      aria-label="Search friends"
+      class="flex-1 rounded-2xl bg-surface-700 px-4 py-2 text-white placeholder-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+    />
+  </div>
+</div>
+
+<app-error-alert *ngIf="errorMessage" [message]="errorMessage" variant="banner" title="Friends list" />
+
+<div class="flex min-h-0 flex-1 flex-col">
+  <ng-container
+    *ngIf="hasSearched && filteredFriends.length === 0 && !errorMessage; else friendsTable"
+  >
+    <div class="flex min-h-0 flex-1 items-center justify-center p-6">
+      <app-empty-state
+        [embedded]="true"
+        title="No friends found"
+        description="Try a different search term."
+      />
+    </div>
+  </ng-container>
+  <ng-template #friendsTable>
+    <app-common-table
+      [data]="filteredFriends"
+      [columns]="tableColumns"
+      [primaryActions]="primaryActions"
+      [secondaryActions]="secondaryActions"
+      appearance="friends"
+      [showColumnHeaders]="false"
+      [enableRowClick]="true"
+      (rowClick)="message($event)"
+    >
+    </app-common-table>
+  </ng-template>
+</div>

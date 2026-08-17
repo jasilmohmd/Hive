@@ -1,0 +1,251 @@
+<!-- about.component.html -->
+<div class="min-h-full w-full bg-zinc-900 ">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex rounded-2xl box-border h-full gap-3 animate-pulse">
+    <!-- Skeleton matching parent layout -->
+    <div class="w-full h-64 bg-zinc-800 rounded-2xl">
+      <div class="h-48 bg-zinc-700 rounded-t-2xl"></div>
+      <div class="p-6 -mt-12">
+        <div class="h-24 w-24 rounded-full bg-zinc-700 border-4 border-zinc-900"></div>
+        <div class="ml-32 space-y-3">
+          <div class="h-8 w-64 bg-zinc-700 rounded-lg"></div>
+          <div class="h-4 w-80 bg-zinc-700 rounded"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage" class="max-w-2xl mx-auto my-6 p-4 bg-red-900/20 border border-red-700 rounded-2xl"
+    role="alert">
+    <div class="flex items-center gap-3 text-red-400">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-none" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <h3 class="font-semibold flex-1">Something went wrong</h3>
+    </div>
+    <p class="mt-3 pl-9 text-red-300">{{ errorMessage }}</p>
+  </div>
+
+  <!-- Community Details -->
+  <div *ngIf="community" class="w-full mx-auto animate-fade-in ">
+    <!-- Cover Image -->
+    <div #coverAnchor class="relative z-0 shadow-2xl">
+      <ng-container *ngIf="canManageCommunity; else coverReadonly">
+        <app-image-picker-menu
+          variant="cover"
+          [src]="community.coverImageUrl || null"
+          [editable]="true"
+          [allowRemove]="false"
+          [alt]="community.name + ' cover image'"
+          (uploaded)="onCommunityCoverUploaded($event)"
+        />
+      </ng-container>
+      <ng-template #coverReadonly>
+        <div class="relative aspect-[3/1] overflow-hidden rounded-xl">
+          <img [src]="community.coverImageUrl || 'default-cover.jpg'" alt="Community cover"
+            class="h-full w-full object-cover" />
+          <div
+            class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-zinc-900/85 via-zinc-900/15 to-transparent"
+            aria-hidden="true"
+          ></div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Profile Section -->
+    <div #detailsSection
+      class="relative z-10 bg-zinc-800 rounded-xl shadow-xl px-4 md:px-6 pt-16 md:pt-20 pb-6 -mt-12 md:-mt-16 mx-2 md:mx-4 mb-4">
+
+      <!-- Manage Community Button -->
+      <button *ngIf="permissions.includes('MANAGE_COMMUNITY')"
+        class="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        <span class="hidden md:inline">Manage Community</span>
+      </button>
+
+      <!-- Community Image -->
+      <div class="absolute -top-8 md:-top-12 left-4 md:left-6 z-[2]">
+        <ng-container *ngIf="canManageCommunity; else logoReadonly">
+          <div class="rounded-full border-4 border-zinc-900 shadow-xl bg-surface-900 p-0">
+            <app-image-picker-menu
+              variant="avatar"
+              [src]="community.imageUrl || null"
+              [editable]="true"
+              [allowRemove]="false"
+              [alt]="community.name + ' logo'"
+              [fallbackLabel]="(community.name || '?').slice(0, 2).toUpperCase()"
+              avatarSizeClass="w-16 h-16 md:w-24 md:h-24"
+              (uploaded)="onCommunityIconUploaded($event)"
+            />
+          </div>
+        </ng-container>
+        <ng-template #logoReadonly>
+          <img [src]="community.imageUrl || 'default-avatar.png'" alt="Community logo"
+            class="w-16 h-16 md:w-24 md:h-24 rounded-full border-4 border-zinc-900 shadow-xl object-cover transition-transform duration-300 hover:scale-105" />
+        </ng-template>
+      </div>
+
+      <!-- Header Section -->
+      <div class="ml-20 md:ml-32 pr-8">
+        <h1 class="text-xl md:text-3xl font-bold text-zinc-100 mb-1 md:mb-2">{{ community.name }}</h1>
+        <p *ngIf="community.description" class="text-zinc-400 text-sm md:text-base leading-relaxed">
+          {{ community.description }}
+        </p>
+      </div>
+
+      <!-- Compact Details Grid -->
+      <div class="grid md:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
+        <!-- Left Column -->
+        <div class="space-y-3 md:space-y-4">
+          <!-- Basic Info Card -->
+          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+            <h2 class="text-xs md:text-sm font-semibold text-zinc-500 mb-2 md:mb-3">Community Details</h2>
+            <div class="space-y-1 md:space-y-2 text-sm md:text-base">
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Type</span>
+                <span class="text-zinc-200 capitalize">{{ community.type }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Owner</span>
+                <span class="text-zinc-200">{{ community.ownerId?.userName || 'Unknown' }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Created</span>
+                <span class="text-zinc-200">{{ community.createdAt | date:'mediumDate' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Members Card -->
+          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+            <div class="flex justify-between items-center mb-2 md:mb-3">
+              <h2 class="text-xs md:text-sm font-semibold text-zinc-500">Members</h2>
+              <div class="flex items-center gap-4">
+                <button *ngIf="permissions.includes('MANAGE_MEMBERS')" (click)="manageMembers()"
+                  class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all"
+                  title="Manage members">
+                  Manage
+                </button>
+                <span class="text-zinc-400 text-xs md:text-sm m-3">{{ community.members.length }}</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1.5 md:gap-2">
+              <div *ngFor="let member of community.members.slice(0,5)"
+                class="flex items-center gap-2 py-1 bg-zinc-500/30 rounded-full">
+                <div *ngIf="member.userId?.status" class="h-3 w-3 bg-green-600/70 rounded-full ml-2 -mr-3"></div>
+                <span class="text-zinc-400 text-sm px-3">{{ member.userId?.userName || 'Unknown' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-3 md:space-y-4">
+
+          <!-- Tags Card -->
+          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+            <div class="flex justify-between items-center mb-2 md:mb-3">
+              <h2 class="text-xs md:text-sm font-semibold text-zinc-500">Community Tags</h2>
+              <div class="flex items-center gap-4">
+                <button *ngIf="permissions.includes('MANAGE_COMMUNITY')"
+                  class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all"
+                  title="Manage tags">
+                  Manage
+                </button>
+                <span class="text-zinc-400 text-xs md:text-sm mx-3">{{ community.tags.length }}</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let tag of community.tags"
+                class="px-3 py-1 bg-zinc-500/30 text-zinc-400 text-sm rounded-full">
+                {{ tag.name }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Channels Card -->
+          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+            <div class="flex justify-between items-center mb-2 md:mb-3">
+              <h2 class="text-xs md:text-sm font-semibold text-zinc-500">Channels</h2>
+              <div class="flex items-center gap-4">
+                <button *ngIf="permissions.includes('MANAGE_CHANNELS')" (click)="manageChannels()"
+                  class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all"
+                  title="Manage channels">
+                  Manage
+                </button>
+                <span class="text-zinc-400 text-xs md:text-sm mx-3">{{ community.channels.length }}</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let channel of community.channels.slice(0,4)"
+                class="px-3 py-1 bg-purple-900/30 text-purple-400 text-sm rounded-full">
+                #{{ channel.name }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Join Requests Card -->
+          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+            <div class="flex justify-between items-center mb-2 md:mb-3">
+              <h2 class="text-xs md:text-sm font-semibold text-zinc-500">Join Requests</h2>
+              <div class="flex items-center gap-4">
+                <button *ngIf="permissions.includes('MANAGE_MEMBERS')"
+                  class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all"
+                  title="Manage requests">
+                  Manage
+                </button>
+                <span class="text-zinc-400 text-xs md:text-sm mx-3">{{ community.joinRequests.length }}</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let request of community.joinRequests.slice(0,4)"
+                class="px-3 py-1 bg-amber-900/30 text-amber-400 text-sm rounded-full">
+                {{ request }}
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Include the modal if showModal is true -->
+<div class="flex-1 overflow-hidden transition-all duration-300 ease-in-out">
+  <app-list-modal 
+    *ngIf="showModal" 
+    [title]="modalData.title || ''" 
+    [addAction]="modalData.addAction || null"
+    [createFields]="modalData.createFields || []" 
+    [data]="modalData.data || []" 
+    [columns]="modalData.columns || []"
+    [primaryActions]="modalData.primaryActions || []" 
+    [secondaryActions]="modalData.secondaryActions || []"
+    [showFallbackInitial]="modalData.showFallbackInitial || false"
+    [searchFields]="modalData.searchFields || []" 
+    (searchChange)="searchUsers($event)"
+    [mode]="modalData.mode || 'create'" 
+    (close)="showModal = false"
+    (action)="handleModalAction($event)"
+    class="animate-fade-in-up">
+  </app-list-modal>
+</div>
+
+
+<app-common-modal 
+  *ngIf="showConfirmModal"
+  title="Confirm Deletion"
+  message="Are you sure you want to delete this channel?"
+  confirmText="Delete"
+  cancelText="Cancel"
+  (confirmed)="onDeleteConfirmed()"
+  (cancelled)="onDeleteCancelled()"
+  class="animate-fade-in-up">
+</app-common-modal>

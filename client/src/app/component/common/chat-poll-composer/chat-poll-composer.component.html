@@ -1,0 +1,50 @@
+<div
+  class="fixed inset-0 z-40 bg-black/40 sm:absolute sm:inset-auto sm:bottom-full sm:left-0 sm:right-0 sm:mb-2 sm:bg-transparent"
+  (click)="dismiss.emit()"
+  role="presentation"
+>
+  <div
+    class="absolute bottom-0 left-0 right-0 max-h-[70vh] overflow-y-auto rounded-t-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-xl sm:relative sm:max-h-[50vh] sm:rounded-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <h3 class="mb-3 text-sm font-medium">Create poll</h3>
+    <input
+      type="text"
+      class="mb-3 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+      [(ngModel)]="question"
+      placeholder="Question"
+      maxlength="300"
+    />
+    <div *ngFor="let opt of options; let i = index" class="mb-2 flex gap-2">
+      <input
+        type="text"
+        class="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+        [(ngModel)]="options[i]"
+        [placeholder]="'Option ' + (i + 1)"
+        maxlength="100"
+      />
+      <button
+        *ngIf="options.length > 2"
+        type="button"
+        class="text-red-400"
+        (click)="removeOption(i)"
+        aria-label="Remove option"
+      >
+        ×
+      </button>
+    </div>
+    <label class="mb-3 flex items-center gap-2 text-sm">
+      <input type="checkbox" [(ngModel)]="allowMultiple" />
+      Allow multiple choices
+    </label>
+    <p *ngIf="error" class="mb-2 text-sm text-red-400">{{ error }}</p>
+    <div class="flex gap-2">
+      <button type="button" class="text-sm text-indigo-400" (click)="addOption()" [disabled]="options.length >= 10">
+        Add option
+      </button>
+      <button type="button" class="ml-auto rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white" (click)="submit()">
+        Send poll
+      </button>
+    </div>
+  </div>
+</div>

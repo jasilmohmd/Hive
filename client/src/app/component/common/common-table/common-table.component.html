@@ -1,0 +1,126 @@
+<div
+  [ngClass]="
+    appearance === 'friends'
+      ? 'overflow-hidden rounded-xl border border-zinc-800/80 bg-surface-950/30'
+      : ''
+  "
+>
+  <div class="min-w-full">
+    <table
+      class="w-full"
+      [class.friends-data-tight]="appearance === 'friends'"
+    >
+      <thead *ngIf="showColumnHeaders">
+        <tr
+          [ngClass]="
+            appearance === 'friends'
+              ? 'border-b border-zinc-800 bg-surface-800/40'
+              : 'border-b border-gray-700'
+          "
+        >
+          <ng-container *ngFor="let col of columns">
+            <th
+              [ngClass]="
+                appearance === 'friends'
+                  ? 'px-3 py-2 text-left text-sm font-thin text-zinc-400 sm:px-4 sm:py-2.5'
+                  : 'px-4 py-2 text-left text-sm font-thin text-zinc-400'
+              "
+              [class.w-[200px]]="col.field === 'profilePicture'"
+            >
+              {{ col.header }}
+            </th>
+          </ng-container>
+          <th
+            [ngClass]="
+              appearance === 'friends'
+                ? 'w-[120px] px-3 py-2 text-right text-sm font-thin text-zinc-400 sm:px-4 sm:py-2.5'
+                : 'w-[120px] px-4 py-2 text-right text-sm font-thin text-zinc-400'
+            "
+          ></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let row of data"
+          class="transition-colors hover:bg-zinc-900/50"
+          [ngClass]="appearance === 'friends' ? 'border-b border-zinc-800/80' : 'border-b border-gray-700'"
+          [class.cursor-pointer]="enableRowClick"
+          (click)="onRowActivate($event, row)"
+        >
+          <ng-container *ngFor="let col of columns">
+            <td
+              [ngClass]="
+                appearance === 'friends'
+                  ? 'px-3 py-2 align-middle sm:px-4 sm:py-2.5'
+                  : 'px-4 py-2 align-middle'
+              "
+            >
+              <ng-container [ngSwitch]="col.field">
+                <div *ngSwitchCase="'profilePicture'" class="flex items-center">
+                  <ng-container *ngIf="row.profilePicture || row.imageUrl; else fallback">
+                    <img
+                      [src]="row.profilePicture || row.imageUrl"
+                      alt="{{ row.userName || row.name || row.email || 'User' }}"
+                      class="h-10 w-10 rounded-full object-cover"
+                      [ngClass]="{ 'ring-1 ring-white/10': appearance === 'friends' }"
+                    />
+                  </ng-container>
+                  <ng-template #fallback>
+                    <ng-container *ngIf="showFallbackInitial">
+                      <div
+                        class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-500 text-lg font-medium"
+                        [ngClass]="{ 'ring-1 ring-white/10': appearance === 'friends' }"
+                      >
+                        {{
+                          ((row.userName || row.name || row.email)
+                            ? (row.userName || row.name || row.email)[0]
+                            : '') | uppercase
+                        }}
+                      </div>
+                    </ng-container>
+                  </ng-template>
+                </div>
+
+                <div *ngSwitchDefault class="truncate">
+                  {{ row[col.field] }}
+                </div>
+              </ng-container>
+            </td>
+          </ng-container>
+
+          <td
+            [ngClass]="
+              appearance === 'friends'
+                ? 'px-3 py-2 text-right align-middle sm:px-4 sm:py-2.5'
+                : 'px-4 py-2 text-right align-middle'
+            "
+          >
+            <div class="flex flex-nowrap items-center justify-end gap-2">
+              <button
+                *ngFor="let act of primaryActions"
+                type="button"
+                (click)="act.action(row); $event.stopPropagation()"
+                [ngClass]="act.class"
+                class="shrink-0 rounded-md bg-zinc-600 p-1.5 transition-colors"
+                [title]="act.label"
+              >
+                <img *ngIf="act.icon" [src]="act.icon" alt="icon" class="h-5 w-5" />
+                <span *ngIf="!act.icon">{{ act.label }}</span>
+              </button>
+
+              <div class="dropdown-container relative shrink-0" *ngIf="secondaryActions?.length">
+                <app-common-dropdown
+                  [items]="secondaryActions"
+                  [isOpen]="dropdownOpen === row"
+                  (isOpenChange)="dropdownOpen = $event ? row : null"
+                  (itemSelected)="onSecondaryAction($event, row)"
+                >
+                </app-common-dropdown>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

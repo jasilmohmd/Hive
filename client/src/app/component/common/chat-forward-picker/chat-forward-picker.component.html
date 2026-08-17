@@ -1,0 +1,83 @@
+<div
+  class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-full max-w-md -translate-x-1/2 px-3"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="forward-picker-title"
+>
+  <div
+    class="pointer-events-auto flex w-full flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl"
+    style="max-height: min(85vh, 28rem)"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3">
+      <h3 id="forward-picker-title" class="text-sm font-medium text-zinc-100">Forward to</h3>
+      <button
+        type="button"
+        class="rounded-lg px-2 py-1 text-lg leading-none text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+        (click)="close()"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 scrollbar-themed">
+      <p *ngIf="loading" class="px-2 py-4 text-sm text-zinc-500">Loading destinations…</p>
+      <p *ngIf="error" class="px-2 py-2 text-sm text-red-400">{{ error }}</p>
+
+      <ng-container *ngIf="!loading && !error">
+        <section *ngIf="channelTargets.length" class="mb-3">
+          <p class="px-2 pb-1 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+            Community channels
+          </p>
+          <button
+            *ngFor="let ch of channelTargets"
+            type="button"
+            class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-zinc-800"
+            (click)="forwardToChannel(ch)"
+          >
+            <span
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-xs text-indigo-300"
+              >#</span
+            >
+            <span class="min-w-0 flex-1">
+              <span class="block truncate font-medium text-zinc-200">{{ ch.channelName }}</span>
+              <span class="block truncate text-xs text-zinc-500">{{ ch.communityName }}</span>
+            </span>
+          </button>
+        </section>
+
+        <section *ngIf="friends.length">
+          <p class="px-2 pb-1 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+            Direct messages
+          </p>
+          <button
+            *ngFor="let f of friends"
+            type="button"
+            class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-zinc-800"
+            (click)="forwardToFriend(f)"
+          >
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs">
+              {{ f.userName.slice(0, 2).toUpperCase() }}
+            </span>
+            <span class="truncate">{{ f.userName }}</span>
+          </button>
+        </section>
+
+        <p *ngIf="!hasTargets" class="px-2 py-4 text-sm text-zinc-500">
+          No destinations available. Join a community channel or add friends to forward messages.
+        </p>
+      </ng-container>
+    </div>
+
+    <div class="shrink-0 border-t border-zinc-800 px-3 py-2">
+      <button
+        type="button"
+        class="w-full rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+        (click)="close()"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<div class="flex flex-col items-center justify-center m-4 sm:m-8">
+  <app-error-alert [message]="errorMessage" variant="inline" *ngIf="errorMessage" />
+
+  <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 sm:mb-10 text-white text-center drop-shadow-md">
+    Login
+  </h2>
+
+  <div
+    class="h-auto sm:h-[60vh] w-[80vw] sm:w-[60vw] lg:w-[40vw] xl:w-[30vw] flex items-center justify-center shadow-lg rounded-2xl bg-gray-600/10 backdrop-blur-lg p-4 sm:p-0"
+  >
+    <form [formGroup]="loginForm" class="w-full sm:w-3/4 max-w-sm flex flex-col" (ngSubmit)="onLogin()">
+      <div class="mb-4">
+        <label for="email" class="block text-base sm:text-lg md:text-xl font-light text-slate-50">Email</label>
+        <input
+          formControlName="email"
+          type="email"
+          id="email"
+          class="mt-1 block w-full h-7 sm:h-10 p-2 bg-white/20 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-transparent"
+          required
+        />
+        <p *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="text-red-500 text-xs">
+          <span *ngIf="loginForm.get('email')?.errors?.['required']">Email is required</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format</span>
+        </p>
+      </div>
+
+      <div class="mb-6">
+        <label for="password" class="block text-base sm:text-lg md:text-xl font-light text-slate-50">Password</label>
+        <input
+          formControlName="password"
+          type="password"
+          id="password"
+          class="mt-1 block w-full h-7 sm:h-10 p-2 bg-white/20 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-transparent"
+          required
+        />
+        <p *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-red-500 text-xs">
+          <span *ngIf="loginForm.get('password')?.errors?.['required']">Password is required</span>
+          <span *ngIf="loginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</span>
+        </p>
+        <a
+          [routerLink]="['/auth/email_verify']"
+          [queryParams]="{ mode: 'forgot-password' }"
+          class="text-slate-100 text-xs sm:text-sm font-thin hover:text-blue-600 hover:cursor-pointer"
+        >
+          Forgot your password?
+        </a>
+      </div>
+
+      <app-button
+        type="submit"
+        variant="primary"
+        size="lg"
+        [loading]="isSubmitting"
+        [disabled]="loginForm.invalid"
+        extraClass="w-3/4 sm:w-1/2 mx-auto drop-shadow-md transition-all duration-300 ease-in-out"
+      >
+        Submit
+      </app-button>
+
+      <p class="text-xs sm:text-sm md:text-base text-slate-100 font-thin mt-6 text-center">
+        Don't have an account?
+        <a routerLink="/auth/email_verify" class="text-gray-700 hover:text-blue-600 hover:cursor-pointer">Register</a>
+      </p>
+    </form>
+  </div>
+</div>

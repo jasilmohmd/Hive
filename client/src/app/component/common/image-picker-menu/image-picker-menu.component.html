@@ -1,0 +1,123 @@
+<div class="relative">
+  <ng-container *ngIf="variant === 'avatar'">
+    <div
+      class="relative overflow-hidden rounded-full bg-surface-800 ring-2 ring-surface-700 mx-auto"
+      [ngClass]="avatarSizeClass"
+    >
+      <img *ngIf="src" [src]="src" [alt]="alt" class="h-full w-full object-cover" />
+      <div
+        *ngIf="!src"
+        class="flex h-full w-full items-center justify-center bg-surface-700 text-lg font-medium text-zinc-400 md:text-2xl"
+      >
+        {{ fallbackLabel }}
+      </div>
+
+      <div
+        *ngIf="editable"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/55 opacity-0 transition-opacity hover:opacity-100 focus-within:opacity-100"
+      >
+        <button
+          type="button"
+          class="rounded-md bg-surface-900/90 px-2 py-1 text-xs text-white hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
+          [disabled]="uploading"
+          (click)="triggerPick()"
+        >
+          Change photo
+        </button>
+        <button
+          *ngIf="allowRemove && src"
+          type="button"
+          class="rounded-md px-2 py-1 text-xs text-zinc-300 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
+          [disabled]="uploading"
+          (click)="onRemove()"
+        >
+          Remove
+        </button>
+      </div>
+
+      <div
+        *ngIf="uploading"
+        class="absolute inset-0 flex items-center justify-center bg-black/65 text-xs font-medium text-white"
+      >
+        Uploading…
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="variant === 'cover'">
+    <div class="relative aspect-[3/1] w-full overflow-hidden rounded-xl bg-surface-800 ring-1 ring-white/10">
+      <img
+        *ngIf="src"
+        [src]="src"
+        [alt]="alt"
+        class="h-full w-full object-cover"
+      />
+      <div
+        *ngIf="!src"
+        class="flex h-full w-full items-center justify-center text-sm text-zinc-500"
+      >
+        No cover image
+      </div>
+
+      <div
+        class="pointer-events-none absolute inset-0 z-[1] rounded-xl bg-gradient-to-t from-zinc-900/85 via-zinc-900/15 to-transparent"
+        aria-hidden="true"
+      ></div>
+
+      <div *ngIf="editable" class="absolute top-2 right-2 z-[2] sm:top-3 sm:right-3">
+        <button
+          type="button"
+          class="rounded-full bg-surface-900/90 p-2.5 text-white shadow-lg ring-1 ring-white/20 backdrop-blur-sm hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
+          [disabled]="uploading"
+          (click)="triggerPick()"
+          aria-label="Edit cover image"
+          title="Edit cover image"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div
+        *ngIf="uploading"
+        class="absolute inset-0 z-[3] flex items-center justify-center bg-black/60 text-sm font-medium text-white"
+      >
+        Uploading…
+      </div>
+    </div>
+  </ng-container>
+
+  <input
+    #fileInput
+    type="file"
+    accept="image/*"
+    class="hidden"
+    (change)="onFileChange($event)"
+  />
+</div>
+
+<app-image-cropper-modal
+  *ngIf="showCropper"
+  [imageChangedEvent]="imageChangedEvent"
+  [aspectRatio]="aspectRatio"
+  format="jpeg"
+  (done)="onCropDone($event)"
+  (cancel)="onCropCancel()"
+/>
+
+<p *ngIf="errorMessage" class="mt-2 text-center text-xs text-danger" role="alert">
+  {{ errorMessage }}
+</p>

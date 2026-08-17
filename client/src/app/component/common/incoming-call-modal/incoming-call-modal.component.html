@@ -1,0 +1,29 @@
+<div
+  *ngIf="incoming"
+  class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
+  role="alertdialog"
+  aria-labelledby="incoming-call-title"
+>
+  <div class="w-full max-w-sm rounded-2xl bg-surface-800 p-6 shadow-xl ring-1 ring-white/10">
+    <h2 id="incoming-call-title" class="text-lg font-semibold text-zinc-100">
+      Incoming {{ callTypeLabel() }}
+    </h2>
+    <p class="mt-2 text-zinc-300">{{ callerName }}</p>
+    <div class="mt-6 flex gap-3">
+      <button
+        type="button"
+        (click)="decline()"
+        class="flex-1 rounded-xl bg-zinc-700 py-3 text-sm font-medium text-zinc-100 hover:bg-zinc-600"
+      >
+        Decline
+      </button>
+      <button
+        type="button"
+        (click)="accept()"
+        class="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-medium text-white hover:bg-emerald-500"
+      >
+        Accept
+      </button>
+    </div>
+  </div>
+</div>

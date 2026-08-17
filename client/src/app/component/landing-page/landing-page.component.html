@@ -1,0 +1,156 @@
+<div class="m-0 min-h-screen overflow-y-auto" style="
+  background: 
+    radial-gradient(circle, #F3C70D, #F39B0D),
+    url('assets/images/landingPage/bg-blend-landing.png');
+    background-size: 100% auto;
+    background-blend-mode: multiply;
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+">
+  <!-- Fixed Header -->
+  <header id="header"
+    class="flex p-7 justify-between fixed top-0 left-0 right-0 bg-transparent z-50 backdrop-blur-sm mx-3">
+    <a href="#" class="flex gap-2 justify-center items-center">
+      <img src="assets/images/Logo-bg-white.png" alt="" class="h-12 rounded-2xl">
+      <p class="font-extrabold text-3xl text-white">hive</p>
+    </a>
+    <div class="flex gap-3 items-center">
+      <a routerLink="/auth/login"
+        class="bg-slate-100/50 px-5 py-2 rounded-3xl font-medium text-gray-800 hover:bg-gray-200 transition-transform transform hover:scale-110 duration-500 ease-out focus:scale-100 focus:bg-gray-200">
+        Sign in
+      </a>
+      <a routerLink="/auth/email_verify"
+        class="bg-brand/80 px-5 py-2 rounded-3xl font-medium text-slate-950 hover:bg-brand transition-transform transform hover:scale-110 duration-500 ease-out focus:scale-100 focus:bg-brand focus-visible:ring-2 focus-visible:ring-white">
+        Sign up
+      </a>
+
+    </div>
+  </header>
+
+  <!-- Scrollable Body Content -->
+  <div class="flex-1 overflow-y-auto mt-28">
+    <div class="mt-8 text-center">
+      <h2 class="text-5xl font-black text-slate-50 drop-shadow-lg">TALK . CHAT . STREAM . HANGOUT</h2>
+      <p class="text-xl mx-auto text-slate-50 font-thin m-4 max-w-3xl">Join the buzzing community of Hive, where
+        conversations thrive and connections flourish. Whether you're part of a gaming clan, a book club, or a
+        professional network, Hive is your hub for seamless communication and collaboration.</p>
+    </div>
+
+    <!-- Cards Section -->
+    <div class="mb-8">
+
+      <!-- First Card -->
+      <div
+        class="h-auto sm:h-[60vh] w-[80vw] sm:w-[60vw] flex justify-between gap-5 shadow-lg rounded-2xl bg-gray-400/10 backdrop-blur-md p-4 sm:p-0 mx-auto my-36">
+        <div class="flex justify-center items-center w-full">
+
+          <!-- Image Section -->
+          <div class="w-1/2 m-16">
+            <img src="assets/images/landingPage/community.png" alt="Community"
+              class="w-full h-auto object-cover rounded-lg">
+          </div>
+
+          <!-- Text Section -->
+          <div class="w-1/2 m-16">
+            <h2 class="text-3xl font-black text-slate-50 mb-6 drop-shadow-md">DISCOVER AND JOIN COMMUNITIES OR CREATE
+              YOUR OWN</h2>
+            <p class="text-slate-100 font-light">Dive into a diverse array of communities tailored to your interests.
+              From gaming clans to book clubs, professional networks to hobby groups, find your tribe in Hive. <br><br>
+              Can't find exactly what you're looking for? Start your own community and bring together like-minded
+              individuals. Share your passions, build meaningful connections, and create a space that feels truly yours.
+            </p>
+          </div>
+
+
+        </div>
+      </div>
+
+      <!-- Second Card -->
+      <div
+        class="h-auto sm:h-[60vh] w-[80vw] sm:w-[60vw] flex justify-between gap-5 shadow-lg rounded-2xl bg-gray-400/10 backdrop-blur-md p-4 sm:p-0 mx-auto my-36">
+        <div class="flex justify-center items-center w-full">
+          <!-- Text Section -->
+          <div class="w-1/2 m-16">
+            <h2 class="text-3xl font-black text-slate-50 mb-6 drop-shadow-md">GROUP CHAT THAT’S ALL FUN</h2>
+            <p class="text-slate-100 font-light">Hive is great for chatting and chilling with friends, or even building
+              a worldwide community. Customize your own space to talk, stream, and hang out.</p>
+          </div>
+
+          <!-- Image Section -->
+          <div class="w-1/2 m-16">
+            <img src="assets/images/landingPage/groupchat.png" alt="Group Chat"
+              class="w-full h-auto object-cover rounded-lg">
+          </div>
+        </div>
+      </div>
+
+      <!-- Third Card -->
+      <div
+        class="h-auto sm:h-[60vh] w-[80vw] sm:w-[60vw] flex justify-between gap-5 shadow-lg rounded-2xl bg-gray-400/10 backdrop-blur-md p-4 sm:p-0 mx-auto my-36">
+        <div class="flex justify-center items-center w-full">
+
+          <!-- Image Section -->
+          <div class="w-1/2 m-16">
+            <img src="assets/images/landingPage/Chatroom.png" alt="Chatroom"
+              class="w-full h-auto object-cover rounded-lg">
+          </div>
+
+          <!-- Text Section -->
+          <div class="w-1/2 m-16">
+            <h2 class="text-3xl font-black text-slate-50 mb-6 drop-shadow-md">HOPE IN WHEN YOU’RE FREE, NO NEED TO CALL
+            </h2>
+            <p class="text-slate-100 font-light">Easily hop in and out of voice or text chats without having to call or
+              invite anyone.</p>
+          </div>
+
+
+        </div>
+      </div>
+
+      <!-- Second Card -->
+      <div
+        class="h-auto sm:h-[60vh] w-[80vw] sm:w-[60vw] flex justify-between gap-5 shadow-lg rounded-2xl bg-gray-400/10 backdrop-blur-md p-4 sm:p-0 mx-auto my-36">
+        <div class="flex justify-center items-center w-full">
+          <!-- Text Section -->
+          <div class="w-1/2 m-16">
+            <h2 class="text-3xl font-black text-slate-50 mb-6 drop-shadow-md">SEE WHO’S
+              AROUND TO
+              CHILL</h2>
+            <p class="text-slate-100 font-light">See who’s around by checking
+              whether they’re Online or Offline</p>
+          </div>
+
+          <!-- Image Section -->
+          <div class="w-1/2 m-16 flex justify-center">
+            <img src="assets/images/landingPage/online-members.png" alt="Group Chat" class="max-h-96 rounded-lg">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<footer class="bg-gray-950 h-52 flex justify-between p-10">
+  <a href="#" class="flex gap-2 justify-center items-center">
+    <img src="assets/images/Logo-bg-white.png" alt="" class="h-12 rounded-2xl">
+    <p class="font-extrabold text-3xl text-white">hive</p>
+  </a>
+
+  <div class="p-10 flex justify-end gap-5">
+    <a href="#"
+      class="text-sm text-slate-100 font-thin transition-transform transform hover:scale-110 duration-500 ease-out">About us</a>
+    <a href="#"
+      class="text-sm text-slate-100 font-thin transition-transform transform hover:scale-110 duration-500 ease-out">Contact</a>
+    <a href="#"
+      class="text-sm text-slate-100 font-thin transition-transform transform hover:scale-110 duration-500 ease-out">Privacy
+      Policy</a>
+    <a href="#"
+      class="text-sm text-slate-100 font-thin transition-transform transform hover:scale-110 duration-500 ease-out">Sitemap</a>
+    <a href="#"
+      class="text-sm text-slate-100 font-thin transition-transform transform hover:scale-110 duration-500 ease-out">Terms of
+      use</a>
+  </div>
+
+</footer>

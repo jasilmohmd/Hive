@@ -1,0 +1,75 @@
+<app-loading-state *ngIf="isLoading" variant="skeleton" containerClass="flex rounded-2xl box-border h-full gap-3 animate-pulse">
+  <div class="relative sm:w-1/6 h-full w-full">
+    <div class="h-full w-full rounded-2xl overflow-hidden pb-20 space-y-2">
+      <div class="h-full bg-zinc-800 rounded-2xl animate-pulse"></div>
+    </div>
+    <div class="absolute bottom-0 w-full z-10 rounded-2xl bg-zinc-800 p-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="h-10 w-10 rounded-full bg-zinc-700"></div>
+          <div class="space-y-1">
+            <div class="h-4 w-20 bg-zinc-700 rounded"></div>
+            <div class="h-3 w-16 bg-zinc-700 rounded"></div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <div class="h-5 w-5 bg-zinc-700 rounded"></div>
+          <div class="h-5 w-5 bg-zinc-700 rounded"></div>
+          <div class="h-5 w-5 bg-zinc-700 rounded"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grow h-full bg-zinc-800 rounded-2xl p-3"></div>
+</app-loading-state>
+
+<app-error-alert
+  *ngIf="errorMessage"
+  variant="banner"
+  title="Something went wrong"
+  [message]="errorMessage"
+/>
+
+<div *ngIf="community && !isLoading && !errorMessage" class="flex h-full min-h-0 w-full gap-3 rounded-2xl box-border">
+  <div class="relative h-full w-full shrink-0 sm:w-1/6">
+    <div
+      class="h-full w-full rounded-2xl overflow-y-auto overflow-x-hidden scrollbar-themed"
+      [class.pb-16]="!voiceSessionActive"
+      [class.pb-32]="voiceSessionActive"
+    >
+      <app-channels-list [communityId]="communityId"></app-channels-list>
+    </div>
+    <div class="absolute bottom-0 w-full z-10 flex flex-col gap-1.5 rounded-2xl">
+      <app-voice-session-bar [communityId]="communityId"></app-voice-session-bar>
+      <div class="bg-zinc-800 rounded-2xl p-3 h-full flex items-center justify-between gap-2 text-zinc-300">
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <img [src]="currentUserImage" [alt]="currentUserName + ' avatar'" class="h-10 w-10 rounded-full object-cover" />
+            <div class="absolute bottom-0 right-0 bg-green-700 border-2 border-zinc-800 rounded-full h-3 w-3" aria-hidden="true"></div>
+          </div>
+
+          <div class="flex-col gap-0">
+            <div class="text-lg">{{ currentUserName }}</div>
+            <div class="text-xs font-thin mt-[-5px]">Online</div>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button type="button" class="p-1 rounded hover:bg-zinc-700 focus-visible:ring-2 focus-visible:ring-brand" aria-label="Voice activity">
+            <img src="assets/Icons/mic-fill.png" alt="" class="h-5 w-5" />
+          </button>
+          <button type="button" class="p-1 rounded hover:bg-zinc-700 focus-visible:ring-2 focus-visible:ring-brand" aria-label="Voice output">
+            <img src="assets/Icons/headphones-fill.png" alt="" class="h-5 w-5" />
+          </button>
+          <button type="button" class="p-1 rounded hover:bg-zinc-700 focus-visible:ring-2 focus-visible:ring-brand" aria-label="Community settings">
+            <img src="assets/Icons/settings.png" alt="" class="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-surface-900">
+    <router-outlet></router-outlet>
+  </div>
+</div>

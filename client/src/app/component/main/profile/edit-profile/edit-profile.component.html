@@ -1,0 +1,27 @@
+<div class="bg-surface-900 text-white rounded-2xl p-6 max-w-md w-full mx-auto mt-6 md:mt-10">
+  <h2 class="text-2xl font-bold mb-4">Edit Profile</h2>
+  <app-error-alert [message]="errorMessage" variant="banner" [title]="'Could not save'" *ngIf="errorMessage" />
+  <form [formGroup]="editProfileForm" (ngSubmit)="updateProfile()" class="mt-4">
+    <div class="mb-4">
+      <label class="block text-gray-400 mb-1">Username</label>
+      <input
+        type="text"
+        formControlName="newUserName"
+        class="w-full px-4 py-2 rounded bg-black text-white border border-gray-700 focus:outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-brand"
+      />
+      <div
+        *ngIf="
+          editProfileForm.get('newUserName')?.invalid &&
+          (editProfileForm.get('newUserName')?.dirty || editProfileForm.get('newUserName')?.touched)
+        "
+        class="text-red-500 text-xs mt-1"
+      >
+        <div *ngIf="editProfileForm.get('newUserName')?.errors?.['required']">Username is required.</div>
+        <div *ngIf="editProfileForm.get('newUserName')?.errors?.['minlength']">Username must be at least 3 characters long.</div>
+      </div>
+    </div>
+    <app-button type="submit" variant="primary" [loading]="isSubmitting" [disabled]="editProfileForm.invalid">
+      Save Changes
+    </app-button>
+  </form>
+</div>

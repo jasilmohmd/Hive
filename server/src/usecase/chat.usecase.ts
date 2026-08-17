@@ -95,6 +95,48 @@ export class ChatUseCase implements IChatUseCase {
     }
   }
 
+  async assertUserCanJoinChat(userId: string, chatId: string): Promise<void> {
+    const userOid = new Types.ObjectId(userId);
+
+    const chat = await this.chatRepository.findChatById(chatId);
+    if (chat) {
+      await this.assertCanAccessExistingChat(userOid, chat);
+      return;
+    }
+
+    const directMatch = chatId.match(DIRECT_CHAT_REGEX);
+    if (directMatch) {
+      const [, id1, id2] = directMatch;
+      const normalized = this.normalizeDirectChatId(id1, id2);
+      if (normalized !== chatId) {
+        throw new Error("Invalid direct chat id: ids must be sorted");
+      }
+      const uid = userOid.toString();
+      if (uid !== id1 && uid !== id2) {
+        throw new Error("Unauthorized to join this chat");
+      }
+      const peer = uid === id1 ? id2 : id1;
+      const status = await this.friendRepository.checkFriendshipStatus(userOid, new Types.ObjectId(peer));
+      if (status !== "already_friends") {
+        throw new Error("You can only join chats with friends");
+      }
+      return;
+    }
+
+    if (!Types.ObjectId.isValid(chatId)) {
+      throw new Error("Chat does not exist");
+    }
+
+    const channelId = new Types.ObjectId(chatId);
+    const channel = await this.channelRepository.getChannelById(channelId);
+    if (!channel || !channelSupportsTextChat(channel.type)) {
+      throw new Error("Chat does not exist");
+    }
+    if (!(await this.userHasChannelAccess(userOid, channel))) {
+      throw new Error("Unauthorized to join this channel chat");
+    }
+  }
+
   private async getOrCreateChatForSend(senderId: Types.ObjectId, chatId: string): Promise<IChat> {
     const existing = await this.chatRepository.findChatById(chatId);
     if (existing) {

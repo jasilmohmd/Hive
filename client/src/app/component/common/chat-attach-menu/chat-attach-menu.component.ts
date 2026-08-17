@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChatSheetComponent } from '../chat-sheet/chat-sheet.component';
 
 @Component({
   selector: 'app-chat-attach-menu',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ChatSheetComponent],
   templateUrl: './chat-attach-menu.component.html',
 })
 export class ChatAttachMenuComponent {
@@ -16,8 +17,4 @@ export class ChatAttachMenuComponent {
   @Output() contactRequested = new EventEmitter<void>();
   @Output() pollRequested = new EventEmitter<void>();
   @Output() dismiss = new EventEmitter<void>();
-
-  onBackdropClick(): void {
-    this.dismiss.emit();
-  }
 }

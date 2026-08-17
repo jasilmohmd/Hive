@@ -51,7 +51,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await CommunityModel.findById(communityId);
     if (!community) return false;
 
-    if (community.joinRequests.includes(userId)) {
+    if (community.joinRequests.some(id => id.equals(userId))) {
       return false; // User already requested to join
     }
 
@@ -78,7 +78,7 @@ export class CommunityRepository implements ICommunityRepository {
     if (!community) return false;
 
     // Ensure the user has a pending request
-    if (!community.joinRequests.includes(userId)) return false;
+    if (!community.joinRequests.some(id => id.equals(userId))) return false;
 
     // Add the user to members and remove from joinRequests
     community.members.push({
@@ -114,7 +114,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.getCommunityById(communityId);
     if (!community) return false;
     // Prevent adding the same member twice.
-    if (community.members.some(member => member.userId === userId)) return false;
+    if (community.members.some(member => member.userId.equals(userId))) return false;
     community.members.push({
       userId: userId,
       roleIds: [roleId],
@@ -127,7 +127,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.getCommunityById(communityId);
     if (!community) return false;
     const initialLength = community.members.length;
-    community.members = community.members.filter(member => member.userId !== userId);
+    community.members = community.members.filter(member => !member.userId.equals(userId));
     await community.save();
     return community.members.length < initialLength;
   }
@@ -139,7 +139,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.getCommunityById(communityId);
     if (!community) return false;
     // Check if the tag already exists.
-    if (community.tags.some(t => t === tagId)) return false;
+    if (community.tags.some(t => t.equals(tagId))) return false;
     community.tags.push(new Types.ObjectId(tagId));
     await community.save();
     return true;
@@ -152,7 +152,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.getCommunityById(communityId);
     if (!community) return false;
     const initialLength = community.tags.length;
-    community.tags = community.tags.filter(t => t !== tagId);
+    community.tags = community.tags.filter(t => !t.equals(tagId));
     await community.save();
     return community.tags.length < initialLength;
   }

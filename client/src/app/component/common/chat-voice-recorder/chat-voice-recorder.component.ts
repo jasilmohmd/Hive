@@ -1,14 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnDestroy, Output } from '@angular/core';
 import { CallService } from '../../../services/call.service';
+import { ChatSheetComponent } from '../chat-sheet/chat-sheet.component';
 
 @Component({
   selector: 'app-chat-voice-recorder',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ChatSheetComponent],
   templateUrl: './chat-voice-recorder.component.html',
 })
 export class ChatVoiceRecorderComponent implements OnDestroy {
+  @Input() theme: 'dm' | 'channel' = 'dm';
   @Output() recorded = new EventEmitter<File>();
   @Output() dismiss = new EventEmitter<void>();
 

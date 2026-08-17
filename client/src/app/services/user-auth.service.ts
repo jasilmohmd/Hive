@@ -4,6 +4,9 @@ import { Injectable } from '@angular/core';
 import { ILoginCredentials, IRegisterationCredentials, IUser } from '../models/user';
 import { catchError, firstValueFrom, Observable, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { CommunityStateService } from './shared/community-state.service';
+import { ChannelStateService } from './shared/channel-state.service';
+import { RoleStateService } from './shared/role-state.service';
 
 const ACCESS_TOKEN_KEY = 'hive_access_token';
 
@@ -15,7 +18,12 @@ export class UserAuthService {
   /** Fallback when sessionStorage is empty or blocked. */
   private memoryToken: string | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private communityState: CommunityStateService,
+    private channelState: ChannelStateService,
+    private roleState: RoleStateService
+  ) {}
 
   persistAccessToken(token: string): void {
     this.memoryToken = token;
@@ -73,7 +81,14 @@ export class UserAuthService {
 
   handelLogout(): Observable<unknown> {
     return this.http.post(`${this.baseUrl}/logout`, {}).pipe(
-      tap(() => this.clearAccessToken()),
+      tap(() => {
+        this.clearAccessToken();
+        // Drop cached community/channel/role state so a different user
+        // logging in on this tab doesn't see the previous user's data.
+        this.communityState.clear();
+        this.channelState.clear();
+        this.roleState.clear();
+      }),
       catchError(this.handleError)
     );
   }

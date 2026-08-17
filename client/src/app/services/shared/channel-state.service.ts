@@ -41,4 +41,10 @@ export class ChannelStateService {
       })
     );
   }
+
+  /** Drop the cached channels so the next load re-fetches (e.g. on logout). */
+  clear(): void {
+    this.channelSubject.next(null);
+    this.currentCommunityId = null;
+  }
 }

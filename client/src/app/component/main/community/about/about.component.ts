@@ -58,6 +58,8 @@ export class AboutComponent {
 
 
   private subscriptions: Subscription = new Subscription();
+  /** Holds subscriptions created per-community so they can be torn down before the next one is set up. */
+  private routeParamSubscriptions: Subscription = new Subscription();
   private toast = inject(ToastService);
 
   constructor(
@@ -73,6 +75,11 @@ export class AboutComponent {
 
   ngOnInit(): void {
     const communitySub = this.route.parent?.params.subscribe(params => {
+      // Tear down the previous community's subscriptions before creating new ones,
+      // since this component is reused (not recreated) when switching communities.
+      this.routeParamSubscriptions.unsubscribe();
+      this.routeParamSubscriptions = new Subscription();
+
       this.communityId = params['id'];
       if (!this.communityId) {
         this.errorMessage = 'Community ID not found';
@@ -80,25 +87,28 @@ export class AboutComponent {
         return;
       }
 
-      this.communityStateService.loadCommunity(this.communityId).subscribe(community => {
-        this.community = community;
-        this.cd.markForCheck();
-        this.isLoading = false;
-      });
+      this.routeParamSubscriptions.add(
+        this.communityStateService.loadCommunity(this.communityId).subscribe(community => {
+          this.community = community;
+          this.cd.markForCheck();
+          this.isLoading = false;
+        })
+      );
 
       // Load user roles via the RoleStateService.
       this.roleStateService.loadUserRoles(this.communityId).subscribe();
 
       // Subscribe to role state updates.
-      const rolesSub = this.roleStateService.userRoles$.subscribe(roles => {
-        this.userRoles = roles;
-      });
-      const permsSub = this.roleStateService.permissions$.subscribe(perms => {
-        this.permissions = perms;
-      });
-
-      this.subscriptions.add(rolesSub);
-      this.subscriptions.add(permsSub);
+      this.routeParamSubscriptions.add(
+        this.roleStateService.userRoles$.subscribe(roles => {
+          this.userRoles = roles;
+        })
+      );
+      this.routeParamSubscriptions.add(
+        this.roleStateService.permissions$.subscribe(perms => {
+          this.permissions = perms;
+        })
+      );
 
     });
 
@@ -106,6 +116,7 @@ export class AboutComponent {
   }
 
   ngOnDestroy(): void {
+    this.routeParamSubscriptions.unsubscribe();
     this.subscriptions.unsubscribe();
   }
 

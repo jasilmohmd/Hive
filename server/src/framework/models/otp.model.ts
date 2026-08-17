@@ -6,6 +6,7 @@ const OTPSchema = new Schema<IOTP>({
   otp: { type: String, required: true },
   mode: { type: String, required: true },
   otpExpiresAt: { type: Date, required: true, expires: 600 }, // Automatically remove after 10 minutes
+  verified: { type: Boolean, required: true, default: false },
 });
 
 const OTPModel = mongoose.model<IOTP>("OTP", OTPSchema);

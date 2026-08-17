@@ -7,6 +7,10 @@ import { ErrorType } from "../../constants/auth/errorType";
 import ErrorMessage from "../../constants/auth/errorMessage";
 import { CustomError } from "../../errors/customError.error";
 
+const isProd = process.env.NODE_ENV === "production";
+const authCookieSameSite = (process.env.COOKIE_SAME_SITE?.trim().toLowerCase() ||
+        (isProd ? "none" : "lax")) as "lax" | "strict" | "none";
+
 export default function errorHandlerMiddleware(err: any, req: Request, res: Response, next: NextFunction): void {
         if (err instanceof RequiredCredentialsNotGiven) {
                 res.status(StatusCodes.BadRequest).json({
@@ -30,7 +34,8 @@ export default function errorHandlerMiddleware(err: any, req: Request, res: Resp
         } else if (err instanceof JWTTokenError) {
                 res.clearCookie("token", {
                         httpOnly: true,
-                        secure: process.env.NODE_ENV === 'development'
+                        secure: isProd,
+                        sameSite: authCookieSameSite
                 });
 
                 res.status(err.details.statusCode).json({

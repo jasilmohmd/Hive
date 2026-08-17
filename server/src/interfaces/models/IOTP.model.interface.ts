@@ -5,4 +5,5 @@ export interface IOTP extends Document {
   otp: string;
   mode: string;
   otpExpiresAt: Date;
+  verified: boolean;
 }

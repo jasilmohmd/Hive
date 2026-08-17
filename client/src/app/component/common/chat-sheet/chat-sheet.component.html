@@ -1,0 +1,27 @@
+<div
+  class="fixed inset-0 z-40 bg-black/40 sm:absolute sm:inset-auto sm:bottom-full sm:left-0 sm:right-0 sm:mb-2 sm:bg-transparent"
+  (click)="dismiss.emit()"
+  role="presentation"
+>
+  <div
+    class="absolute bottom-0 left-0 right-0 rounded-t-2xl border border-zinc-700 shadow-xl sm:relative sm:rounded-2xl"
+    [ngClass]="[themeClasses, panelClass]"
+    (click)="$event.stopPropagation()"
+  >
+    <div
+      *ngIf="sheetTitle"
+      class="flex items-center justify-between border-b border-zinc-700 px-3 py-2"
+    >
+      <span class="text-sm font-medium">{{ sheetTitle }}</span>
+      <button
+        type="button"
+        class="rounded-lg px-2 py-1 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+        (click)="dismiss.emit()"
+      >
+        Close
+      </button>
+    </div>
+
+    <ng-content></ng-content>
+  </div>
+</div>

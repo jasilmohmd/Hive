@@ -1,0 +1,62 @@
+<p *ngIf="hasForwardedLabel(msg.metadata)" class="mb-1 text-[10px] uppercase tracking-wide text-zinc-500">Forwarded</p>
+<app-chat-message-reply *ngIf="msg.replyTo" [reply]="msg.replyTo" />
+
+<ng-container *ngIf="isStickerMessage(msg); else richMessage">
+  <img
+    [src]="msg.content"
+    alt="Sticker"
+    class="mx-auto max-h-32 w-auto max-w-[min(100%,12rem)] object-contain"
+    loading="lazy"
+  />
+</ng-container>
+
+<ng-template #richMessage>
+  <ng-container *ngIf="isAudioMessage(msg); else videoOrMore">
+    <app-chat-message-audio [src]="msg.content" />
+  </ng-container>
+
+  <ng-template #videoOrMore>
+    <ng-container *ngIf="isVideoMessage(msg); else fileOrMore">
+      <app-chat-message-video [src]="msg.content" />
+    </ng-container>
+
+    <ng-template #fileOrMore>
+      <ng-container *ngIf="isFileMessage(msg) && fileMessageContent(msg) as file; else locationOrMore">
+        <app-chat-message-file [file]="file" />
+      </ng-container>
+
+      <ng-template #locationOrMore>
+        <ng-container *ngIf="isLocationMessage(msg) && locationMessageContent(msg) as loc; else contactOrMore">
+          <app-chat-message-location [location]="loc" />
+        </ng-container>
+
+        <ng-template #contactOrMore>
+          <ng-container *ngIf="isContactMessage(msg) && parseContactContent(msg.content) as contact; else pollOrMore">
+            <app-chat-message-contact [contact]="contact" />
+          </ng-container>
+
+          <ng-template #pollOrMore>
+            <ng-container *ngIf="isPollMessage(msg) && msg.poll; else gifOrImage">
+              <app-chat-message-poll [poll]="msg.poll" (vote)="vote.emit($event)" />
+            </ng-container>
+
+            <ng-template #gifOrImage>
+              <ng-container *ngIf="isGifMessage(msg) || isImageMessage(msg); else textMessage">
+                <app-chat-media
+                  [src]="msg.content"
+                  [alt]="(isGifMessage(msg) ? 'GIF in ' : 'Shared image in ') + context"
+                />
+              </ng-container>
+
+              <ng-template #textMessage>
+                <span>{{ msg.content }}</span>
+                <app-chat-link-preview *ngIf="metadataFor(msg).linkPreview as lp" [preview]="lp" />
+                <span *ngIf="msg.edited" class="ml-1 text-[10px] text-zinc-500">(edited)</span>
+              </ng-template>
+            </ng-template>
+          </ng-template>
+        </ng-template>
+      </ng-template>
+    </ng-template>
+  </ng-template>
+</ng-template>

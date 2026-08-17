@@ -7,13 +7,16 @@ import { IRoleRepository } from '../interfaces/repository/IRole.repository.inter
 import IRBACService from '../interfaces/utils/IRBAC.service';
 import IChannelUsecase from '../interfaces/usecase/IChannel.usecase.interface';
 import { IChatRepository } from '../interfaces/repository/IChat.repository.interface';
+import { ICommunityRepository } from '../interfaces/repository/ICommunity.repository.interface';
+import { userHasChannelAccess } from '../framework/utils/channelAccess.util';
 
 export class ChannelUseCase implements IChannelUsecase{
   constructor(
     private channelRepository: IChannelRepository,
     private roleRepository: IRoleRepository,
     private rbacService: IRBACService,
-    private chatRepository: IChatRepository
+    private chatRepository: IChatRepository,
+    private communityRepository: ICommunityRepository
   ) { }
 
   /**
@@ -56,24 +59,33 @@ export class ChannelUseCase implements IChannelUsecase{
       }
       return createdChannel;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error creating channel: ${error.message}`);
     }
   }
 
   /**
-   * Get a channel by its ID.
+   * Get a channel by its ID. Only members of the channel's community with
+   * access to that channel's allowedRoles may view it.
    */
-  async getChannelById(id: Types.ObjectId): Promise<IChannel> {
+  async getChannelById(userId: Types.ObjectId, id: Types.ObjectId): Promise<IChannel> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new ValidationError("Invalid channel ID", "channel");
+      }
+      if (!Types.ObjectId.isValid(userId)) {
+        throw new ValidationError("Invalid Admin ID", "admin");
       }
       const channel = await this.channelRepository.getChannelById(id);
       if (!channel) {
         throw new NotFoundError("Channel not found", "channel");
       }
+      if (!(await userHasChannelAccess(userId, channel, this.communityRepository))) {
+        throw new UnauthorizedError("Permission denied", "channel");
+      }
       return channel;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error fetching channel: ${error.message}`);
     }
   }
@@ -105,6 +117,7 @@ export class ChannelUseCase implements IChannelUsecase{
       const groupedChannels = await this.channelRepository.getAccessibleChannels(communityId, userRoleIds);
       return groupedChannels;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error fetching accessible channels: ${error.message}`);
     }
   }
@@ -139,6 +152,7 @@ export class ChannelUseCase implements IChannelUsecase{
       }
       return channels;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error searching channels: ${error.message}`);
     }
   }
@@ -180,6 +194,7 @@ export class ChannelUseCase implements IChannelUsecase{
       }
       return updatedChannel;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error updating channel: ${error.message}`);
     }
   }
@@ -211,6 +226,7 @@ export class ChannelUseCase implements IChannelUsecase{
       }
       return result;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error deleting channel: ${error.message}`);
     }
   }

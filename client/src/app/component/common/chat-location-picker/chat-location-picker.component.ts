@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ILocationMessageContent } from '../../../util/message-display';
+import { ChatSheetComponent } from '../chat-sheet/chat-sheet.component';
 
 @Component({
   selector: 'app-chat-location-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ChatSheetComponent],
   templateUrl: './chat-location-picker.component.html',
 })
 export class ChatLocationPickerComponent {
@@ -17,10 +18,6 @@ export class ChatLocationPickerComponent {
   label = '';
   loading = false;
   error: string | null = null;
-
-  onBackdropClick(): void {
-    this.dismiss.emit();
-  }
 
   shareLocation(): void {
     if (!navigator.geolocation) {

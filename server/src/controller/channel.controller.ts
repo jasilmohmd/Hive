@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { Types } from "mongoose";
 import { IChannel } from "../entity/Channel.entity";
 import IAuthRequest from "../interfaces/common/IAuthRequest.interface";
@@ -48,14 +48,15 @@ export default class ChannelController implements IChannelController {
   /**
    * Get a channel by its ID.
    */
-  public async getChannelById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async getChannelById(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      const userId = req.userId!;
       const { id } = req.params;
       if (!Types.ObjectId.isValid(id)) {
         res.status(StatusCodes.BadRequest).json({ error: "Invalid channel ID" });
         return;
       }
-      const channel = await this.channelUseCase.getChannelById(new Types.ObjectId(id));
+      const channel = await this.channelUseCase.getChannelById(userId, new Types.ObjectId(id));
       res.status(StatusCodes.Success).json(channel);
     } catch (error: any) {
       next(error);

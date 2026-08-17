@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { IChannelRepository } from "../interfaces/repository/IChannel.repository.interface";
 import { ICommunityRepository } from "../interfaces/repository/ICommunity.repository.interface";
 import { assertVoiceroomChannelAccess } from "../framework/utils/channelAccess.util";
-import { loadLiveKitSdk } from "../framework/utils/livekitSdk.js";
+import { loadLiveKitSdk } from "../framework/utils/livekitSdk";
 import {
   getChannelPresenceList,
   IVoiceroomParticipant,

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { Types } from "mongoose";
 import IRoleController from "../interfaces/controllers/IRole.controller.interface";
 import IRoleUsecase from "../interfaces/usecase/IRole.usecase.interface";
@@ -55,14 +55,15 @@ export default class RoleController implements IRoleController {
    * Expects:
    *  - Role ID in req.params.id.
    */
-  public async getRoleById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async getRoleById(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      const userId = req.userId!;
       const { id } = req.params;
       if (!id || !Types.ObjectId.isValid(id)) {
         res.status(StatusCodes.BadRequest).json({ error: "Invalid role ID" });
         return;
       }
-      const role = await this.roleUsecase.getRoleById(new Types.ObjectId(id));
+      const role = await this.roleUsecase.getRoleById(userId, new Types.ObjectId(id));
       res.status(StatusCodes.Success).json(role);
     } catch (error: any) {
       next(error);
@@ -168,15 +169,16 @@ export default class RoleController implements IRoleController {
    * Expects:
    *  - communityId in req.params.communityId.
    */
-  public async listRoles(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async listRoles(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
 
+      const userId = req.userId!;
       const communityId = new Types.ObjectId(req.params.communityId);
       if (!communityId || !Types.ObjectId.isValid(communityId)) {
         res.status(StatusCodes.BadRequest).json({ error: "Invalid community ID" });
         return;
       }
-      const roles = await this.roleUsecase.listRoles(new Types.ObjectId(communityId));
+      const roles = await this.roleUsecase.listRoles(userId, new Types.ObjectId(communityId));
       res.status(StatusCodes.Success).json(roles);
     } catch (error: any) {
       next(error);

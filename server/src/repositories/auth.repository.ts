@@ -4,13 +4,18 @@ import OTPModel from "../framework/models/otp.model";
 import Users from "../framework/models/user.model";
 import IAuthRepository from "../interfaces/repository/IAuth.repository.interface";
 
+/** Escape regex metacharacters so user input can't inject a pattern or trigger ReDoS. */
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export default class AuthRepository implements IAuthRepository {
 
   constructor() { }
 
   async isUserExist(email: string, userName: string): Promise<IUser | null | never> {
     try {
-      return await Users.findOne({ $or: [{ email: { $regex: new RegExp(`^${email}$`, 'i') } }, { userName: { $regex: new RegExp(`^${userName}$`, 'i') } }] });
+      return await Users.findOne({ $or: [{ email: { $regex: new RegExp(`^${escapeRegExp(email)}$`, 'i') } }, { userName: { $regex: new RegExp(`^${escapeRegExp(userName)}$`, 'i') } }] });
     } catch (err: any) {
       throw err;
     }
@@ -22,7 +27,7 @@ export default class AuthRepository implements IAuthRepository {
 
       await OTPModel.findOneAndUpdate(
         { email },
-        { otp, mode, otpExpiresAt: new Date(Date.now() + 60 * 1000) }, // Expires in 10 minutes
+        { otp, mode, otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000), verified: false }, // Expires in 10 minutes
         { upsert: true, new: true }
       );
 
@@ -39,6 +44,33 @@ export default class AuthRepository implements IAuthRepository {
 
     }catch(error){
       throw error
+    }
+  }
+
+  async markOTPVerified(email: string): Promise<void> {
+    try {
+
+      await OTPModel.updateOne({ email }, { $set: { verified: true } });
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async consumeVerifiedOTP(email: string, mode: string): Promise<boolean> {
+    try {
+
+      const otpRecord = await OTPModel.findOneAndDelete({
+        email,
+        mode,
+        verified: true,
+        otpExpiresAt: { $gt: new Date() },
+      });
+
+      return otpRecord !== null;
+
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -92,7 +124,7 @@ export default class AuthRepository implements IAuthRepository {
 
   async getUserDataByEmail(email: string): Promise<IUser | null | never> {
     try {
-      return await Users.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+      return await Users.findOne({ email: { $regex: new RegExp(`^${escapeRegExp(email)}$`, 'i') } });
     } catch (err: any) {
       throw err;
     }
@@ -103,7 +135,7 @@ export default class AuthRepository implements IAuthRepository {
     try{
 
        // Use lean() to return a plain JavaScript object matching IUser
-       const user = await Users.findOne({ _id: userId }).lean<IUser>();
+       const user = await Users.findOne({ _id: userId }).select("-password").lean<IUser>();
 
        if (!user) {
          throw new Error(`User with ID ${userId} not found`);

@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ChatSheetComponent } from '../chat-sheet/chat-sheet.component';
 
 interface GiphyImageSet {
   url?: string;
@@ -35,7 +36,7 @@ interface GiphyResponse {
 @Component({
   selector: 'app-chat-gif-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ChatSheetComponent],
   templateUrl: './chat-gif-picker.component.html',
 })
 export class ChatGifPickerComponent implements OnInit, OnDestroy {
@@ -157,9 +158,5 @@ export class ChatGifPickerComponent implements OnInit, OnDestroy {
 
   pickMedia(url: string): void {
     this.picked.emit(url);
-  }
-
-  onBackdropClick(): void {
-    this.dismiss.emit();
   }
 }

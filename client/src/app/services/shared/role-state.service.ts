@@ -37,4 +37,10 @@ export class RoleStateService {
       })
     );
   }
+
+  /** Drop cached roles/permissions so stale data doesn't linger across sessions (e.g. on logout). */
+  clear(): void {
+    this.userRolesSubject.next([]);
+    this.permissionsSubject.next([]);
+  }
 }

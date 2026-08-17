@@ -38,7 +38,7 @@ export default class FriendUseCase implements IFriendUsecase {
     }
 
     // Check if sender and receiver are the same
-  if (senderId === receiverId) {
+  if (senderId.equals(receiverId)) {
     throw new ValidationError({
       statusCode: StatusCodes.BadRequest,
       errorField: ErrorField.USER,
@@ -174,7 +174,7 @@ export default class FriendUseCase implements IFriendUsecase {
     }
 
     // Prevent a user from blocking themselves
-    if (userId === blockedUserId) {
+    if (userId.equals(blockedUserId)) {
       throw new ValidationError({
         statusCode: StatusCodes.BadRequest,
         errorField: ErrorField.USER,

@@ -241,9 +241,17 @@ io.on("connection", (socket) => {
     logger.info(`Socket connected userId=${connectedUserId}`);
   }
 
-  socket.on("joinChat", (chatId: string) => {
-    if (typeof chatId === "string" && chatId) {
+  socket.on("joinChat", async (chatId: string) => {
+    const userId = socket.data.userId as string | undefined;
+    if (typeof chatId !== "string" || !chatId || !userId) return;
+
+    try {
+      await chatUseCase.assertUserCanJoinChat(userId, chatId);
       socket.join(chatId);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Unauthorized to join chat";
+      logger.warn(`[socket] joinChat rejected userId=${userId} chatId=${chatId}: ${msg}`);
+      socket.emit("chatError", { message: msg });
     }
   });
 

@@ -189,111 +189,15 @@
 
           >
 
-            <p *ngIf="hasForwardedLabel(msg.metadata)" class="mb-1 text-[10px] uppercase tracking-wide text-zinc-500">Forwarded</p>
+            <app-chat-message-body
 
-            <app-chat-message-reply *ngIf="msg.replyTo" [reply]="msg.replyTo" />
+              [msg]="msg"
 
-            <ng-container *ngIf="isStickerMessage(msg); else dmRichMessage">
+              context="conversation"
 
-              <img
+              (vote)="onVotePoll(msg, $event)"
 
-                [src]="msg.content"
-
-                alt="Sticker"
-
-                class="mx-auto max-h-32 w-auto max-w-[min(100%,12rem)] object-contain"
-
-                loading="lazy"
-
-              />
-
-            </ng-container>
-
-            <ng-template #dmRichMessage>
-
-              <ng-container *ngIf="isAudioMessage(msg); else dmVideoOrMore">
-
-                <app-chat-message-audio [src]="msg.content" />
-
-              </ng-container>
-
-              <ng-template #dmVideoOrMore>
-
-                <ng-container *ngIf="isVideoMessage(msg); else dmFileOrMedia">
-
-                  <app-chat-message-video [src]="msg.content" />
-
-                </ng-container>
-
-                <ng-template #dmFileOrMedia>
-
-                  <ng-container *ngIf="isFileMessage(msg) && fileMessageContent(msg) as file; else dmMediaOrLoc">
-
-                    <app-chat-message-file [file]="file" />
-
-                  </ng-container>
-
-                  <ng-template #dmMediaOrLoc>
-
-                    <ng-container *ngIf="isLocationMessage(msg) && locationMessageContent(msg) as loc; else dmContactOrMore">
-
-                      <app-chat-message-location [location]="loc" />
-
-                    </ng-container>
-
-                    <ng-template #dmContactOrMore>
-
-                      <ng-container *ngIf="isContactMessage(msg) && parseContactContent(msg.content) as contact; else dmPollOrMedia">
-
-                        <app-chat-message-contact [contact]="contact" />
-
-                      </ng-container>
-
-                      <ng-template #dmPollOrMedia>
-
-                        <ng-container *ngIf="isPollMessage(msg) && msg.poll; else dmGifOrImage">
-
-                          <app-chat-message-poll [poll]="msg.poll" (vote)="onVotePoll(msg, $event)" />
-
-                        </ng-container>
-
-                        <ng-template #dmGifOrImage>
-
-                          <ng-container *ngIf="isGifMessage(msg) || isImageMessage(msg); else textMessage">
-
-                            <app-chat-media
-
-                              [src]="msg.content"
-
-                              [alt]="isGifMessage(msg) ? 'GIF in conversation' : 'Shared image in conversation'"
-
-                            />
-
-                          </ng-container>
-
-                          <ng-template #textMessage>
-
-                            <span>{{ msg.content }}</span>
-
-                            <app-chat-link-preview *ngIf="metadataFor(msg).linkPreview as lp" [preview]="lp" />
-
-                            <span *ngIf="msg.edited" class="ml-1 text-[10px] text-zinc-500">(edited)</span>
-
-                          </ng-template>
-
-                        </ng-template>
-
-                      </ng-template>
-
-                    </ng-template>
-
-                  </ng-template>
-
-                </ng-template>
-
-              </ng-template>
-
-            </ng-template>
+            />
 
           </div>
 
@@ -403,11 +307,11 @@
 
       />
 
-      <app-chat-voice-recorder *ngIf="voicePanelOpen" (recorded)="onVoiceRecorded($event)" (dismiss)="voicePanelOpen = false" />
+      <app-chat-voice-recorder *ngIf="voicePanelOpen" theme="dm" (recorded)="onVoiceRecorded($event)" (dismiss)="voicePanelOpen = false" />
 
-      <app-chat-poll-composer *ngIf="pollComposerOpen" (created)="onPollCreated($event)" (dismiss)="pollComposerOpen = false" />
+      <app-chat-poll-composer *ngIf="pollComposerOpen" theme="dm" (created)="onPollCreated($event)" (dismiss)="pollComposerOpen = false" />
 
-      <app-chat-contact-picker *ngIf="contactPickerOpen" (picked)="onContactPicked($event)" (dismiss)="contactPickerOpen = false" />
+      <app-chat-contact-picker *ngIf="contactPickerOpen" theme="dm" (picked)="onContactPicked($event)" (dismiss)="contactPickerOpen = false" />
 
       <app-chat-forward-picker
         *ngIf="forwardMsg"

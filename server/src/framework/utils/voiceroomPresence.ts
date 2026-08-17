@@ -15,6 +15,52 @@ export interface IVoiceroomParticipant {
 
 const channelPresence = new Map<string, Map<string, IVoiceroomParticipant>>();
 
+/**
+ * Tracks which sockets a user has joined a given channel's voiceroom with,
+ * so a user with multiple open tabs isn't dropped from presence when only
+ * one of their sockets disconnects or leaves.
+ */
+const channelUserSockets = new Map<string, Map<string, Set<string>>>();
+/** Reverse index: which channels a given socket has joined, for fast cleanup on disconnect. */
+const socketChannels = new Map<string, Set<string>>();
+
+function trackUserSocket(channelId: string, userId: string, socketId: string): void {
+  let userMap = channelUserSockets.get(channelId);
+  if (!userMap) {
+    userMap = new Map();
+    channelUserSockets.set(channelId, userMap);
+  }
+  let sockets = userMap.get(userId);
+  if (!sockets) {
+    sockets = new Set();
+    userMap.set(userId, sockets);
+  }
+  sockets.add(socketId);
+
+  let channels = socketChannels.get(socketId);
+  if (!channels) {
+    channels = new Set();
+    socketChannels.set(socketId, channels);
+  }
+  channels.add(channelId);
+}
+
+/** Untracks this socket for the channel; returns true if it was the user's last socket there. */
+function untrackUserSocket(channelId: string, userId: string, socketId: string): boolean {
+  const userMap = channelUserSockets.get(channelId);
+  const sockets = userMap?.get(userId);
+  socketChannels.get(socketId)?.delete(channelId);
+
+  if (!sockets) return true;
+  sockets.delete(socketId);
+  if (sockets.size === 0) {
+    userMap!.delete(userId);
+    if (userMap!.size === 0) channelUserSockets.delete(channelId);
+    return true;
+  }
+  return false;
+}
+
 function channelRoom(channelId: string): string {
   return `channel:${channelId}`;
 }
@@ -41,8 +87,13 @@ export function registerVoiceroomPresence(io: Server): void {
     if (!userId) return;
 
     socket.on("disconnect", () => {
-      for (const [channelId, map] of channelPresence.entries()) {
-        if (map.delete(userId)) {
+      const channels = socketChannels.get(socket.id);
+      if (!channels) return;
+      for (const channelId of [...channels]) {
+        const wasLastSocket = untrackUserSocket(channelId, userId, socket.id);
+        if (!wasLastSocket) continue; // user still connected via another tab/socket
+        const map = channelPresence.get(channelId);
+        if (map?.delete(userId)) {
           if (map.size === 0) channelPresence.delete(channelId);
           broadcastState(io, channelId);
         }
@@ -84,6 +135,7 @@ export function registerVoiceroomPresence(io: Server): void {
           communityRepository
         );
         socket.join(channelRoom(data.channelId));
+        trackUserSocket(data.channelId, userId, socket.id);
         let map = channelPresence.get(data.channelId);
         if (!map) {
           map = new Map();
@@ -111,9 +163,12 @@ export function registerVoiceroomPresence(io: Server): void {
 
     socket.on("room:leave", (data: { channelId?: string }) => {
       if (!data?.channelId) return;
-      const map = channelPresence.get(data.channelId);
-      if (map?.delete(userId)) {
-        if (map.size === 0) channelPresence.delete(data.channelId);
+      const wasLastSocket = untrackUserSocket(data.channelId, userId, socket.id);
+      if (wasLastSocket) {
+        const map = channelPresence.get(data.channelId);
+        if (map?.delete(userId)) {
+          if (map.size === 0) channelPresence.delete(data.channelId);
+        }
       }
       /* Stay in channel room if still watching lobby — only room:unwatch leaves */
       broadcastState(io, data.channelId);

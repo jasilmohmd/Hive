@@ -6,6 +6,7 @@ export interface ISendMessageOptions {
 }
 
 export interface IChatUseCase {
+  assertUserCanJoinChat(userId: string, chatId: string): Promise<void>;
   sendMessage(
     senderId: string,
     chatId: string,

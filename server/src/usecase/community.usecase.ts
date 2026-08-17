@@ -81,6 +81,7 @@ export class CommunityUseCase {
 
       return createdCommunity;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Failed to create community: ${error.message}`);
     }
   }
@@ -99,6 +100,7 @@ export class CommunityUseCase {
       if (!community) throw new NotFoundError("Community not found", "community");
       return community;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error fetching community: ${error.message}`);
     }
   }
@@ -116,6 +118,7 @@ export class CommunityUseCase {
       }
       return communities;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error searching communities: ${error.message}`);
     }
   }
@@ -147,6 +150,7 @@ export class CommunityUseCase {
       if (!updatedCommunity) throw new Error("Update failed");
       return updatedCommunity;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error updating community: ${error.message}`);
     }
   }
@@ -176,6 +180,7 @@ export class CommunityUseCase {
       if (!result) throw new Error("Deletion failed");
       return result;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error deleting community: ${error.message}`);
     }
   }
@@ -187,6 +192,7 @@ export class CommunityUseCase {
     try {
       return await this.communityRepository.getAllCommunities();
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error listing communities: ${error.message}`);
     }
   }
@@ -207,6 +213,7 @@ export class CommunityUseCase {
       }
       return communities;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error fetching communities for user: ${error.message}`);
     }
   }
@@ -227,18 +234,19 @@ export class CommunityUseCase {
       if (!community) throw new NotFoundError("Community not found", "community");
 
       // Check if user is already a member
-      if (community.members.some(member => member.userId === userId)) {
+      if (community.members.some(member => member.userId.equals(userId))) {
         throw new ValidationError("User is already a member", "community");
       }
 
       // Prevent duplicate requests
       const existingRequests = await this.communityRepository.getJoinRequests(communityId);
-      if (existingRequests.includes(new Types.ObjectId(userId))) {
+      if (existingRequests.some(id => id.equals(userId))) {
         throw new ValidationError("Join request already sent", "community");
       }
 
       return await this.communityRepository.addJoinRequest(communityId, userId);
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error sending join request: ${error.message}`);
     }
   }
@@ -271,6 +279,7 @@ export class CommunityUseCase {
 
       return await this.communityRepository.approveJoinRequest(communityId, memberId, roleId);
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error approving join request: ${error.message}`);
     }
   }
@@ -299,6 +308,7 @@ export class CommunityUseCase {
 
       return await this.communityRepository.removeJoinRequest(communityId, memberId);
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error rejecting join request: ${error.message}`);
     }
   }
@@ -325,6 +335,7 @@ export class CommunityUseCase {
       if (!result) throw new Error("Failed to leave community");
       return result;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error leaving community: ${error.message}`);
     }
   }
@@ -359,6 +370,7 @@ export class CommunityUseCase {
       if (!result) throw new Error("Failed to add member");
       return result;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error adding member: ${error.message}`);
     }
   }
@@ -388,6 +400,7 @@ export class CommunityUseCase {
       if (!result) throw new Error("Failed to remove member");
       return result;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error removing member: ${error.message}`);
     }
   }
@@ -418,6 +431,7 @@ export class CommunityUseCase {
       if (!result) throw new Error("Failed to add tag to community");
       return result;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error adding tag to community: ${error.message}`);
     }
   }
@@ -446,6 +460,7 @@ export class CommunityUseCase {
       if (!result) throw new Error("Failed to remove tag from community");
       return result;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error removing tag from community: ${error.message}`);
     }
   }
@@ -466,6 +481,7 @@ export class CommunityUseCase {
       }
       return communities;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error filtering communities by tag: ${error.message}`);
     }
   }
@@ -488,6 +504,7 @@ export class CommunityUseCase {
       }
       return communities;
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error filtering communities by category: ${error.message}`);
     }
   }
@@ -499,6 +516,7 @@ export class CommunityUseCase {
     try {
       return await this.communityRepository.getTags();
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error listing tags: ${error.message}`);
     }
   }
@@ -507,6 +525,7 @@ export class CommunityUseCase {
     try {
       return await this.communityRepository.getTagById(id);
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error finding tag: ${error.message}`);
     }
   }
@@ -518,6 +537,7 @@ export class CommunityUseCase {
     try {
       return await this.communityRepository.getCategories();
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error listing categories: ${error.message}`);
     }
   }

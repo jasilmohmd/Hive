@@ -27,4 +27,9 @@ export class CommunityStateService {
       })
     );
   }
+
+  /** Drop the cached community so the next load re-fetches (e.g. on logout). */
+  clear(): void {
+    this.communitySubject.next(null);
+  }
 }

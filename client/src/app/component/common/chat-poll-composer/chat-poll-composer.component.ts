@@ -1,14 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ChatSheetComponent } from '../chat-sheet/chat-sheet.component';
 
 @Component({
   selector: 'app-chat-poll-composer',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ChatSheetComponent],
   templateUrl: './chat-poll-composer.component.html',
 })
 export class ChatPollComposerComponent {
+  @Input() theme: 'dm' | 'channel' = 'dm';
   @Output() created = new EventEmitter<{ question: string; options: string[]; allowMultiple: boolean }>();
   @Output() dismiss = new EventEmitter<void>();
 

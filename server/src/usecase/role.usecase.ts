@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { IRoleRepository } from '../interfaces/repository/IRole.repository.interface';
 import { IRole } from '../entity/Role.entity';
-import { UnauthorizedError, NotFoundError, ValidationError } from '../errors/customError.error';
+import { UnauthorizedError, NotFoundError, ValidationError, CustomError } from '../errors/customError.error';
 import { roleValidator } from '../framework/utils/validators/role.validator';
 import IRoleUsecase from '../interfaces/usecase/IRole.usecase.interface';
 import IRBACService from '../interfaces/utils/IRBAC.service';
@@ -54,15 +54,18 @@ export class RoleUseCase implements IRoleUsecase {
       return await this.roleRepository.createRole(roleData);
 
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error crating role: ${error.message}`);
     }
 
   }
 
   /**
-   * Get a role by its ID.
+   * Get a role by its ID, without checking the caller's membership.
+   * For internal use only (e.g. by updateRole/deleteRole, which already
+   * gate on the caller holding MANAGE_ROLES in that role's community).
    */
-  async getRoleById(id: Types.ObjectId): Promise<IRole> {
+  private async getRoleByIdRaw(id: Types.ObjectId): Promise<IRole> {
 
     try {
 
@@ -73,6 +76,30 @@ export class RoleUseCase implements IRoleUsecase {
       return role;
 
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
+      throw new Error(`Error geting role: ${error.message}`);
+    }
+
+  }
+
+  /**
+   * Get a role by its ID. Only members of the role's community may view it.
+   */
+  async getRoleById(userId: Types.ObjectId, id: Types.ObjectId): Promise<IRole> {
+
+    try {
+
+      const role = await this.getRoleByIdRaw(id);
+
+      const membership = await this.roleRepository.getUserRoles(userId, role.communityId);
+      if (!membership || membership.length === 0) {
+        throw new UnauthorizedError("Permission denied", "role");
+      }
+
+      return role;
+
+    } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error geting role: ${error.message}`);
     }
 
@@ -91,10 +118,11 @@ export class RoleUseCase implements IRoleUsecase {
       }
 
       const roles = await this.roleRepository.getUserRoles(userId, communityId);
-      
+
       return roles
 
     } catch (error:any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error geting roles: ${error.message}`);
     }
 
@@ -116,7 +144,7 @@ export class RoleUseCase implements IRoleUsecase {
         throw new ValidationError("Invalid Admin ID", "admin");
       }
 
-      const role = await this.getRoleById(roleId);
+      const role = await this.getRoleByIdRaw(roleId);
       if (role.isDefault) {
         throw new UnauthorizedError("Cannot update default role", "role");
       }
@@ -134,6 +162,7 @@ export class RoleUseCase implements IRoleUsecase {
       return updatedRole;
 
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error updating role: ${error.message}`);
     }
 
@@ -155,7 +184,7 @@ export class RoleUseCase implements IRoleUsecase {
         throw new ValidationError("Invalid Admin ID", "admin");
       }
 
-      const role = await this.getRoleById(roleId);
+      const role = await this.getRoleByIdRaw(roleId);
       if (role.isDefault) {
         throw new UnauthorizedError("Cannot delete default role", "role");
       }
@@ -171,6 +200,7 @@ export class RoleUseCase implements IRoleUsecase {
       return result;
 
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error deleting role: ${error.message}`);
     }
 
@@ -178,9 +208,9 @@ export class RoleUseCase implements IRoleUsecase {
   }
 
   /**
-   * List all roles for a given community.
+   * List all roles for a given community. Only members of that community may list them.
    */
-  async listRoles(communityId: Types.ObjectId): Promise<IRole[]> {
+  async listRoles(userId: Types.ObjectId, communityId: Types.ObjectId): Promise<IRole[]> {
 
     try {
 
@@ -188,9 +218,19 @@ export class RoleUseCase implements IRoleUsecase {
         throw new ValidationError("Invalid Community ID", "community");
       }
 
+      if (!Types.ObjectId.isValid(userId)) {
+        throw new ValidationError("Invalid Admin ID", "admin");
+      }
+
+      const membership = await this.roleRepository.getUserRoles(userId, communityId);
+      if (!membership || membership.length === 0) {
+        throw new UnauthorizedError("Permission denied", "role");
+      }
+
       return await this.roleRepository.getAllRoles(communityId);
 
     } catch (error: any) {
+      if (error instanceof CustomError) throw error;
       throw new Error(`Error listing roles: ${error.message}`);
     }
 

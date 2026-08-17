@@ -282,7 +282,7 @@ export default class AuthUsecase implements IAuthUseCase {
         });
       }
 
-      await this.authRepository.clearOTP(email); // Remove OTP after verification
+      await this.authRepository.markOTPVerified(email); // Mark verified so setNewPassword can consume it
 
       return true; // Return true on successful verification
 
@@ -308,6 +308,16 @@ export default class AuthUsecase implements IAuthUseCase {
         errorField: ErrorField.PASSWORD,
         message: ErrorMessage.PASSWORD_MIN_LENGTH_NOT_MET,
         errorCode: ErrorCode.PASSWORD_MIN_LENGTH_NOT_MET,
+      });
+    }
+
+    const otpVerified = await this.authRepository.consumeVerifiedOTP(email, "forgot-password");
+    if (!otpVerified) {
+      throw new ValidationError({
+        statusCode: StatusCodes.BadRequest,
+        errorField: ErrorField.OTP,
+        message: ErrorMessage.OTP_NOT_VERIFIED,
+        errorCode: ErrorCode.OTP_NOT_VERIFIED,
       });
     }
 

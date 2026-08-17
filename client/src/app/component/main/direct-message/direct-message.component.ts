@@ -15,19 +15,11 @@ import {
 import { LoadingStateComponent } from '../../common/loading-state/loading-state.component';
 import { ErrorAlertComponent } from '../../common/error-alert/error-alert.component';
 import { EmptyStateComponent } from '../../common/empty-state/empty-state.component';
-import { ChatMediaComponent } from '../../common/chat-media/chat-media.component';
 import { ChatGifPickerComponent } from '../../common/chat-gif-picker/chat-gif-picker.component';
 import { ChatAttachMenuComponent } from '../../common/chat-attach-menu/chat-attach-menu.component';
 import { ChatMediaPickerComponent } from '../../common/chat-media-picker/chat-media-picker.component';
 import { ChatLocationPickerComponent } from '../../common/chat-location-picker/chat-location-picker.component';
-import { ChatMessageVideoComponent } from '../../common/chat-message-video/chat-message-video.component';
-import { ChatMessageFileComponent } from '../../common/chat-message-file/chat-message-file.component';
-import { ChatMessageLocationComponent } from '../../common/chat-message-location/chat-message-location.component';
-import { ChatMessageAudioComponent } from '../../common/chat-message-audio/chat-message-audio.component';
-import { ChatMessageReplyComponent } from '../../common/chat-message-reply/chat-message-reply.component';
-import { ChatLinkPreviewComponent } from '../../common/chat-link-preview/chat-link-preview.component';
-import { ChatMessageContactComponent } from '../../common/chat-message-contact/chat-message-contact.component';
-import { ChatMessagePollComponent } from '../../common/chat-message-poll/chat-message-poll.component';
+import { ChatMessageBodyComponent } from '../../common/chat-message-body/chat-message-body.component';
 import { ChatMessageReactionsComponent } from '../../common/chat-message-reactions/chat-message-reactions.component';
 import { ChatMessageContextMenuComponent } from '../../common/chat-message-context-menu/chat-message-context-menu.component';
 import { ChatVoiceRecorderComponent } from '../../common/chat-voice-recorder/chat-voice-recorder.component';
@@ -46,23 +38,8 @@ import {
   uploadComposerFile,
 } from '../../../util/chat-attachment-host';
 import {
-  IFileMessageContent,
   ILocationMessageContent,
-  isFileMessage,
-  isGifMessage,
-  isImageMessage,
-  isLocationMessage,
-  isStickerMessage,
-  isVideoMessage,
-  parseFileContent,
-  parseLocationContent,
-  isAudioMessage,
-  isContactMessage,
-  isPollMessage,
   isCallMessage,
-  parseContactContent,
-  parseMetadata,
-  hasForwardedLabel,
 } from '../../../util/message-display';
 import {
   applyMessageDeleted,
@@ -81,19 +58,11 @@ import {
     LoadingStateComponent,
     ErrorAlertComponent,
     EmptyStateComponent,
-    ChatMediaComponent,
     ChatGifPickerComponent,
     ChatAttachMenuComponent,
     ChatMediaPickerComponent,
     ChatLocationPickerComponent,
-    ChatMessageVideoComponent,
-    ChatMessageFileComponent,
-    ChatMessageLocationComponent,
-    ChatMessageAudioComponent,
-    ChatMessageReplyComponent,
-    ChatLinkPreviewComponent,
-    ChatMessageContactComponent,
-    ChatMessagePollComponent,
+    ChatMessageBodyComponent,
     ChatMessageReactionsComponent,
     ChatMessageContextMenuComponent,
     ChatVoiceRecorderComponent,
@@ -136,18 +105,7 @@ export class DirectMessageComponent implements OnInit, OnDestroy {
   pendingFile: File | null = null;
   pendingUploadKind: ChatUploadKind | null = null;
   attachError: string | null = null;
-  readonly isGifMessage = isGifMessage;
-  readonly isImageMessage = isImageMessage;
-  readonly isStickerMessage = isStickerMessage;
-  readonly isVideoMessage = isVideoMessage;
-  readonly isFileMessage = isFileMessage;
-  readonly isLocationMessage = isLocationMessage;
-  readonly isAudioMessage = isAudioMessage;
-  readonly isContactMessage = isContactMessage;
-  readonly isPollMessage = isPollMessage;
   readonly isCallMessage = isCallMessage;
-  readonly parseContactContent = parseContactContent;
-  readonly hasForwardedLabel = hasForwardedLabel;
 
   private subs = new Subscription();
   private historySub: Subscription | null = null;
@@ -582,10 +540,6 @@ export class DirectMessageComponent implements OnInit, OnDestroy {
     return !isCallMessage(msg);
   }
 
-  metadataFor(msg: IChatMessage) {
-    return parseMetadata(msg.metadata);
-  }
-
   onAttachMediaRequested(): void {
     this.attachMenuOpen = false;
     this.mediaPickerOpen = true;
@@ -639,14 +593,6 @@ export class DirectMessageComponent implements OnInit, OnDestroy {
 
   closeAttachPanels(): void {
     closeAllAttachPanels(this);
-  }
-
-  fileMessageContent(msg: { content: string }): IFileMessageContent | null {
-    return parseFileContent(msg.content);
-  }
-
-  locationMessageContent(msg: { content: string }): ILocationMessageContent | null {
-    return parseLocationContent(msg.content);
   }
 
   onGifChosen(url: string): void {

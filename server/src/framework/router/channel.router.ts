@@ -28,7 +28,7 @@ const jwtService: IJWTService = new JWTService();
 const authMiddleware: IAuthMiddleware = new AuthMiddleware(jwtService);
 const rbacService: IRBACService = new RBACService(roleRepository,communityRepository);
 
-const channelUsecase: IChannelUsecase = new ChannelUseCase(channelRepository,roleRepository,rbacService,chatRepository);
+const channelUsecase: IChannelUsecase = new ChannelUseCase(channelRepository,roleRepository,rbacService,chatRepository,communityRepository);
 
 const channelController: IChannelController = new ChannelController(channelUsecase);
 

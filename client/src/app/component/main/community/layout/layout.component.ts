@@ -39,6 +39,8 @@ export class ComunityLayoutComponent implements OnInit, OnDestroy {
   voiceSessionActive = false;
 
   private subscriptions: Subscription = new Subscription();
+  /** Holds subscriptions created per-community so they can be torn down before the next one is set up. */
+  private routeParamSubscriptions: Subscription = new Subscription();
 
   constructor(
     private route: ActivatedRoute,
@@ -50,6 +52,11 @@ export class ComunityLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const communitySub = this.route.params.subscribe(params => {
+      // Tear down the previous community's subscriptions before creating new ones,
+      // since this component is reused (not recreated) when switching communities.
+      this.routeParamSubscriptions.unsubscribe();
+      this.routeParamSubscriptions = new Subscription();
+
       this.communityId = params['id'];
       if (!this.communityId) {
         this.errorMessage = 'Community ID not found';
@@ -57,26 +64,28 @@ export class ComunityLayoutComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.communityStateService.loadCommunity(this.communityId).subscribe(community => {
-        this.community = community;
-        // console.log(community);
-        this.isLoading = false;
-      });
+      this.routeParamSubscriptions.add(
+        this.communityStateService.loadCommunity(this.communityId).subscribe(community => {
+          this.community = community;
+          // console.log(community);
+          this.isLoading = false;
+        })
+      );
 
       // Load user roles via the RoleStateService.
       this.roleStateService.loadUserRoles(this.communityId).subscribe();
 
       // Subscribe to role state updates.
-      const rolesSub = this.roleStateService.userRoles$.subscribe(roles => {
-        this.userRoles = roles;
-      });
-      const permsSub = this.roleStateService.permissions$.subscribe(perms => {
-        this.permissions = perms;
-      });
-
-      this.subscriptions.add(rolesSub);
-      this.subscriptions.add(permsSub);
-
+      this.routeParamSubscriptions.add(
+        this.roleStateService.userRoles$.subscribe(roles => {
+          this.userRoles = roles;
+        })
+      );
+      this.routeParamSubscriptions.add(
+        this.roleStateService.permissions$.subscribe(perms => {
+          this.permissions = perms;
+        })
+      );
     });
 
     this.subscriptions.add(communitySub);
@@ -98,6 +107,7 @@ export class ComunityLayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     void this.voiceroom.leaveActiveCall();
+    this.routeParamSubscriptions.unsubscribe();
     this.subscriptions.unsubscribe();
   }
 

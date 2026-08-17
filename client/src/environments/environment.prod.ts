@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://hive-backend-n6iv.onrender.com',
-  socketUrl: 'https://hive-backend-n6iv.onrender.com',
+  apiUrl: 'https://YOUR-RENDER-SERVICE.onrender.com',
+  socketUrl: 'https://YOUR-RENDER-SERVICE.onrender.com',
   livekitUrl: 'wss://hive-k10di6bg.livekit.cloud',
 };

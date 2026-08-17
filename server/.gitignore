@@ -3,3 +3,10 @@ node_modules
 
 # Ignore the dist folder
 dist
+
+# src is TypeScript-only — a stray `tsc` run here previously committed 131
+# compiled .js files that shadowed the real .ts sources during dev (see README).
+src/**/*.js
+
+# Winston runtime output
+logs

@@ -1,0 +1,11 @@
+{
+  "name": "hive",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix client && npm install --prefix server",
+    "client": "npm run start --prefix client",
+    "server": "npm run dev --prefix server",
+    "build:client": "npm run build --prefix client",
+    "build:server": "npm run build --prefix server"
+  }
+}

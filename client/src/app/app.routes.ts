@@ -27,6 +27,7 @@ import { CommunityCreateStepThreeComponent } from './component/main/create-commu
 import { AboutComponent } from './component/main/community/about/about.component';
 import { ChatroomComponent } from './component/main/community/chatroom/chatroom.component';
 import { VoiceroomComponent } from './component/main/community/voiceroom/voiceroom.component';
+import { StyleguideComponent } from './component/styleguide/styleguide.component';
 
 
 export const routes: Routes = [
@@ -85,6 +86,8 @@ export const routes: Routes = [
       }
     ]
   },
+  { path: "styleguide", component: StyleguideComponent, data: { title: "Styleguide" } },
+
   { path: "",canActivateChild: [AuthGuardChild], component: LandingPageComponent, data: { title: "Hive" } }
 
 ];

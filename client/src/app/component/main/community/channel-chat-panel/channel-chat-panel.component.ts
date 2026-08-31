@@ -63,6 +63,8 @@ import {
   forwardMessageToChat,
 } from '../../../../util/chat-message-actions';
 import { IUser } from '../../../../services/friends.service';
+import { LongPressDirective } from '../../../../directives/long-press.directive';
+import { ButtonComponent } from '../../../common/button/button.component';
 
 @Component({
   selector: 'app-channel-chat-panel',
@@ -84,6 +86,8 @@ import { IUser } from '../../../../services/friends.service';
     ChatPollComposerComponent,
     ChatContactPickerComponent,
     ChatForwardPickerComponent,
+    ButtonComponent,
+    LongPressDirective,
   ],
   templateUrl: './channel-chat-panel.component.html',
   styleUrl: './channel-chat-panel.component.css',
@@ -369,7 +373,16 @@ export class ChannelChatPanelComponent implements OnInit, OnChanges, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
     const mouse = event as MouseEvent;
-    this.contextMenuAnchor = { x: mouse.clientX, y: mouse.clientY };
+    this.openContextMenuAt(msg, { x: mouse.clientX, y: mouse.clientY });
+  }
+
+  /**
+   * Touch entry point for the same menu. `contextmenu` never fires on iOS
+   * Safari for a plain element, so without this the message actions are
+   * unreachable on iPhone; appLongPress supplies the coordinates.
+   */
+  openContextMenuAt(msg: IChatMessage, point: { x: number; y: number }): void {
+    this.contextMenuAnchor = point;
     this.contextMenuMsg = msg;
   }
 

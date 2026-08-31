@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { ImageCroppedEvent, ImageCropperComponent, OutputFormat } from 'ngx-image-cropper';
+import { ButtonComponent } from '../../common/button/button.component';
 
 @Component({
   selector: 'app-image-cropper-modal',
   standalone: true,
-  imports: [CommonModule, ImageCropperComponent],
+  imports: [CommonModule, ImageCropperComponent, ButtonComponent],
   templateUrl: './image-cropper-modal.component.html',
   styleUrl: './image-cropper-modal.component.css'
 })

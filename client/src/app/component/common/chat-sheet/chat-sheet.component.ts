@@ -29,7 +29,7 @@ export class ChatSheetComponent {
 
   get themeClasses(): string {
     return this.theme === 'channel'
-      ? 'bg-zinc-900 text-zinc-200'
-      : 'bg-surface-900 text-zinc-200 ring-1 ring-zinc-800';
+      ? 'bg-surface-900 text-ink-secondary'
+      : 'bg-surface-900 text-ink-secondary ring-1 ring-surface-800';
   }
 }

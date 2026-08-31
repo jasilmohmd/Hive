@@ -8,6 +8,8 @@ import { CommunityService } from '../../../services/community.service';
 import { ChannelService } from '../../../services/channel.service';
 import ICommunity from '../../../models/community';
 
+import { ButtonComponent } from '../../common/button/button.component';
+
 export interface IForwardChannelTarget {
   chatId: string;
   channelName: string;
@@ -17,7 +19,7 @@ export interface IForwardChannelTarget {
 @Component({
   selector: 'app-chat-forward-picker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonComponent],
   templateUrl: './chat-forward-picker.component.html',
 })
 export class ChatForwardPickerComponent implements OnInit {

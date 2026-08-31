@@ -7,16 +7,16 @@
     *ngFor="let t of (toast.toasts$ | async)"
     class="pointer-events-auto flex items-start gap-2 rounded-lg border px-4 py-3 text-sm shadow-lg animate-fadeIn"
     [ngClass]="{
-      'border-success/40 bg-surface-900 text-zinc-100': t.type === 'success',
-      'border-danger/50 bg-surface-900 text-red-200': t.type === 'error',
-      'border-zinc-600 bg-surface-900 text-zinc-200': t.type === 'info'
+      'border-success/40 bg-surface-900 text-ink': t.type === 'success',
+      'border-danger/50 bg-surface-900 text-danger-text': t.type === 'error',
+      'border-surface-600 bg-surface-900 text-ink': t.type === 'info'
     }"
     role="status"
   >
     <span class="flex-1">{{ t.message }}</span>
     <button
       type="button"
-      class="rounded text-zinc-400 hover:text-white focus-visible:ring-2 focus-visible:ring-brand"
+      class="rounded text-ink-secondary hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
       (click)="toast.dismiss(t.id)"
       [attr.aria-label]="'Dismiss notification'"
     >

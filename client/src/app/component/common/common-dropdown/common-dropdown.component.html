@@ -1,15 +1,15 @@
 <!-- Dropdown Toggle Button -->
-<button type="button" (click)="toggle($event)" aria-haspopup="menu" class="flex items-center justify-center bg-surface-950 hover:bg-gray-600 px-2 py-2 text-sm rounded-full focus-visible:ring-2 focus-visible:ring-brand">
+<button type="button" (click)="toggle($event)" aria-haspopup="menu" class="flex items-center justify-center bg-surface-950 hover:bg-surface-600 px-2 py-2 text-sm rounded-full focus-visible:ring-2 focus-visible:ring-brand">
   <!-- You can customize the toggle button icon here -->
   <img src="assets/Icons/menu-vertical.png" alt="menu" class="w-6 h-6">
 </button>
 <!-- Dropdown Menu -->
-<div *ngIf="isOpen" class="absolute right-0 mt-2 w-40 bg-gray-800 rounded-md shadow-lg z-50">
+<div *ngIf="isOpen" class="absolute right-0 mt-2 w-40 bg-surface-800 rounded-md shadow-lg z-50">
   <button 
     *ngFor="let item of items" 
     (click)="selectItem(item, $event)"
     [ngClass]="item.class"
-    class="flex items-center justify-center w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700"
+    class="flex items-center justify-center w-full text-left px-4 py-2 text-sm text-ink hover:bg-surface-700"
   >
     <!-- Conditionally display icon -->
     <ng-container *ngIf="(item.display || 'both') !== 'label'">

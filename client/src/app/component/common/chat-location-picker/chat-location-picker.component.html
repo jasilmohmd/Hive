@@ -5,18 +5,18 @@
   (dismiss)="dismiss.emit()"
 >
   <div class="space-y-3 p-4">
-    <p class="text-sm text-zinc-400">Share your current position with this chat.</p>
+    <p class="text-sm text-ink-secondary">Share your current position with this chat.</p>
     <input
       type="text"
-      class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+      class="w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-sm placeholder-ink-muted focus:border-brand focus:outline-none"
       [(ngModel)]="label"
       placeholder="Label (optional), e.g. Meet here"
       maxlength="200"
     />
-    <p *ngIf="error" class="text-sm text-red-400">{{ error }}</p>
+    <p *ngIf="error" class="text-sm text-danger-text">{{ error }}</p>
     <button
       type="button"
-      class="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-50"
+      class="w-full rounded-lg bg-success px-4 py-2 text-sm font-medium text-surface-950 hover:bg-success-hover disabled:opacity-50"
       [disabled]="loading"
       (click)="shareLocation()"
     >

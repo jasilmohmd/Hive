@@ -3,11 +3,12 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommunityService } from '../../../../services/community.service';
+import { ButtonComponent } from '../../../common/button/button.component';
 
 @Component({
   selector: 'community-create-step-three',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, ButtonComponent],
   templateUrl: './step-three.component.html',
   styleUrl: './step-three.component.css'
 })
@@ -94,15 +95,15 @@ export class CommunityCreateStepThreeComponent implements OnInit {
   getTagClasses(tag: any): string {
     const base = 'rounded-full border transition-colors cursor-pointer ';
     return this.isTagSelected(tag)
-      ? base + 'border-blue-500 bg-blue-500/10 hover:bg-blue-500/20'
-      : base + 'border-zinc-700 hover:border-zinc-500 bg-zinc-800';
+      ? base + 'border-brand bg-brand/10 hover:bg-brand/20'
+      : base + 'border-surface-700 hover:border-surface-500 bg-surface-800';
   }
 
   getCheckboxClasses(tag: any): string {
     const base = 'w-5 h-5 rounded-full flex items-center justify-center ';
     return this.isTagSelected(tag)
-      ? base + 'bg-blue-500'
-      : base + 'border-2 border-zinc-500';
+      ? base + 'bg-brand'
+      : base + 'border-2 border-surface-500';
   }
 
   previousStep() {

@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ChatSheetComponent } from '../chat-sheet/chat-sheet.component';
+import { ButtonComponent } from '../../common/button/button.component';
 
 @Component({
   selector: 'app-chat-poll-composer',
   standalone: true,
-  imports: [CommonModule, FormsModule, ChatSheetComponent],
+  imports: [CommonModule, FormsModule, ChatSheetComponent, ButtonComponent],
   templateUrl: './chat-poll-composer.component.html',
 })
 export class ChatPollComposerComponent {

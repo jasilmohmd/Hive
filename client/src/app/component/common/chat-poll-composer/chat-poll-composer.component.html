@@ -6,40 +6,46 @@
   <h3 class="mb-3 text-sm font-medium">Create poll</h3>
   <input
     type="text"
-    class="mb-3 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+    class="mb-3 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-sm focus:border-brand focus:outline-none"
     [(ngModel)]="question"
     placeholder="Question"
     maxlength="300"
   />
-  <div *ngFor="let opt of options; let i = index" class="mb-2 flex gap-2">
+  <div *ngFor="let opt of options; let i = index" class="mb-2 flex items-center gap-2">
     <input
       type="text"
-      class="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+      class="min-w-0 flex-1 rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-sm focus:border-brand focus:outline-none"
       [(ngModel)]="options[i]"
       [placeholder]="'Option ' + (i + 1)"
       maxlength="100"
     />
+    <!-- Was a bare "×" glyph with no box: about 8px of hittable area. -->
     <button
       *ngIf="options.length > 2"
       type="button"
-      class="text-red-400"
+      class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-danger-text transition-colors hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-text"
       (click)="removeOption(i)"
-      aria-label="Remove option"
+      [attr.aria-label]="'Remove option ' + (i + 1)"
     >
       ×
     </button>
   </div>
   <label class="mb-3 flex items-center gap-2 text-sm">
-    <input type="checkbox" [(ngModel)]="allowMultiple" />
+    <!-- accent-color keeps the native control on the brand instead of the
+         browser's default blue, which was the last stray colour in this sheet. -->
+    <input type="checkbox" class="h-4 w-4 accent-[rgb(var(--brand))]" [(ngModel)]="allowMultiple" />
     Allow multiple choices
   </label>
-  <p *ngIf="error" class="mb-2 text-sm text-red-400">{{ error }}</p>
-  <div class="flex gap-2">
-    <button type="button" class="text-sm text-indigo-400" (click)="addOption()" [disabled]="options.length >= 10">
+  <p *ngIf="error" class="mb-2 text-sm text-danger-text">{{ error }}</p>
+  <div class="flex items-center gap-2">
+    <button
+      type="button"
+      class="inline-flex min-h-9 items-center rounded-lg px-2 text-sm text-brand transition-colors hover:bg-surface-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      (click)="addOption()"
+      [disabled]="options.length >= 10"
+    >
       Add option
     </button>
-    <button type="button" class="ml-auto rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white" (click)="submit()">
-      Send poll
-    </button>
+    <app-button variant="primary" size="sm" extraClass="ml-auto" (click)="submit()">Send poll</app-button>
   </div>
 </app-chat-sheet>

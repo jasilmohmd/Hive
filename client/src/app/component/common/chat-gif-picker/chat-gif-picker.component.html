@@ -4,18 +4,18 @@
   panelClass="max-h-[min(70vh,420px)] overflow-hidden sm:bottom-auto sm:max-h-[min(50vh,380px)]"
   (dismiss)="dismiss.emit()"
 >
-  <div class="border-b border-zinc-800 p-2">
+  <div class="border-b border-surface-800 p-2">
     <input
       type="search"
-      class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+      class="w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-sm placeholder-ink-muted focus:border-brand focus:outline-none"
       [ngModel]="searchDraft"
       (ngModelChange)="onSearchInput($event)"
       [placeholder]="searchPlaceholder"
       autocomplete="off"
     />
   </div>
-  <p *ngIf="error" class="px-4 py-2 text-center text-sm text-red-400">{{ error }}</p>
-  <div *ngIf="loading" class="px-4 py-8 text-center text-sm text-zinc-500">Loading…</div>
+  <p *ngIf="error" class="px-4 py-2 text-center text-sm text-danger-text">{{ error }}</p>
+  <div *ngIf="loading" class="px-4 py-8 text-center text-sm text-ink-muted">Loading…</div>
   <div
     *ngIf="!loading && !error && results.length"
     class="grid max-h-[min(55vh,320px)] grid-cols-3 gap-1 overflow-y-auto p-2 sm:grid-cols-4"
@@ -23,7 +23,7 @@
     <button
       *ngFor="let url of results"
       type="button"
-      class="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-zinc-800/90 ring-1 ring-zinc-700 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      class="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-surface-800/90 ring-1 ring-surface-700 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
       (click)="pickMedia(url)"
     >
       <img

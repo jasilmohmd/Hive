@@ -5,12 +5,13 @@ import { ImageCroppedEvent, ImageCropperComponent, LoadedImage } from 'ngx-image
 import { DomSanitizer } from '@angular/platform-browser';
 import { ChangeDetectorRef } from '@angular/core';
 import { ImageCropperModalComponent } from '../../../common/image-cropper-modal/image-cropper-modal.component';
+import { ButtonComponent } from '../../../common/button/button.component';
 
 
 @Component({
   selector: 'community-create-step-two',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, ImageCropperModalComponent],
+  imports: [ReactiveFormsModule, CommonModule, ImageCropperModalComponent, ButtonComponent],
   templateUrl: './step-two.component.html',
   styleUrl: './step-two.component.css'
 })

@@ -34,7 +34,7 @@ export class AddfriendComponent {
     {
       label: 'Send Request',
       action: (row: any) => this.sendFriendRequest(row._id),
-      class: '!bg-green-500 hover:!bg-green-600 px-4 py-2 text-sm rounded-md',
+      class: '!bg-success !text-surface-950 hover:!bg-success-hover px-4 py-2 text-sm rounded-md',
       display: "label"
     }
   ];

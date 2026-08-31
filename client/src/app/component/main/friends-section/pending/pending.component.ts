@@ -31,13 +31,13 @@ export class PendingComponent implements OnInit {
     {
       label: 'Accept',
       action: (row: any) => this.acceptRequest(row._id),
-      class: '!bg-green-500 hover:!bg-green-600 px-4 py-2 text-sm rounded-md',
+      class: '!bg-success !text-surface-950 hover:!bg-success-hover px-4 py-2 text-sm rounded-md',
       display: "label"
     },
     {
       label: 'Reject',
       action: (row: any) => this.rejectRequest(row._id),
-      class: '!bg-red-500 hover:!bg-red-600 px-4 py-2 text-sm rounded-md',
+      class: '!bg-danger !text-white hover:!bg-danger-hover px-4 py-2 text-sm rounded-md',
       display: "label"
     }
   ];

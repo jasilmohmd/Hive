@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ButtonComponent } from '../../../common/button/button.component';
 
 @Component({
   selector: 'community-create-step-one',
   standalone: true,
-  imports: [ReactiveFormsModule,CommonModule],
+  imports: [ReactiveFormsModule,CommonModule, ButtonComponent],
   templateUrl: './step-one.component.html',
   styleUrl: './step-one.component.css'
 })

@@ -12,6 +12,7 @@ import { CommunityStateService } from '../../../../services/shared/community-sta
 import { RoleStateService } from '../../../../services/shared/role-state.service';
 import { IRole } from '../../../../models/role';
 import { UserAuthService } from '../../../../services/user-auth.service';
+import { ChannelSidebarService } from '../../../../services/shared/channel-sidebar.service';
 
 @Component({
   selector: 'community-layout',
@@ -38,6 +39,13 @@ export class ComunityLayoutComponent implements OnInit, OnDestroy {
   currentUserImage: string = '/assets/images/community/Profile/comedyclub.jpg';
   voiceSessionActive = false;
 
+  /**
+   * Mirrors ChannelSidebarService. The control that flips it lives in the app
+   * shell's navigation, which is not an ancestor of this component in any
+   * template — hence the service rather than an @Input or local state.
+   */
+  sidebarCollapsed = false;
+
   private subscriptions: Subscription = new Subscription();
   /** Holds subscriptions created per-community so they can be torn down before the next one is set up. */
   private routeParamSubscriptions: Subscription = new Subscription();
@@ -47,10 +55,17 @@ export class ComunityLayoutComponent implements OnInit, OnDestroy {
     private communityStateService: CommunityStateService,
     private roleStateService: RoleStateService,
     private authService: UserAuthService,
-    private voiceroom: VoiceroomService
+    private voiceroom: VoiceroomService,
+    private channelSidebar: ChannelSidebarService
   ) { }
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.channelSidebar.collapsed$.subscribe((collapsed) => {
+        this.sidebarCollapsed = collapsed;
+      })
+    );
+
     const communitySub = this.route.params.subscribe(params => {
       // Tear down the previous community's subscriptions before creating new ones,
       // since this component is reused (not recreated) when switching communities.

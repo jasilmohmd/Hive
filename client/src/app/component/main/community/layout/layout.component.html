@@ -1,26 +1,6 @@
-<app-loading-state *ngIf="isLoading" variant="skeleton" containerClass="flex flex-col rounded-2xl box-border h-full gap-3 animate-pulse sm:flex-row">
-  <div class="relative h-56 w-full shrink-0 sm:h-full sm:w-1/6">
-    <div class="h-full w-full rounded-2xl overflow-hidden pb-20 space-y-2">
-      <div class="h-full bg-zinc-800 rounded-2xl animate-pulse"></div>
-    </div>
-    <div class="absolute bottom-0 w-full z-10 rounded-2xl bg-zinc-800 p-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div class="h-10 w-10 rounded-full bg-zinc-700"></div>
-          <div class="space-y-1">
-            <div class="h-4 w-20 bg-zinc-700 rounded"></div>
-            <div class="h-3 w-16 bg-zinc-700 rounded"></div>
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <div class="h-5 w-5 bg-zinc-700 rounded"></div>
-          <div class="h-5 w-5 bg-zinc-700 rounded"></div>
-          <div class="h-5 w-5 bg-zinc-700 rounded"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="grow h-full bg-zinc-800 rounded-2xl p-3"></div>
+<app-loading-state *ngIf="isLoading" variant="skeleton" containerClass="flex h-full flex-row gap-2 rounded-2xl box-border animate-pulse md:gap-3">
+  <div class="h-full w-44 shrink-0 rounded-2xl bg-surface-800 md:w-1/6 md:min-w-[13rem] md:max-w-[18rem]"></div>
+  <div class="grow h-full bg-surface-800 rounded-2xl p-3"></div>
 </app-loading-state>
 
 <app-error-alert
@@ -30,44 +10,61 @@
   [message]="errorMessage"
 />
 
-<div *ngIf="community && !isLoading && !errorMessage" class="flex h-full min-h-0 w-full flex-col gap-3 rounded-2xl box-border sm:flex-row">
-  <div class="relative h-56 w-full shrink-0 sm:h-full sm:w-1/6">
-    <div
-      class="h-full w-full rounded-2xl overflow-y-auto overflow-x-hidden scrollbar-themed"
-      [class.pb-16]="!voiceSessionActive"
-      [class.pb-32]="voiceSessionActive"
-    >
+<div
+  *ngIf="community && !isLoading && !errorMessage"
+  class="flex h-full min-h-0 w-full flex-row gap-2 rounded-2xl box-border md:gap-3"
+>
+  <!--
+    Channel sidebar: a column at every width — never an overlay — and removed
+    from the row entirely when collapsed, rather than left as a stub strip.
+    A 40px stub was just dead space; the control that brings it back lives in
+    the app shell's navigation (bottom bar on phones, icon rail on desktop),
+    which is always on screen anyway.
+
+    176px expanded on phones, up from 144px. That was the fix for voice-room
+    names truncating to nothing: the row has ~78px for the label, not ~46px.
+  -->
+  <aside
+    *ngIf="!sidebarCollapsed"
+    class="cl-aside flex h-full min-h-0 shrink-0 flex-col gap-1.5 w-44 md:w-1/6 md:min-w-[13rem] md:max-w-[18rem]"
+    aria-label="Channels"
+  >
+    <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden rounded-2xl scrollbar-themed">
       <app-channels-list [communityId]="communityId"></app-channels-list>
     </div>
-    <div class="absolute bottom-0 w-full z-10 flex flex-col gap-1.5 rounded-2xl">
-      <app-voice-session-bar [communityId]="communityId"></app-voice-session-bar>
-      <div class="bg-zinc-800 rounded-2xl p-3 h-full flex items-center justify-between gap-2 text-zinc-300">
-        <div class="flex items-center gap-2">
-          <div class="relative">
-            <img [src]="currentUserImage" [alt]="currentUserName + ' avatar'" class="h-10 w-10 rounded-full object-cover" />
-            <div class="absolute bottom-0 right-0 bg-green-700 border-2 border-zinc-800 rounded-full h-3 w-3" aria-hidden="true"></div>
+
+      <!-- Voice session + user controls, pinned to the bottom of the column -->
+      <div class="flex shrink-0 flex-col gap-1.5">
+        <app-voice-session-bar [communityId]="communityId"></app-voice-session-bar>
+
+        <!-- Stacks on phones because avatar + name + three controls will not fit
+             across 176px; returns to a single row from md up. -->
+        <div class="flex flex-col gap-1.5 rounded-2xl bg-surface-800 p-2 text-ink-secondary md:flex-row md:items-center md:justify-between md:gap-2">
+          <div class="flex min-w-0 items-center gap-2">
+            <div class="relative shrink-0">
+              <img [src]="currentUserImage" [alt]="currentUserName + ' avatar'" class="h-8 w-8 rounded-full object-cover md:h-9 md:w-9" />
+              <div class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-surface-800 bg-success md:h-3 md:w-3" aria-hidden="true"></div>
+            </div>
+            <div class="flex min-w-0 flex-col leading-tight">
+              <span class="truncate text-sm font-medium text-ink">{{ currentUserName }}</span>
+              <span class="text-xs text-ink-muted">Online</span>
+            </div>
           </div>
 
-          <div class="flex-col gap-0">
-            <div class="text-lg">{{ currentUserName }}</div>
-            <div class="text-xs font-thin mt-[-5px]">Online</div>
+          <div class="flex items-center justify-between gap-0.5 md:justify-end">
+            <button type="button" class="cl-user-btn focus-visible:ring-2 focus-visible:ring-brand" aria-label="Voice activity">
+              <img src="assets/Icons/mic-fill.png" alt="" class="h-5 w-5" />
+            </button>
+            <button type="button" class="cl-user-btn focus-visible:ring-2 focus-visible:ring-brand" aria-label="Voice output">
+              <img src="assets/Icons/headphones-fill.png" alt="" class="h-5 w-5" />
+            </button>
+            <button type="button" class="cl-user-btn focus-visible:ring-2 focus-visible:ring-brand" aria-label="Community settings">
+              <img src="assets/Icons/settings.png" alt="" class="h-5 w-5" />
+            </button>
           </div>
-        </div>
-
-        <div class="flex gap-2">
-          <button type="button" class="p-1 rounded hover:bg-zinc-700 focus-visible:ring-2 focus-visible:ring-brand" aria-label="Voice activity">
-            <img src="assets/Icons/mic-fill.png" alt="" class="h-5 w-5" />
-          </button>
-          <button type="button" class="p-1 rounded hover:bg-zinc-700 focus-visible:ring-2 focus-visible:ring-brand" aria-label="Voice output">
-            <img src="assets/Icons/headphones-fill.png" alt="" class="h-5 w-5" />
-          </button>
-          <button type="button" class="p-1 rounded hover:bg-zinc-700 focus-visible:ring-2 focus-visible:ring-brand" aria-label="Community settings">
-            <img src="assets/Icons/settings.png" alt="" class="h-5 w-5" />
-          </button>
         </div>
       </div>
-    </div>
-  </div>
+  </aside>
 
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-surface-900">
     <router-outlet></router-outlet>

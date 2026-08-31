@@ -1,25 +1,31 @@
 <div [class]="containerClasses">
 
-  <p *ngIf="attachError" class="mb-2 text-sm text-red-400">{{ attachError }}</p>
-  <div *ngIf="replyPreview" class="mb-2 flex items-center justify-between rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-2 text-xs">
-    <span class="truncate text-zinc-300">Replying: {{ replyPreview }}</span>
-    <button type="button" class="shrink-0 text-zinc-400 hover:text-white" (click)="cancelReply.emit()">×</button>
+  <p *ngIf="attachError" class="mb-2 text-sm text-danger-text">{{ attachError }}</p>
+  <div *ngIf="replyPreview" class="mb-2 flex items-center justify-between rounded-lg border border-brand/40 bg-brand/10 px-3 py-2 text-xs">
+    <span class="truncate text-ink-secondary">Replying: {{ replyPreview }}</span>
+    <button type="button" class="shrink-0 text-ink-secondary hover:text-ink" (click)="cancelReply.emit()">×</button>
   </div>
   <div *ngIf="pendingFile" [class]="pendingFileChipClasses">
 
     <span class="truncate pr-3">
 
-      <span class="text-zinc-400">{{ pendingKindLabel() }} · </span>{{ pendingFile.name }}
+      <span class="text-ink-secondary">{{ pendingKindLabel() }} · </span>{{ pendingFile.name }}
 
-      <span class="text-zinc-500"> ({{ formatSize(pendingFile.size) }})</span>
+      <span class="text-ink-muted"> ({{ formatSize(pendingFile.size) }})</span>
 
     </span>
 
-    <button type="button" (click)="removePending()" class="text-red-400 hover:text-red-300">Remove</button>
+    <button type="button" (click)="removePending()" class="text-danger-text hover:text-danger-text">Remove</button>
 
   </div>
 
-  <div class="flex items-center gap-2">
+  <!--
+    Wraps below md: the input claims the whole first line (w-full), which pushes
+    the icon group and send button onto a second row. Three 36px icon buttons
+    plus a send button will not share one row with a usable text field inside
+    the ~230px this bar gets on a phone. From md up it is a single row again.
+  -->
+  <div class="flex flex-wrap items-center gap-2 md:flex-nowrap">
 
     <input
 
@@ -125,7 +131,9 @@
 
     >
 
-      {{ isUploading ? 'Uploading...' : 'Send' }}
+      <span class="md:hidden">{{ isUploading ? 'Sending…' : 'Send' }}</span>
+
+      <span class="hidden md:inline">{{ isUploading ? 'Uploading...' : 'Send' }}</span>
 
     </button>
 

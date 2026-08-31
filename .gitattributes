@@ -1,0 +1,54 @@
+# Line endings are declared here rather than inferred.
+#
+# This repo previously relied on core.autocrlf alone, with no .gitattributes.
+# That leaves the decision to each machine's git config, so a file written by
+# one tool and edited by another would show up in `git diff` as a whole-file
+# rewrite. At one point roughly a third of an outstanding diff — 1,407
+# insertions matched by 1,407 deletions — was carriage returns rather than
+# anything anyone had typed.
+#
+# eol=lf normalises the working tree too, not just the stored blob, so what you
+# see locally matches what CI and every other checkout sees.
+
+* text=auto eol=lf
+
+# Source and config — always LF.
+*.ts     text eol=lf
+*.js     text eol=lf
+*.mjs    text eol=lf
+*.cjs    text eol=lf
+*.json   text eol=lf
+*.html   text eol=lf
+*.css    text eol=lf
+*.scss   text eol=lf
+*.md     text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.svg    text eol=lf
+
+# Windows-only scripts genuinely need CRLF.
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+*.ps1    text eol=crlf
+
+# Binary — never transformed, never diffed as text.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.avif   binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.otf    binary
+*.eot    binary
+*.mp3    binary
+*.wav    binary
+*.ogg    binary
+*.mp4    binary
+*.webm   binary
+*.mov    binary
+*.pdf    binary
+*.zip    binary

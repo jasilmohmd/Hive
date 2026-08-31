@@ -1,6 +1,6 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostBinding, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription, firstValueFrom } from 'rxjs';
 import {
   VoiceroomService,
@@ -54,11 +54,41 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
   gridScreenStripHidden = false;
   chatPanelOpen = false;
 
+  /**
+   * Theater mode: the room breaks out of the community layout and takes the
+   * whole window, hiding the rail, channel list and header. Distinct from
+   * isFullscreen, which focuses a single tile *within* the room.
+   */
+  roomExpanded = false;
+
+  @HostBinding('class.vr-expanded')
+  get isRoomExpanded(): boolean {
+    return this.roomExpanded;
+  }
+
+  toggleRoomExpanded(): void {
+    this.roomExpanded = !this.roomExpanded;
+  }
+
+  /** Escape steps back one level: focused tile first, then theater mode. */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isFullscreen) {
+      this.closeFullscreen();
+      return;
+    }
+    if (this.roomExpanded) this.roomExpanded = false;
+  }
+
+  /** Fullscreen chrome (dock + close + tray pill) auto-hides when idle. */
+  fsControlsVisible = true;
+  private fsIdleTimer: ReturnType<typeof setTimeout> | null = null;
+  private static readonly FS_IDLE_MS = 3000;
+
   private subs = new Subscription();
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
     public voiceroom: VoiceroomService,
     private presence: VoiceroomPresenceService,
     private channels: ChannelService,
@@ -181,6 +211,7 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearFsIdleTimer();
     this.subs.unsubscribe();
     if (
       this.channelId &&
@@ -289,26 +320,35 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
     await this.leaveCall();
   }
 
-  async leave(): Promise<void> {
-    if (
-      this.channelId &&
-      !this.voiceroom.isConnectedTo(this.channelId)
-    ) {
-      this.presence.unwatch(this.channelId);
-    }
-    if (this.communityId) {
-      await this.router.navigate([
-        '/main/community',
-        this.communityId,
-        'about',
-      ]);
-    }
-  }
-
   closeFullscreen(): void {
     this.expandedParticipantId = null;
     this.expandedScreenId = null;
     this.minimizedTrayHidden = false;
+    this.clearFsIdleTimer();
+    this.fsControlsVisible = true;
+  }
+
+  /** Pointer, touch or key activity in the fullscreen layer wakes the chrome. */
+  onFullscreenActivity(): void {
+    this.fsControlsVisible = true;
+    this.restartFsIdleTimer();
+  }
+
+  private restartFsIdleTimer(): void {
+    this.clearFsIdleTimer();
+    this.fsIdleTimer = setTimeout(() => {
+      this.fsIdleTimer = null;
+      // An open tray is a deliberate choice, not idle time — keep the chrome up.
+      if (this.showMinimizedTray && !this.minimizedTrayHidden) return;
+      this.fsControlsVisible = false;
+    }, VoiceroomComponent.FS_IDLE_MS);
+  }
+
+  private clearFsIdleTimer(): void {
+    if (this.fsIdleTimer !== null) {
+      clearTimeout(this.fsIdleTimer);
+      this.fsIdleTimer = null;
+    }
   }
 
   toggleMute(): void {
@@ -331,6 +371,7 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
     this.expandedScreenId = null;
     this.expandedParticipantId = p.identity;
     this.minimizedTrayHidden = false;
+    this.onFullscreenActivity();
   }
 
   expandScreen(p: IVoiceroomParticipantView): void {
@@ -338,6 +379,7 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
     this.expandedParticipantId = null;
     this.expandedScreenId = p.identity;
     this.minimizedTrayHidden = false;
+    this.onFullscreenActivity();
   }
 
   /** Screen tiles in fullscreen tray (all shares when a person is focused). */
@@ -371,6 +413,7 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
 
   toggleMinimizedTray(): void {
     this.minimizedTrayHidden = !this.minimizedTrayHidden;
+    this.onFullscreenActivity();
   }
 
   toggleGridScreenStrip(): void {

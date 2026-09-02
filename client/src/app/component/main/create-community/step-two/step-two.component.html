@@ -15,7 +15,7 @@
         </div>
         <div class="relative" *ngIf="imagePreview">
           <img [src]="imagePreview" alt="Preview" class="max-w-full h-32 object-cover rounded-lg">
-          <button type="button" (click)="removeImage('image', $event)"
+          <button type="button" aria-label="Remove image" (click)="removeImage('image', $event)"
             class="absolute -top-2 -right-2 bg-danger text-ink rounded-full p-1 hover:bg-danger-hover transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -52,7 +52,7 @@
         </div>
         <div class="relative" *ngIf="coverPreview">
           <img [src]="coverPreview" alt="Cover Preview" class="max-w-full h-32 object-cover rounded-lg">
-          <button type="button" (click)="removeImage('coverImage', $event); $event.stopPropagation()"
+          <button type="button" aria-label="Remove cover image" (click)="removeImage('coverImage', $event); $event.stopPropagation()"
             class="absolute -top-2 -right-2 bg-danger text-ink rounded-full p-1 hover:bg-danger-hover transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

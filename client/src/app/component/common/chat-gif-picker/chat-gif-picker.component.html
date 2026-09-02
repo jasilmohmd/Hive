@@ -24,6 +24,7 @@
       *ngFor="let url of results"
       type="button"
       class="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-surface-800/90 ring-1 ring-surface-700 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      [attr.aria-label]="mode === 'sticker' ? 'Send sticker' : 'Send GIF'"
       (click)="pickMedia(url)"
     >
       <img

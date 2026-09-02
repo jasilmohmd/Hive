@@ -1,4 +1,4 @@
-<p *ngIf="hasForwardedLabel(msg.metadata)" class="mb-1 text-[10px] uppercase tracking-wide text-ink-muted">Forwarded</p>
+<p *ngIf="hasForwardedLabel(msg.metadata)" class="mb-1 text-xs uppercase tracking-wide text-ink-muted">Forwarded</p>
 <app-chat-message-reply *ngIf="msg.replyTo" [reply]="msg.replyTo" />
 
 <ng-container *ngIf="isStickerMessage(msg); else richMessage">
@@ -51,7 +51,7 @@
               <ng-template #textMessage>
                 <span>{{ msg.content }}</span>
                 <app-chat-link-preview *ngIf="metadataFor(msg).linkPreview as lp" [preview]="lp" />
-                <span *ngIf="msg.edited" class="ml-1 text-[10px] text-ink-muted">(edited)</span>
+                <span *ngIf="msg.edited" class="ml-1 text-xs text-ink-muted">(edited)</span>
               </ng-template>
             </ng-template>
           </ng-template>

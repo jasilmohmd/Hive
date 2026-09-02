@@ -95,11 +95,11 @@
             <span class="min-w-0 max-w-full truncate text-xs font-medium md:text-sm" [ngStyle]="senderNameStyle(msg)">{{
               senderName(msg) ?? 'Unknown user'
             }}</span>
-            <span class="shrink-0 whitespace-nowrap text-[11px] text-ink-muted md:text-xs">{{ msg.timestamp | date : 'shortTime' }}</span>
+            <span class="shrink-0 whitespace-nowrap text-xs text-ink-muted">{{ msg.timestamp | date : 'shortTime' }}</span>
           </div>
 
           <div *ngIf="isMine(msg)" class="mb-0.5 flex justify-end px-0.5 md:mb-1">
-            <span class="whitespace-nowrap text-[11px] text-ink-muted md:text-xs">{{ msg.timestamp | date : 'shortTime' }}</span>
+            <span class="whitespace-nowrap text-xs text-ink-muted">{{ msg.timestamp | date : 'shortTime' }}</span>
           </div>
 
           <div

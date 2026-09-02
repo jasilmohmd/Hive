@@ -66,7 +66,7 @@
     </div>
 
     <div *ngIf="room.isOpen" class="ml-3 mr-1 border-l border-surface-700/80 pl-2">
-      <p *ngIf="presenceFor(room).length === 0" class="py-0.5 text-xs text-ink-muted md:text-[10px]">Empty</p>
+      <p *ngIf="presenceFor(room).length === 0" class="py-0.5 text-xs text-ink-muted">Empty</p>
       <div
         *ngFor="let participant of presenceFor(room)"
         class="flex items-center gap-1.5 rounded py-1.5 pr-1 hover:bg-surface-800/80 md:py-0.5"
@@ -79,7 +79,7 @@
             class="h-full w-full object-cover"
           />
           <ng-template #listInitials>
-            <span class="flex h-full w-full items-center justify-center text-[10px] font-medium text-ink-secondary md:text-[9px]">
+            <span class="flex h-full w-full items-center justify-center text-[10px] font-medium text-ink-secondary">
               {{ initials(participant.userName) }}
             </span>
           </ng-template>

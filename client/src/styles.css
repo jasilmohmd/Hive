@@ -215,3 +215,49 @@
     background-color: rgb(var(--brand) / 0.45);
   }
 }
+
+/* ===========================================================================
+   Shared entrance animations.
+
+   These lived as byte-identical copies in about.component.css and
+   list-modal.component.css, under a comment reading "Add these to your
+   component's CSS file". Component styles are scoped, so the five other places
+   that used .animate-fade-in — common-modal, loading-state and toast-container
+   among them — referenced a class that did not exist in their scope and simply
+   animated nothing. Defining them once here fixes those silently dead usages.
+   =========================================================================== */
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-up {
+    animation: none;
+  }
+}

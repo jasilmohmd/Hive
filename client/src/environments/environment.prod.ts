@@ -4,3 +4,4 @@ export const environment = {
     socketUrl: 'https://hive-backend-n6iv.onrender.com',
     livekitUrl: 'wss://hive-k10di6bg.livekit.cloud',
 };
+

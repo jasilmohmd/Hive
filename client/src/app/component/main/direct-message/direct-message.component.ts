@@ -29,6 +29,8 @@ import { ChatForwardPickerComponent } from '../../common/chat-forward-picker/cha
 import { ChatMessageCallComponent } from '../../common/chat-message-call/chat-message-call.component';
 import { chatSenderMessageBubbleStyle } from '../../../util/chat-sender-color';
 import { ChatUploadKind, validateFileForUpload } from '../../../util/chat-attachment';
+import { LongPressDirective } from '../../../directives/long-press.directive';
+import { ButtonComponent } from '../../common/button/button.component';
 import {
   closeAllAttachPanels,
   clearPendingAttach,
@@ -71,6 +73,8 @@ import {
     ChatForwardPickerComponent,
     ChatMessageCallComponent,
     DmCallOverlayComponent,
+    ButtonComponent,
+    LongPressDirective,
   ],
   templateUrl: './direct-message.component.html',
   styleUrl: './direct-message.component.css',
@@ -412,7 +416,16 @@ export class DirectMessageComponent implements OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
     const mouse = event as MouseEvent;
-    this.contextMenuAnchor = { x: mouse.clientX, y: mouse.clientY };
+    this.openContextMenuAt(msg, { x: mouse.clientX, y: mouse.clientY });
+  }
+
+  /**
+   * Touch entry point for the same menu. `contextmenu` never fires on iOS
+   * Safari for a plain element, so without this the message actions are
+   * unreachable on iPhone; appLongPress supplies the coordinates.
+   */
+  openContextMenuAt(msg: IChatMessage, point: { x: number; y: number }): void {
+    this.contextMenuAnchor = point;
     this.contextMenuMsg = msg;
   }
 

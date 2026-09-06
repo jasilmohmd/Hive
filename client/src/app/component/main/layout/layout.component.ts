@@ -10,6 +10,7 @@ import { IncomingCallModalComponent } from '../../common/incoming-call-modal/inc
 import { CallService } from '../../../services/call.service';
 import { ChatService } from '../../../services/chat.service';
 import { Subscription } from 'rxjs';
+import { ChannelSidebarService } from '../../../services/shared/channel-sidebar.service';
 
 @Component({
   selector: 'app-layout',
@@ -29,6 +30,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
   communities: any[] = [];
   pageTitle = 'Hive';
 
+  /**
+   * The channel sidebar's show/hide control lives in this shell's navigation
+   * rather than inside the sidebar, so that hiding it leaves nothing behind —
+   * a collapsed stub column in the routed view was just dead space.
+   *
+   * Only meaningful on a community route, hence inCommunity.
+   */
+  channelSidebarCollapsed = false;
+  inCommunity = false;
+
   private subs = new Subscription();
 
   constructor(
@@ -37,7 +48,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private call: CallService,
-    private chat: ChatService
+    private chat: ChatService,
+    private channelSidebar: ChannelSidebarService
   ) {}
 
   ngOnInit(): void {
@@ -46,11 +58,30 @@ export class LayoutComponent implements OnInit, OnDestroy {
     });
     this.loadCommunities();
     this.updatePageTitle();
+    this.updateInCommunity();
     this.subs.add(
       this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe(() => {
         this.updatePageTitle();
+        this.updateInCommunity();
       })
     );
+    this.subs.add(
+      this.channelSidebar.collapsed$.subscribe((collapsed) => {
+        this.channelSidebarCollapsed = collapsed;
+      })
+    );
+  }
+
+  toggleChannelSidebar(): void {
+    this.channelSidebar.toggle();
+  }
+
+  /**
+   * The create-community wizard also lives under /main/community, so match the
+   * id segment rather than the prefix alone — it has no channel sidebar.
+   */
+  private updateInCommunity(): void {
+    this.inCommunity = /\/main\/community\/(?!create)[^/]+/.test(this.router.url);
   }
 
   ngOnDestroy(): void {

@@ -192,12 +192,12 @@ export class AboutComponent {
       {
         label: 'Edit',
         action: (channel: any) => this.handleModalAction({ action: 'edit', item: channel }),
-        class: 'px-3 py-1 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors'
+        class: 'px-3 py-1 bg-brand text-surface-950 rounded-xl hover:bg-brand-hover transition-colors'
       },
       {
         label: 'Delete',
         action: (channel: any) => this.handleModalAction({ action: 'delete', item: channel }),
-        class: 'px-3 py-1 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors'
+        class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
       }
     ];
 
@@ -361,12 +361,12 @@ export class AboutComponent {
       {
         label: 'Manage',
         action: (member: any) => this.handleModalAction({ action: 'edit', item: member }),
-        class: 'px-3 py-1 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors'
+        class: 'px-3 py-1 bg-brand text-surface-950 rounded-xl hover:bg-brand-hover transition-colors'
       },
       {
         label: 'Remove',
         action: (member: any) => this.handleModalAction({ action: 'delete', item: member }),
-        class: 'px-3 py-1 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors'
+        class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
       }
     ];
 
@@ -400,7 +400,7 @@ export class AboutComponent {
         {
           label: 'Add',
           action: (user: any) => this.addUserToCommunity(user),
-          class: 'px-3 py-1 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors'
+          class: 'px-3 py-1 bg-success text-surface-950 rounded-xl hover:bg-success-hover transition-colors'
         }
       ],
       secondaryActions: [],

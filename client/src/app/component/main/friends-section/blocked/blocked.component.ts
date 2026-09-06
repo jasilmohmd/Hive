@@ -33,7 +33,7 @@ export class BlockedComponent {
     {
       label: 'Unblock',
       action: (row: any) => this.requestConfirmation(row._id),
-      class: '!bg-red-500 hover:!bg-red-600 px-4 py-2 text-sm rounded-md',
+      class: '!bg-danger !text-white hover:!bg-danger-hover px-4 py-2 text-sm rounded-md',
       display: "label"
     }
   ];

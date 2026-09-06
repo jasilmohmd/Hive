@@ -1,3 +1,11 @@
+/* ===========================================================================
+   Landing page.
+
+   Same principle as the auth screens: the honeycomb amber is the ground and
+   stays, but nothing readable sits directly on it except the display headline.
+   Body copy either goes near-black on the amber, or onto a solid dark card.
+   =========================================================================== */
+
 #header {
   transform: translateY(0);
   transition: transform 0.3s ease-in-out;
@@ -6,4 +14,177 @@
   left: 0;
   right: 0;
   z-index: 50;
+}
+
+/* ─────────────────────────────── Nav ─────────────────────────────── */
+
+.lp-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Dark on honey — 12.17:1, and it reads as deliberate rather than washed out. */
+.lp-nav-btn--ghost {
+  border-color: rgb(var(--surface-950) / 0.25);
+  color: rgb(var(--surface-950));
+}
+
+.lp-nav-btn--ghost:hover {
+  background: rgb(var(--surface-950) / 0.1);
+  border-color: rgb(var(--surface-950) / 0.45);
+}
+
+.lp-nav-btn--solid {
+  background: rgb(var(--surface-950));
+  color: rgb(var(--brand));
+}
+
+.lp-nav-btn--solid:hover {
+  background: rgb(var(--surface-900));
+}
+
+/* ────────────────────────────── Hero ─────────────────────────────── */
+
+.lp-hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 6vw, 3.75rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  text-wrap: balance;
+  /* As a flex item this defaults to min-width:auto, which stops it wrapping
+     and lets a long headline overflow the viewport. */
+  width: 100%;
+  min-width: 0;
+  color: #fff;
+  /* White on amber measures 1.55:1 — the shadow carries it. Display type only. */
+  text-shadow: 0 2px 16px rgb(0 0 0 / 0.32), 0 1px 2px rgb(0 0 0 / 0.22);
+}
+
+.lp-hero-sub {
+  max-width: 44rem;
+  margin-inline: auto;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: rgb(var(--surface-950) / 0.78);
+}
+
+/* ────────────────────────────── Cards ────────────────────────────── */
+
+.lp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: min(100%, 64rem);
+  margin-inline: auto;
+  border-radius: 1.25rem;
+  border: 1px solid rgb(var(--surface-700));
+  background: rgb(var(--surface-900));
+  padding: 2rem;
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.7);
+}
+
+.lp-card-media,
+.lp-card-body {
+  width: 100%;
+}
+
+.lp-card-media img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.lp-card-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.6vw, 1.875rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  text-wrap: balance;
+  margin-bottom: 1rem;
+  color: rgb(var(--text-primary));
+}
+
+.lp-card-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgb(var(--text-secondary));
+}
+
+.lp-card-text + .lp-card-text {
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .lp-card {
+    flex-direction: row;
+    gap: 3rem;
+    padding: 2.75rem;
+  }
+
+  /* Alternating sides, without duplicating the markup order. */
+  .lp-card--flip {
+    flex-direction: row-reverse;
+  }
+
+  .lp-card-media,
+  .lp-card-body {
+    width: 50%;
+  }
+}
+
+/* ───────────────────────────── Footer ────────────────────────────── */
+
+.lp-footer {
+  background: rgb(var(--surface-950));
+  padding: 2.5rem 1.5rem;
+}
+
+.lp-footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.75rem;
+  width: min(100%, 72rem);
+  margin-inline: auto;
+}
+
+.lp-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 1.75rem;
+}
+
+.lp-footer-links a {
+  font-size: 0.875rem;
+  color: rgb(var(--text-muted));
+  transition: color 0.15s ease;
+}
+
+.lp-footer-links a:hover {
+  color: rgb(var(--text-primary));
+}
+
+@media (min-width: 768px) {
+  .lp-footer-inner {
+    flex-direction: row;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #header {
+    transition: none;
+  }
 }

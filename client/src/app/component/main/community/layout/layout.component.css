@@ -1,3 +1,25 @@
+/* ===========================================================================
+   An Angular component element has no default display, so <community-layout>
+   laid out as an inline box of automatic height and the root div's h-full had
+   nothing to resolve against — the sidebar and chat pane collapsed to their
+   content and left dead space under the composer.
+
+   `height: 100%` does not fix it: the routed wrapper is a flex item whose own
+   computed height is auto, so the percentage has nothing to resolve against and
+   falls back to content height. Pinning to the wrapper's padding box with
+   inset:0 sidesteps percentage resolution entirely, and unlike making that
+   wrapper a flex row it cannot affect the other pages that share it.
+
+   The wrapper carries `relative` in the app layout template.
+   =========================================================================== */
+:host {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+}
+
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -21,4 +43,52 @@ router-outlet {
   height: 0;
   min-height: 0;
   overflow: hidden;
+}
+
+/* ===========================================================================
+   Channel sidebar user controls.
+
+   The sidebar itself is a plain flex column at every breakpoint — the widths
+   live in the template. Only the icon buttons need real CSS, because 24px
+   squares were never a reasonable tap target on a phone.
+
+   Below md the column is 144px wide with 8px of padding, so three buttons plus
+   their gaps have to fit inside 128px: 3 x 36px + 2 x 2px = 112px. At md the
+   row has more room and the buttons return to their compact 32px size.
+   =========================================================================== */
+
+/* ===========================================================================
+   Collapse
+
+   There is no toggle button in here any more and no collapsed width either.
+   The sidebar is simply not rendered when collapsed (*ngIf on <aside>), and
+   the control that brings it back lives in the app shell's navigation — a
+   collapsed stub column in this row was dead space.
+
+   Note for anyone re-adding an animation: a `transition: width` here does NOT
+   work. Measured against the running app, the column kept reporting its old
+   width indefinitely after a toggle, because this view runs change detection
+   continuously (presence and socket updates) and each pass restarted the
+   interpolation before it could settle.
+   =========================================================================== */
+
+.cl-user-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  transition: background 0.15s ease;
+}
+
+.cl-user-btn:hover {
+  background: rgb(var(--surface-700));
+}
+
+@media (min-width: 768px) {
+  .cl-user-btn {
+    width: 2rem;
+    height: 2rem;
+  }
 }

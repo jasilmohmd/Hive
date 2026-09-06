@@ -11,3 +11,23 @@
   min-height: 0;
   min-width: 0;
 }
+
+/* ===========================================================================
+   Message bubble, touch behaviour.
+
+   A long press on a bubble opens the message actions (appLongPress). On iOS
+   the same gesture would otherwise raise the system selection callout and
+   start selecting text, which swallows the press and leaves the actions
+   unreachable — the reason they were missing on iPhone entirely.
+
+   Scoped to coarse pointers so mouse users keep normal text selection and
+   copy on desktop.
+   =========================================================================== */
+
+@media (pointer: coarse) {
+  .chat-bubble {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

@@ -1,0 +1,292 @@
+<div class="min-h-screen bg-surface-950 text-ink">
+
+  <!-- Toolbar -->
+  <div class="sticky top-0 z-20 border-b border-surface-700 bg-surface-950/95 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-4 px-6 py-4">
+      <div class="flex items-center gap-3">
+        <svg width="24" height="27" viewBox="0 0 30 33" fill="none" aria-hidden="true" class="shrink-0">
+          <path d="M15 1.5 28 9v15L15 31.5 2 24V9L15 1.5Z" stroke="rgb(var(--brand))" stroke-width="2.2" stroke-linejoin="round" />
+          <path d="M15 10.5 21.5 14.25v7.5L15 25.5 8.5 21.75v-7.5L15 10.5Z" fill="rgb(var(--brand))" />
+        </svg>
+        <span class="font-display text-lg font-bold tracking-tight">Hive styleguide</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs uppercase tracking-widest text-ink-muted">Ramp</span>
+        <div class="flex gap-1.5">
+          <button type="button" (click)="setRamp('warm')"
+            [class]="'rounded-lg px-3 py-1.5 text-sm transition-colors ' + (ramp === 'warm' ? 'bg-brand text-surface-950 font-medium' : 'bg-surface-800 text-ink-secondary hover:bg-surface-700')">
+            Warm
+          </button>
+          <button type="button" (click)="setRamp('neutral')"
+            [class]="'rounded-lg px-3 py-1.5 text-sm transition-colors ' + (ramp === 'neutral' ? 'bg-brand text-surface-950 font-medium' : 'bg-surface-800 text-ink-secondary hover:bg-surface-700')">
+            Neutral
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs uppercase tracking-widest text-ink-muted">Type</span>
+        <div class="flex gap-1.5">
+          <button *ngFor="let d of directions" type="button" (click)="setType(d.id)"
+            [class]="'rounded-lg px-3 py-1.5 text-sm transition-colors ' + (typeDirection === d.id ? 'bg-brand text-surface-950 font-medium' : 'bg-surface-800 text-ink-secondary hover:bg-surface-700')">
+            {{ d.label }}
+          </button>
+        </div>
+      </div>
+
+      <p class="ml-auto max-w-xs text-xs leading-relaxed text-ink-muted">
+        Both switches are live and app-wide. Whatever you settle on here becomes six values in
+        <span class="text-ink-secondary">styles.css</span>.
+      </p>
+    </div>
+  </div>
+
+  <div class="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-14">
+
+    <!-- Intro -->
+    <header class="flex flex-col gap-4 border-b border-surface-700 pb-10">
+      <h1 class="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
+        Every token, rendered by the real components
+      </h1>
+      <p class="max-w-2xl text-ink-secondary">
+        This page uses the same <span class="text-ink">app-button</span>, <span class="text-ink">app-empty-state</span>,
+        <span class="text-ink">app-error-alert</span> and <span class="text-ink">app-loading-state</span> the rest of Hive does.
+        If something drifts here, it has drifted in the app.
+      </p>
+      <p class="max-w-2xl text-sm text-ink-muted">
+        Current type direction: <span class="text-ink-secondary">{{ activeDirection.display }}</span> for display,
+        <span class="text-ink-secondary">{{ activeDirection.body }}</span> for body. {{ activeDirection.tradeoff }}
+      </p>
+    </header>
+
+    <!-- Brand -->
+    <section class="flex flex-col gap-5">
+      <div class="flex flex-wrap items-baseline gap-4">
+        <h2 class="font-display text-2xl font-bold tracking-tight">Brand</h2>
+        <p class="text-sm text-ink-muted">Amber is reserved for brand and active state — nothing else.</p>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div *ngFor="let s of brand" class="overflow-hidden rounded-xl border border-surface-700">
+          <div class="h-24" [style.background]="'rgb(var(' + s.cssVar + '))'"></div>
+          <div class="flex flex-col gap-1 bg-surface-900 px-4 py-3">
+            <span class="text-sm font-medium">{{ s.name }}</span>
+            <span class="text-xs text-ink-muted">{{ s.hex }} · {{ s.note }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Surfaces -->
+    <section class="flex flex-col gap-5">
+      <div class="flex flex-wrap items-baseline gap-4">
+        <h2 class="font-display text-2xl font-bold tracking-tight">Surfaces</h2>
+        <p class="text-sm text-ink-muted">One ramp replaces surface + zinc + gray + slate. Toggle Warm / Neutral above to compare.</p>
+      </div>
+      <div class="flex flex-col gap-2 rounded-2xl border border-surface-700 bg-surface-900 p-5">
+        <div *ngFor="let s of surfaces" class="flex items-center gap-4">
+          <div class="h-11 w-24 shrink-0 rounded-lg border border-surface-600" [style.background]="'rgb(var(' + s.cssVar + '))'"></div>
+          <span class="w-28 shrink-0 text-sm">{{ s.name }}</span>
+          <span class="w-24 shrink-0 text-sm text-ink-muted">{{ resolvedHex(s.cssVar, s.hex) }}</span>
+          <span class="text-sm text-ink-muted">{{ s.note }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Text -->
+    <section class="flex flex-col gap-5">
+      <div class="flex flex-wrap items-baseline gap-4">
+        <h2 class="font-display text-2xl font-bold tracking-tight">Text</h2>
+        <p class="text-sm text-ink-muted">The gap that caused most of the drift — there was no muted-text token, so zinc-400 and zinc-500 became one.</p>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div *ngFor="let t of inks" class="flex flex-col gap-3 rounded-xl border border-surface-700 bg-surface-900 p-5">
+          <span [class]="'text-xl font-semibold ' + t.cls">{{ t.label }}</span>
+          <span class="flex flex-col gap-0.5 text-xs">
+            <span>{{ t.name }}</span>
+            <span class="text-ink-muted">{{ t.hex }} · {{ t.ratio }}</span>
+          </span>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 rounded-lg bg-surface-850 px-5 py-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="mt-0.5 shrink-0" aria-hidden="true">
+          <circle cx="12" cy="12" r="9.5" stroke="rgb(var(--brand))" stroke-width="1.8" />
+          <path d="M12 7.5v5.5" stroke="rgb(var(--brand))" stroke-width="2" stroke-linecap="round" />
+          <circle cx="12" cy="16.5" r="1.2" fill="rgb(var(--brand))" />
+        </svg>
+        <p class="text-sm leading-relaxed text-ink-secondary">
+          <span class="text-ink">text-ink-muted only sits on surface-900 or darker.</span>
+          On surface-800 it drops to 3.92:1 and fails AA for body copy — use text-ink-secondary on raised surfaces.
+        </p>
+      </div>
+    </section>
+
+    <!-- Semantic and presence -->
+    <section class="flex flex-col gap-5">
+      <div class="flex flex-wrap items-baseline gap-4">
+        <h2 class="font-display text-2xl font-bold tracking-tight">Semantic &amp; presence</h2>
+        <p class="text-sm text-ink-muted">Green stays. It never collides with amber's job.</p>
+      </div>
+      <div class="grid gap-5 lg:grid-cols-2">
+        <div class="flex flex-col gap-4 rounded-2xl border border-surface-700 bg-surface-900 p-5">
+          <h3 class="font-medium">Status colours</h3>
+          <div class="flex items-center gap-4">
+            <div class="h-8 w-14 shrink-0 rounded-lg bg-success"></div>
+            <span class="flex flex-col text-sm"><span>success</span><span class="text-xs text-ink-muted">Fill and text · #10B981 · 6.98:1</span></span>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="h-8 w-14 shrink-0 rounded-lg bg-danger"></div>
+            <span class="flex flex-col text-sm"><span>danger</span><span class="text-xs text-ink-muted">Fill only · #DC2626 · white text at 4.83:1</span></span>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="h-8 w-14 shrink-0 rounded-lg bg-danger-text"></div>
+            <span class="flex flex-col text-sm"><span class="text-brand">danger-text</span><span class="text-xs text-ink-muted">New · #F26B6B · error copy on dark</span></span>
+          </div>
+          <p class="border-t border-surface-700 pt-4 text-xs leading-relaxed text-ink-muted">
+            Why the split: #DC2626 as red <em>text</em> on a dark panel is 3.67:1 and fails AA. Your form validation
+            currently uses it. Fills stay, text lightens.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-4 rounded-2xl border border-surface-700 bg-surface-900 p-5">
+          <h3 class="font-medium">Presence</h3>
+          <div class="flex gap-9">
+            <div class="flex flex-col items-center gap-3">
+              <div class="relative h-12 w-12">
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-surface-700 text-base font-semibold text-ink-secondary">AN</div>
+                <div class="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-[3px] border-surface-900 bg-success"></div>
+              </div>
+              <span class="flex flex-col items-center gap-0.5"><span class="text-sm font-medium">Online</span><span class="text-xs text-ink-muted">success, filled</span></span>
+            </div>
+            <div class="flex flex-col items-center gap-3">
+              <div class="relative h-12 w-12">
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-surface-700 text-base font-semibold text-ink-muted">JK</div>
+                <div class="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-[3px] border-surface-900 bg-surface-900 ring-2 ring-inset ring-surface-600"></div>
+              </div>
+              <span class="flex flex-col items-center gap-0.5"><span class="text-sm font-medium">Offline</span><span class="text-xs text-ink-muted">surface-600, hollow</span></span>
+            </div>
+          </div>
+          <p class="border-t border-surface-700 pt-4 text-xs leading-relaxed text-ink-muted">
+            Two states, because two states is what the app has. If idle and do-not-disturb arrive later, separate them
+            by <span class="text-ink-secondary">shape</span> — a crescent and a bar — rather than reaching for amber.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Buttons -->
+    <section class="flex flex-col gap-5">
+      <div class="flex flex-wrap items-baseline gap-4">
+        <h2 class="font-display text-2xl font-bold tracking-tight">Button</h2>
+        <p class="text-sm text-ink-muted">Live <span class="text-ink-secondary">app-button</span>. Hover and tab through them — the states are real.</p>
+      </div>
+
+      <div class="overflow-x-auto rounded-2xl border border-surface-700 bg-surface-900">
+        <table class="w-full min-w-[720px] border-collapse">
+          <thead>
+            <tr>
+              <th class="w-56 border-b border-surface-700 px-5 py-3 text-left text-xs uppercase tracking-widest text-ink-muted">Variant</th>
+              <th class="border-b border-surface-700 px-5 py-3 text-left text-xs uppercase tracking-widest text-ink-muted">Idle</th>
+              <th class="border-b border-surface-700 px-5 py-3 text-left text-xs uppercase tracking-widest text-ink-muted">Disabled</th>
+              <th class="border-b border-surface-700 px-5 py-3 text-left text-xs uppercase tracking-widest text-ink-muted">Loading</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let v of variants">
+              <td class="border-b border-surface-700 px-5 py-4 align-top">
+                <span class="flex flex-col gap-1">
+                  <span class="text-sm font-medium">{{ v.id }}</span>
+                  <span class="text-xs leading-snug text-ink-muted">{{ v.note }}</span>
+                </span>
+              </td>
+              <td class="border-b border-surface-700 px-5 py-4">
+                <app-button [variant]="v.id">{{ v.label }}</app-button>
+              </td>
+              <td class="border-b border-surface-700 px-5 py-4">
+                <app-button [variant]="v.id" [disabled]="true">{{ v.label }}</app-button>
+              </td>
+              <td class="border-b border-surface-700 px-5 py-4">
+                <app-button [variant]="v.id" [loading]="true">{{ v.label }}</app-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex flex-wrap items-end gap-9 rounded-2xl border border-surface-700 bg-surface-900 p-6">
+        <div *ngFor="let s of sizes" class="flex flex-col items-start gap-3">
+          <app-button [size]="s.id">{{ s.label }}</app-button>
+          <span class="flex flex-col gap-0.5 text-xs"><span>{{ s.id }}</span><span class="text-ink-muted">{{ s.note }}</span></span>
+        </div>
+        <div class="flex min-w-[240px] grow flex-col items-start gap-3">
+          <app-button [block]="true">Block</app-button>
+          <span class="flex flex-col gap-0.5 text-xs"><span>block</span><span class="text-ink-muted">Full width · forms, mobile sheets</span></span>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-3 rounded-lg bg-surface-850 px-5 py-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="mt-0.5 shrink-0" aria-hidden="true">
+          <path d="M12 3.5 21 19H3L12 3.5Z" stroke="rgb(var(--brand))" stroke-width="1.8" stroke-linejoin="round" />
+          <path d="M12 10v3.5" stroke="rgb(var(--brand))" stroke-width="2" stroke-linecap="round" />
+          <circle cx="12" cy="16.4" r="1.1" fill="rgb(var(--brand))" />
+        </svg>
+        <p class="text-sm leading-relaxed text-ink-secondary">
+          <span class="text-ink">sm is 32px tall</span>, under the 44px comfortable touch target. Fine on desktop,
+          not on a phone — the mobile shell should reach for md.
+        </p>
+      </div>
+    </section>
+
+    <!-- Radius and spacing -->
+    <section class="grid gap-10 lg:grid-cols-2">
+      <div class="flex flex-col gap-5">
+        <div class="flex flex-wrap items-baseline gap-4">
+          <h2 class="font-display text-2xl font-bold tracking-tight">Radius</h2>
+          <p class="text-sm text-ink-muted">Four values, down from eight.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div *ngFor="let r of radii" class="flex flex-col gap-3">
+            <div [class]="'h-20 border border-ink-muted bg-surface-800 ' + r.cls"></div>
+            <span class="flex flex-col gap-0.5 text-xs"><span>{{ r.label }}</span><span class="text-ink-muted">{{ r.note }}</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-5">
+        <div class="flex flex-wrap items-baseline gap-4">
+          <h2 class="font-display text-2xl font-bold tracking-tight">Spacing</h2>
+          <p class="text-sm text-ink-muted">4px base. Everything lands on one of these seven.</p>
+        </div>
+        <div class="flex items-end gap-5">
+          <div *ngFor="let s of spacing" class="flex flex-col items-start gap-2.5">
+            <div class="rounded-sm bg-brand" [style.width.px]="s" [style.height.px]="s"></div>
+            <span class="text-xs text-ink-muted">{{ s }}</span>
+          </div>
+        </div>
+        <p class="text-sm leading-relaxed text-ink-secondary">
+          Panel gutters are 16. The gap between floating regions is 12. Chat message vertical rhythm is 8.
+        </p>
+      </div>
+    </section>
+
+    <!-- Existing shared components -->
+    <section class="flex flex-col gap-5">
+      <div class="flex flex-wrap items-baseline gap-4">
+        <h2 class="font-display text-2xl font-bold tracking-tight">Feedback states</h2>
+        <p class="text-sm text-ink-muted">The components you already built, rendered against the new tokens. Drift shows up here first.</p>
+      </div>
+      <div class="grid gap-5 lg:grid-cols-3">
+        <div class="rounded-2xl border border-surface-700 bg-surface-900 p-5">
+          <app-empty-state title="No communities yet" description="Create one from the sidebar plus button when you are ready." />
+        </div>
+        <div class="rounded-2xl border border-surface-700 bg-surface-900 p-5">
+          <app-error-alert variant="banner" title="Could not load communities" message="The server did not respond. Try again in a moment." />
+        </div>
+        <div class="rounded-2xl border border-surface-700 bg-surface-900 p-5">
+          <app-loading-state variant="spinner" message="Loading communities…" />
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>

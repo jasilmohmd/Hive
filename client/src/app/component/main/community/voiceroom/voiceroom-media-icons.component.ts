@@ -24,7 +24,7 @@ import { CommonModule } from '@angular/common';
           aria-hidden="true"
         >
           <span
-            class="block w-full rotate-45 rounded-sm bg-red-500/90"
+            class="block w-full rotate-45 rounded-sm bg-danger/90"
             [class.h-px]="compact"
             [class.h-0.5]="!compact"
           ></span>
@@ -34,12 +34,12 @@ import { CommonModule } from '@angular/common';
       <span class="relative inline-flex" [attr.title]="cameraOn ? 'Camera on' : 'Camera off'">
         <svg
           viewBox="0 0 24 24"
-          class="fill-current text-zinc-400"
+          class="fill-current text-ink-muted"
           [class.h-3]="compact"
           [class.w-3]="compact"
           [class.h-4]="!compact"
           [class.w-4]="!compact"
-          [class.text-emerald-400]="cameraOn"
+          [class.text-success]="cameraOn"
           [class.opacity-35]="!cameraOn"
           aria-hidden="true"
         >
@@ -53,7 +53,7 @@ import { CommonModule } from '@angular/common';
           aria-hidden="true"
         >
           <span
-            class="block w-full rotate-45 rounded-sm bg-red-500/90"
+            class="block w-full rotate-45 rounded-sm bg-danger/90"
             [class.h-px]="compact"
             [class.h-0.5]="!compact"
           ></span>
@@ -67,12 +67,12 @@ import { CommonModule } from '@angular/common';
       >
         <svg
           viewBox="0 0 24 24"
-          class="fill-current text-zinc-500"
+          class="fill-current text-ink-muted"
           [class.h-3]="compact"
           [class.w-3]="compact"
           [class.h-4]="!compact"
           [class.w-4]="!compact"
-          [class.text-violet-400]="screenOn"
+          [class.text-brand]="screenOn"
           [class.opacity-35]="!screenOn"
           aria-hidden="true"
         >

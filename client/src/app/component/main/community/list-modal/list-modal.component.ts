@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { CommonTableComponent } from '../../../common/common-table/common-table.component';
 import { TableAction, TableColumn } from '../../../../interface/table.interface';
+import { ButtonComponent } from '../../../common/button/button.component';
 
 interface CreateField {
   field: string;
@@ -20,7 +21,7 @@ interface CreateField {
 @Component({
   selector: 'app-list-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, CommonTableComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CommonTableComponent, ButtonComponent],
   templateUrl: './list-modal.component.html',
   styleUrls: ['./list-modal.component.css'],
 })

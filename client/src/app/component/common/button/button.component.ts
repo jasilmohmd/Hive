@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
+export type ButtonSize = 'sm' | 'md' | 'lg';
+
 @Component({
   selector: 'app-button',
   standalone: true,
@@ -9,23 +12,31 @@ import { Component, Input } from '@angular/core';
 })
 export class ButtonComponent {
   @Input() type: 'button' | 'submit' | 'reset' = 'button';
-  @Input() variant: 'primary' | 'secondary' | 'ghost' | 'danger' = 'primary';
-  @Input() size: 'sm' | 'md' | 'lg' = 'md';
+  @Input() variant: ButtonVariant = 'primary';
+  @Input() size: ButtonSize = 'md';
   @Input() loading = false;
   @Input() disabled = false;
   @Input() block = false;
   @Input() extraClass = '';
 
+  /**
+   * Every variant carries a border — transparent where it is not visible — so
+   * `outline` matches the others' height exactly instead of sitting 2px taller.
+   */
   get variantClasses(): string {
     switch (this.variant) {
       case 'primary':
-        return 'bg-brand text-surface-950 hover:bg-brand-hover disabled:opacity-50';
+        return 'border border-transparent bg-brand text-surface-950 hover:bg-brand-hover focus-visible:ring-brand disabled:opacity-50';
       case 'secondary':
-        return 'bg-surface-700 text-white hover:bg-surface-600 disabled:opacity-50';
+        return 'border border-transparent bg-surface-700 text-ink hover:bg-surface-600 focus-visible:ring-brand disabled:opacity-50';
+      case 'outline':
+        return 'border border-brand bg-transparent text-brand hover:bg-brand hover:text-surface-950 focus-visible:ring-brand disabled:opacity-50';
       case 'ghost':
-        return 'bg-transparent text-zinc-200 hover:bg-zinc-800 disabled:opacity-50';
+        return 'border border-transparent bg-transparent text-ink-secondary hover:bg-surface-850 hover:text-ink focus-visible:ring-brand disabled:opacity-50';
+      case 'success':
+        return 'border border-transparent bg-success text-surface-950 hover:bg-success-hover focus-visible:ring-brand disabled:opacity-50';
       case 'danger':
-        return 'bg-danger text-white hover:bg-danger-hover disabled:opacity-50';
+        return 'border border-transparent bg-danger text-white hover:bg-danger-hover focus-visible:ring-danger-text disabled:opacity-50';
       default:
         return '';
     }

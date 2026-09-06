@@ -1,7 +1,7 @@
-<div class="min-h-full text-zinc-100 p-4 md:p-6">
+<div class="min-h-full text-ink p-4 md:p-6">
   <div class="max-w-4xl mx-auto">
     <h1 class="text-2xl font-semibold mb-2">Discover communities</h1>
-    <p class="text-zinc-400 text-sm mb-6">
+    <p class="text-ink-secondary text-sm mb-6">
       Browse public communities you can explore and join from community pages.
     </p>
 
@@ -17,16 +17,16 @@
     <ul *ngIf="!loading && communities.length" class="space-y-3">
       <li
         *ngFor="let c of communities; trackBy: trackCommunity"
-        class="rounded-xl bg-zinc-900 border border-zinc-800 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        class="rounded-xl bg-surface-900 border border-surface-800 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
           <h2 class="font-medium text-lg">{{ c.name }}</h2>
-          <p class="text-zinc-400 text-sm line-clamp-2">{{ c.description || 'No description' }}</p>
-          <span class="inline-block mt-2 text-xs uppercase tracking-wide text-zinc-500">{{ c.type }}</span>
+          <p class="text-ink-secondary text-sm line-clamp-2">{{ c.description || 'No description' }}</p>
+          <span class="inline-block mt-2 text-xs uppercase tracking-wide text-ink-muted">{{ c.type }}</span>
         </div>
         <a
           [routerLink]="['/main/community', c._id]"
-          class="shrink-0 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm text-center focus-visible:ring-2 focus-visible:ring-brand"
+          class="shrink-0 px-4 py-2 rounded-lg bg-brand hover:bg-brand-hover text-surface-950 text-sm text-center focus-visible:ring-2 focus-visible:ring-brand"
         >
           Open
         </a>

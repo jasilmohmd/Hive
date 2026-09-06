@@ -1,4 +1,6 @@
 import { CommonModule } from '@angular/common';
+
+import { ButtonComponent, ButtonVariant } from '../button/button.component';
 import {
   AfterViewInit,
   Component,
@@ -14,7 +16,7 @@ import {
 @Component({
   selector: 'app-common-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonComponent],
   templateUrl: './common-modal.component.html',
   styleUrl: './common-modal.component.css',
 })
@@ -86,16 +88,15 @@ export class CommonModalComponent implements AfterViewInit, OnDestroy {
     this.cancelled.emit();
   }
 
-  get confirmClasses(): string {
+  /** The modal's variant, mapped onto the shared button's own variants. */
+  get confirmVariant(): ButtonVariant {
     switch (this.variant) {
-      case 'destructive':
-        return 'bg-danger text-white hover:bg-danger-hover';
       case 'confirm':
-        return 'bg-brand text-surface-950 hover:bg-brand-hover';
+        return 'primary';
       case 'info':
-        return 'bg-success text-white hover:bg-success-hover';
+        return 'success';
       default:
-        return 'bg-danger text-white hover:bg-danger-hover';
+        return 'danger';
     }
   }
 }

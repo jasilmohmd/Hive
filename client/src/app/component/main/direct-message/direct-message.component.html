@@ -1,6 +1,6 @@
 <div
 
-  class="relative flex h-full min-h-0 flex-1 flex-col rounded-2xl bg-surface-900 text-zinc-200"
+  class="relative flex h-full min-h-0 flex-1 flex-col rounded-2xl bg-surface-900 text-ink"
 
 >
 
@@ -44,7 +44,7 @@
 
           *ngIf="!friendImageUrl"
 
-          class="flex h-full w-full items-center justify-center text-sm font-medium text-zinc-300"
+          class="flex h-full w-full items-center justify-center text-sm font-medium text-ink-secondary"
 
         >
 
@@ -68,7 +68,7 @@
         <button
           type="button"
           (click)="startVoiceCall()"
-          class="rounded-full bg-surface-600 p-2.5 text-zinc-200 hover:bg-zinc-600 focus-visible:ring-2 focus-visible:ring-brand"
+          class="rounded-full bg-surface-600 p-2.5 text-ink hover:bg-surface-600 focus-visible:ring-2 focus-visible:ring-brand"
           aria-label="Start voice call"
           title="Voice call"
         >
@@ -79,7 +79,7 @@
         <button
           type="button"
           (click)="startVideoCall()"
-          class="rounded-full bg-surface-600 p-2.5 text-zinc-200 hover:bg-zinc-600 focus-visible:ring-2 focus-visible:ring-brand"
+          class="rounded-full bg-surface-600 p-2.5 text-ink hover:bg-surface-600 focus-visible:ring-2 focus-visible:ring-brand"
           aria-label="Start video call"
           title="Video call"
         >
@@ -97,7 +97,7 @@
 
         <span class="text-lg font-medium">Messages</span>
 
-        <span class="text-xs text-amber-400"
+        <span class="text-xs text-brand"
 
           >Open this page from Friends → Message, or add ?friendId=… to the URL.</span
 
@@ -175,17 +175,21 @@
 
           <div
 
-            class="rounded-2xl px-4 py-2 whitespace-pre-wrap ring-1"
+            class="chat-bubble rounded-2xl px-4 py-2 whitespace-pre-wrap ring-1"
 
             [ngClass]="
 
-              isMine(msg) ? 'text-zinc-200 ring-zinc-700/50' : 'text-zinc-100 ring-white/[0.06]'
+              isMine(msg) ? 'text-ink ring-surface-700/50' : 'text-ink ring-white/[0.06]'
 
             "
 
             [ngStyle]="messageBubbleStyle(msg)"
 
             (contextmenu)="openContextMenu(msg, $event)"
+
+            appLongPress
+
+            (longPress)="openContextMenuAt(msg, $event)"
 
           >
 
@@ -213,7 +217,7 @@
 
           />
 
-          <span class="px-1 text-[11px] text-zinc-500">{{
+          <span class="px-1 text-xs text-ink-muted">{{
 
             msg.timestamp | date : 'shortTime'
 
@@ -241,7 +245,7 @@
 
 
 
-    <div class="relative shrink-0 border-t border-zinc-800/80">
+    <div class="relative shrink-0 border-t border-surface-800/80">
 
       <input
 
@@ -417,7 +421,7 @@
 
     *ngIf="editingMsg"
 
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/60 p-4"
 
     role="dialog"
 
@@ -427,13 +431,13 @@
 
   >
 
-    <div class="w-full max-w-md rounded-2xl border border-zinc-700 bg-surface-800 p-4 shadow-xl">
+    <div class="w-full max-w-md rounded-2xl border border-surface-700 bg-surface-800 p-4 shadow-xl">
 
-      <h3 class="mb-3 text-sm font-medium text-zinc-200">Edit message</h3>
+      <h3 class="mb-3 text-sm font-medium text-ink">Edit message</h3>
 
       <textarea
 
-        class="mb-3 w-full resize-none rounded-lg border border-zinc-600 bg-surface-900 px-3 py-2 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none"
+        class="mb-3 w-full resize-none rounded-lg border border-surface-600 bg-surface-900 px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
 
         rows="4"
 
@@ -445,9 +449,9 @@
 
       <div class="flex justify-end gap-2">
 
-        <button type="button" class="rounded-lg px-3 py-1.5 text-sm text-zinc-400 hover:bg-zinc-800" (click)="cancelEdit()">Cancel</button>
+        <app-button variant="ghost" size="sm" (click)="cancelEdit()">Cancel</app-button>
 
-        <button type="button" class="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-500" (click)="saveEdit()">Save</button>
+        <app-button variant="primary" size="sm" (click)="saveEdit()">Save</app-button>
 
       </div>
 

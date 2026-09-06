@@ -1,336 +1,372 @@
-<div class="voiceroom-root relative flex h-full min-h-0 w-full min-w-0 flex-col bg-zinc-950 text-zinc-100">
-  <header class="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-2">
+<div class="vr-root relative flex h-full min-h-0 w-full min-w-0 flex-col bg-surface-950 text-ink">
+
+  <!-- ─────────────────────────── Header ─────────────────────────── -->
+  <header class="vr-header">
     <div class="min-w-0">
-      <h1 class="truncate text-lg font-semibold">{{ channel?.name ?? 'Voice room' }}</h1>
-      <p class="text-xs text-zinc-400">
+      <h1 class="vr-title truncate">{{ channel?.name ?? 'Voice room' }}</h1>
+      <p class="flex items-center gap-1.5 text-xs text-ink-muted">
+        <span class="vr-live-dot" [class.vr-live-dot--on]="connected" aria-hidden="true"></span>
         <ng-container *ngIf="connected; else lobbyCount">
-          {{ participants.length }} / {{ maxParticipants }} in call
+          {{ participants.length }} of {{ maxParticipants }} in call
         </ng-container>
         <ng-template #lobbyCount>
-          {{ lobbyPresence.length }} / {{ maxParticipants }} in voice room now
+          {{ lobbyPresence.length }} of {{ maxParticipants }} here now
         </ng-template>
       </p>
     </div>
+
     <div class="flex shrink-0 items-center gap-2">
       <button
         type="button"
-        class="rounded-lg p-2 hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-brand"
-        [ngClass]="{ 'bg-zinc-800': chatPanelOpen }"
-        aria-label="Toggle chat"
-        [attr.aria-expanded]="chatPanelOpen"
-        (click)="toggleChatPanel()"
+        class="vr-icon-btn"
+        [attr.aria-label]="roomExpanded ? 'Collapse voice room' : 'Expand voice room'"
+        [attr.aria-pressed]="roomExpanded"
+        [title]="roomExpanded ? 'Collapse (Esc)' : 'Expand'"
+        (click)="toggleRoomExpanded()"
       >
-        <img src="assets/Icons/chat_fill.png" alt="" class="h-5 w-5">
+        <svg *ngIf="!roomExpanded" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <svg *ngIf="roomExpanded" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 4l-6 6V5m0 5h5M4 20l6-6v5m0-5H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
       </button>
       <button
         type="button"
-        class="rounded-lg border border-zinc-600 px-3 py-1 text-sm hover:bg-zinc-800"
-        (click)="connected ? leaveCallAndStay() : leave()"
+        class="vr-icon-btn"
+        [class.vr-icon-btn--on]="chatPanelOpen"
+        aria-label="Toggle chat"
+        [attr.aria-expanded]="chatPanelOpen"
+        title="Chat"
+        (click)="toggleChatPanel()"
       >
-        {{ connected ? 'Leave call' : 'Back' }}
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 12a7.5 7.5 0 0 1-10.9 6.7L4.5 20l1.3-4.4A7.5 7.5 0 1 1 20 12Z"
+                stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <!--
+        Only rendered once you are actually in the call. The pre-join state used
+        to show a "Back" button that navigated to the community About page —
+        redundant now that the channel sidebar is on screen at every breakpoint,
+        and its presence-unwatch is already done by ngOnDestroy on navigation.
+      -->
+      <button
+        *ngIf="connected"
+        type="button"
+        class="vr-btn vr-btn--quiet"
+        (click)="leaveCallAndStay()"
+      >
+        Leave call
       </button>
     </div>
   </header>
 
-  <div class="flex min-h-0 flex-1 w-full">
+  <div class="flex min-h-0 w-full flex-1">
     <div class="relative flex min-h-0 min-w-0 flex-1 flex-col">
-  <app-loading-state
-    *ngIf="loading"
-    variant="spinner"
-    message="Loading voice room…"
-    containerClass="flex flex-1 items-center justify-center"
-  />
 
-  <app-error-alert *ngIf="errorMessage && !loading" [message]="errorMessage" class="m-3 shrink-0" />
+      <app-loading-state
+        *ngIf="loading"
+        variant="spinner"
+        message="Loading voice room…"
+        containerClass="flex flex-1 items-center justify-center"
+      />
 
-  <!-- Lobby -->
-  <section
-    *ngIf="!loading && !errorMessage && !connected"
-    class="flex min-h-0 w-full flex-1 flex-col px-4 py-3"
-  >
-    <p class="mb-2 shrink-0 text-sm font-medium text-zinc-300">Currently in this voice room</p>
-    <div class="min-h-0 flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
-      <p
-        *ngIf="lobbyPresence.length === 0"
-        class="flex h-full min-h-[8rem] items-center justify-center text-sm text-zinc-500"
+      <app-error-alert *ngIf="errorMessage && !loading" [message]="errorMessage" class="m-3 shrink-0" />
+
+      <!-- ───────────────────────── Lobby ───────────────────────── -->
+      <section
+        *ngIf="!loading && !errorMessage && !connected"
+        class="flex min-h-0 w-full flex-1 flex-col items-center justify-center p-4"
       >
-        No one is in the room yet.
-      </p>
-      <ul *ngIf="lobbyPresence.length > 0" class="space-y-1.5">
-        <li
-          *ngFor="let u of lobbyPresence"
-          class="flex items-center gap-2 rounded-lg border border-zinc-800/80 bg-zinc-950/50 px-2 py-1.5"
-        >
-          <div class="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-zinc-700">
-            <img
-              *ngIf="lobbyUserImage(u); else lobbyInitials"
-              [src]="lobbyUserImage(u)"
-              [alt]="u.userName"
-              class="h-full w-full object-cover"
-            />
-            <ng-template #lobbyInitials>
-              <span class="flex h-full w-full items-center justify-center text-xs font-semibold text-zinc-300">
-                {{ initials(u.userName) }}
-              </span>
-            </ng-template>
+        <div class="vr-lobby-card">
+          <div class="flex flex-col items-center gap-1 text-center">
+            <span class="vr-eyebrow">Voice room</span>
+            <h2 class="vr-lobby-title">{{ channel?.name ?? 'Voice room' }}</h2>
+            <p class="text-sm text-ink-muted">
+              {{ lobbyPresence.length }} of {{ maxParticipants }} seats taken
+            </p>
           </div>
-          <span class="min-w-0 flex-1 truncate text-sm">{{ u.userName }}</span>
-          <span class="chip shrink-0">
-            <app-voiceroom-media-icons
-              [muted]="u.muted"
-              [cameraOn]="u.cameraOn"
-              [screenOn]="u.screenOn"
-              [showScreen]="u.screenOn"
-              [compact]="true"
-            />
-          </span>
-        </li>
-      </ul>
-    </div>
-    <div class="mt-3 flex shrink-0 justify-center">
-      <button
-        type="button"
-        class="rounded-full bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
-        [disabled]="joining || lobbyPresence.length >= maxParticipants"
-        (click)="joinVoice()"
-      >
-        {{ joining ? 'Joining…' : 'Join voice room' }}
-      </button>
-    </div>
-  </section>
 
-  <!-- In call -->
-  <div
-    *ngIf="!loading && !errorMessage && connected && !isFullscreen"
-    class="flex min-h-0 w-full flex-1 flex-col"
-  >
-    <div
-      *ngIf="audioPlaybackBlocked"
-      class="mx-3 mt-2 flex shrink-0 items-center justify-between gap-2 rounded-lg border border-amber-600/50 bg-amber-950/40 px-3 py-1.5 text-xs"
-    >
-      <span>Click to enable remote audio.</span>
-      <button type="button" class="chip bg-amber-600/90 text-zinc-950" (click)="enableAudio()">Enable audio</button>
-    </div>
+          <div class="vr-lobby-list">
+            <p
+              *ngIf="lobbyPresence.length === 0"
+              class="flex min-h-[7rem] items-center justify-center px-4 text-center text-sm text-ink-muted"
+            >
+              Nobody's here yet — be the first in.
+            </p>
 
-    <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <section *ngIf="screenShares.length && !gridScreenStripHidden" class="shrink-0 border-b border-zinc-800 px-2 py-2">
-        <div class="mb-1 flex items-center justify-between px-1">
-          <span class="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Screen share</span>
-          <button type="button" class="text-[10px] text-zinc-500 hover:text-zinc-300" (click)="toggleGridScreenStrip()">Hide</button>
-        </div>
-        <div class="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2 px-1">
+            <ul *ngIf="lobbyPresence.length > 0" class="flex flex-col gap-1.5">
+              <li *ngFor="let u of lobbyPresence" class="vr-lobby-row">
+                <div class="vr-avatar vr-avatar--sm">
+                  <img
+                    *ngIf="lobbyUserImage(u); else lobbyInitials"
+                    [src]="lobbyUserImage(u)"
+                    [alt]="u.userName"
+                    class="h-full w-full object-cover"
+                  />
+                  <ng-template #lobbyInitials>
+                    <span class="vr-initials text-xs">{{ initials(u.userName) }}</span>
+                  </ng-template>
+                </div>
+                <span class="min-w-0 flex-1 truncate text-sm">{{ u.userName }}</span>
+                <span class="vr-chip vr-chip--flat shrink-0">
+                  <app-voiceroom-media-icons
+                    [muted]="u.muted"
+                    [cameraOn]="u.cameraOn"
+                    [screenOn]="u.screenOn"
+                    [showScreen]="u.screenOn"
+                    [compact]="true"
+                  />
+                </span>
+              </li>
+            </ul>
+          </div>
+
           <button
-            *ngFor="let s of screenShares"
             type="button"
-            class="tile aspect-video"
-            (click)="expandScreen(s)"
+            class="vr-join"
+            [disabled]="joining || lobbyPresence.length >= maxParticipants"
+            (click)="joinVoice()"
           >
-            <div class="tile-media bg-black">
-              <video class="absolute inset-0 h-full w-full object-contain" autoplay playsinline [appLkTrack]="s.screenTrack" [lkMuted]="s.isLocal"></video>
-            </div>
-            <div class="tile-overlay">
-              <span class="chip max-w-[70%] truncate text-[10px]">{{ s.name }}</span>
-              <span class="chip shrink-0 text-[10px] text-violet-300">Screen</span>
-            </div>
+            <svg *ngIf="!joining" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="h-[1.15em] w-[1.15em]">
+              <path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0v-5a3 3 0 0 1 3-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+              <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+            {{ joining ? 'Joining…' : lobbyPresence.length >= maxParticipants ? 'Room is full' : 'Join voice room' }}
           </button>
         </div>
       </section>
-      <button
-        *ngIf="screenShares.length && gridScreenStripHidden"
-        type="button"
-        class="shrink-0 border-b border-zinc-800 px-3 py-1 text-[10px] text-zinc-500 hover:text-zinc-300"
-        (click)="toggleGridScreenStrip()"
-      >
-        Show screen shares ({{ screenShares.length }})
-      </button>
 
-      <div class="min-h-0 flex-1 overflow-y-auto p-2">
-        <div class="grid grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-2">
-          <button
-            *ngFor="let p of participants"
-            type="button"
-            class="tile aspect-[4/3]"
-            [ngClass]="p.isSpeaking ? 'tile-speaking' : ''"
-            (click)="expandParticipant(p)"
-          >
-            <ng-container *ngTemplateOutlet="participantTileMedia; context: { $implicit: p }"></ng-container>
-            <div class="tile-overlay">
-              <span class="chip max-w-[65%] truncate text-[10px] font-medium">
-                {{ p.name }}{{ p.isLocal ? ' (you)' : '' }}
-              </span>
-              <span class="chip shrink-0">
-                <app-voiceroom-media-icons
-                  [muted]="p.muted"
-                  [cameraOn]="p.cameraOn"
-                  [screenOn]="p.screenOn"
-                  [showScreen]="p.screenOn"
-                  [compact]="true"
-                />
-              </span>
-            </div>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="flex shrink-0 items-center justify-center gap-2 border-t border-zinc-800 p-2">
-      <button type="button" class="rounded-full bg-zinc-700 px-4 py-2 text-xs hover:bg-zinc-600" (click)="toggleMute()">
-        {{ voiceroom.localMuted ? 'Unmute' : 'Mute' }}
-      </button>
-      <button type="button" class="rounded-full bg-zinc-700 px-4 py-2 text-xs hover:bg-zinc-600" (click)="toggleCamera()">
-        {{ voiceroom.localCamOn ? 'Cam off' : 'Cam on' }}
-      </button>
-      <button type="button" class="rounded-full bg-zinc-700 px-4 py-2 text-xs hover:bg-zinc-600" (click)="toggleScreen()">
-        {{ voiceroom.localScreenOn ? 'Stop share' : 'Share' }}
-      </button>
-      <button type="button" class="rounded-full bg-red-600 px-4 py-2 text-xs text-white hover:bg-red-500" (click)="leaveCallAndStay()">
-        Leave call
-      </button>
-    </div>
-  </div>
-
-  <!-- Fullscreen focus -->
-  <div
-    *ngIf="!loading && !errorMessage && connected && isFullscreen"
-    class="fullscreen-layer absolute inset-0 z-40 flex min-h-0 flex-col bg-black"
-  >
-    <div class="relative flex h-full min-h-0 flex-1 flex-col">
-      <button
-        type="button"
-        class="fs-control absolute right-2 top-2 z-50 rounded-full p-1"
-        aria-label="Close fullscreen"
-        (click)="closeFullscreen()"
-      >
-        <img src="assets/Icons/Close_round_light.png" alt="" class="h-6 w-6 opacity-90" />
-      </button>
-
-      <div class="relative min-h-0 flex-1">
-        <ng-container *ngIf="expandedScreenId && expandedScreen as es">
-          <video
-            class="absolute inset-0 h-full w-full object-contain"
-            autoplay
-            playsinline
-            [appLkTrack]="es.screenTrack"
-            [lkMuted]="es.isLocal"
-          ></video>
-          <div class="absolute left-2 top-2 z-10 flex flex-wrap items-center gap-1">
-            <span class="chip-ghost text-xs">{{ es.name }}{{ es.isLocal ? ' (you)' : '' }}</span>
-            <span class="chip-ghost text-[10px] text-violet-200">Screen</span>
-          </div>
-        </ng-container>
-
-        <p
-          *ngIf="expandedParticipantId && !expandedParticipant"
-          class="absolute inset-0 flex items-center justify-center text-sm text-zinc-500"
-        >
-          Participant unavailable
-        </p>
-
-        <ng-container *ngIf="expandedParticipantId && expandedParticipant as ep">
-          <video
-            *ngIf="ep.cameraTrack; else expandedProfile"
-            class="absolute inset-0 h-full w-full object-contain"
-            autoplay
-            playsinline
-            [appLkTrack]="ep.cameraTrack"
-            [lkMuted]="true"
-          ></video>
-          <ng-template #expandedProfile>
-            <div class="absolute inset-0 flex items-center justify-center bg-zinc-950/40">
-              <div class="h-40 w-40 overflow-hidden rounded-full bg-zinc-800/80 ring-2 ring-white/10 sm:h-52 sm:w-52">
-                <img
-                  *ngIf="participantImage(ep); else expandedInitials"
-                  [src]="participantImage(ep)"
-                  [alt]="ep.name"
-                  class="h-full w-full object-cover"
-                />
-                <ng-template #expandedInitials>
-                  <span class="flex h-full w-full items-center justify-center text-3xl font-semibold text-zinc-400">
-                    {{ initials(ep.name) }}
-                  </span>
-                </ng-template>
-              </div>
-            </div>
-          </ng-template>
-          <audio
-            *ngIf="ep.audioTrack && !ep.isLocal"
-            class="sr-only"
-            autoplay
-            playsinline
-            [appLkTrack]="ep.audioTrack"
-          ></audio>
-          <div class="absolute left-2 top-2 z-10 flex flex-wrap items-center gap-1">
-            <span class="chip-ghost text-xs">{{ ep.name }}{{ ep.isLocal ? ' (you)' : '' }}</span>
-            <span class="chip-ghost">
-              <app-voiceroom-media-icons
-                [muted]="ep.muted"
-                [cameraOn]="ep.cameraOn"
-                [screenOn]="ep.screenOn"
-                [showScreen]="ep.screenOn"
-                [compact]="true"
-              />
-            </span>
-          </div>
-        </ng-container>
-      </div>
-
-      <!-- Unified minimized tray: screens + participants -->
-      <button
-        *ngIf="showMinimizedTray && minimizedTrayHidden"
-        type="button"
-        class="fs-tray-reveal absolute bottom-2 left-1/2 z-50 -translate-x-1/2"
-        (click)="toggleMinimizedTray()"
-      >
-        Show tray ({{ minimizedTrayCount }})
-      </button>
-
+      <!-- ──────────────────────── In call ──────────────────────── -->
       <div
-        *ngIf="showMinimizedTray && !minimizedTrayHidden"
-        class="minimized-tray absolute bottom-0 left-0 right-0 z-40"
+        *ngIf="!loading && !errorMessage && connected && !isFullscreen"
+        class="flex min-h-0 w-full flex-1 flex-col"
       >
-        <div class="tray-toolbar">
-          <span class="chip-ghost text-[10px] uppercase tracking-wide">
-            Switch view
+        <div *ngIf="audioPlaybackBlocked" class="vr-notice">
+          <span class="flex items-center gap-2">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="h-4 w-4 shrink-0">
+              <path d="M11 5 6.5 8.5H4v7h2.5L11 19V5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+              <path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            </svg>
+            Remote audio is blocked by your browser.
           </span>
-          <button
-            type="button"
-            class="fs-tray-reveal tray-hide-btn"
-            (click)="toggleMinimizedTray()"
-          >
-            Hide
-          </button>
+          <button type="button" class="vr-btn vr-btn--brand vr-btn--xs" (click)="enableAudio()">Enable audio</button>
         </div>
-        <div class="tray-scroll">
+
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+
+          <!-- Screen shares -->
+          <section *ngIf="screenShares.length && !gridScreenStripHidden" class="vr-strip">
+            <div class="vr-strip-head">
+              <span class="vr-eyebrow">Screen share · {{ screenShares.length }}</span>
+              <button type="button" class="vr-link" (click)="toggleGridScreenStrip()">Hide</button>
+            </div>
+            <div class="vr-grid vr-grid--screens">
+              <button
+                *ngFor="let s of screenShares"
+                type="button"
+                class="vr-tile aspect-video"
+                (click)="expandScreen(s)"
+              >
+                <div class="vr-tile-media bg-surface-950">
+                  <video class="absolute inset-0 h-full w-full object-contain" autoplay playsinline
+                         [appLkTrack]="s.screenTrack" [lkMuted]="s.isLocal"></video>
+                </div>
+                <span class="vr-tile-expand" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <div class="vr-tile-overlay">
+                  <span class="vr-chip max-w-[70%] truncate">{{ s.name }}</span>
+                  <span class="vr-chip vr-chip--screen shrink-0">Screen</span>
+                </div>
+              </button>
+            </div>
+          </section>
+
           <button
-            *ngFor="let s of fsTrayScreens"
+            *ngIf="screenShares.length && gridScreenStripHidden"
             type="button"
-            class="tray-tile tray-tile-screen"
-            [attr.title]="s.name + ' — screen'"
-            (click)="expandScreen(s)"
+            class="vr-strip-toggle"
+            (click)="toggleGridScreenStrip()"
           >
-            <ng-container *ngTemplateOutlet="trayScreenTile; context: { $implicit: s }"></ng-container>
-            <span class="tray-tile-badge tray-tile-badge-screen">Screen</span>
+            Show screen shares ({{ screenShares.length }})
           </button>
-          <button
-            *ngFor="let p of fsTrayParticipants"
-            type="button"
-            class="tray-tile"
-            [class.tray-tile-active]="p.identity === expandedParticipantId"
-            [attr.title]="p.name"
-            (click)="expandParticipant(p)"
-          >
-            <ng-container *ngTemplateOutlet="trayTileMedia; context: { $implicit: p }"></ng-container>
-            <span class="tray-tile-badge">{{ p.name }}</span>
-          </button>
+
+          <!-- Participants -->
+          <div class="min-h-0 flex-1 overflow-y-auto scrollbar-themed p-3">
+            <div class="vr-grid vr-grid--people">
+              <button
+                *ngFor="let p of participants"
+                type="button"
+                class="vr-tile aspect-[4/3]"
+                [class.vr-tile--speaking]="p.isSpeaking"
+                [class.vr-tile--self]="p.isLocal"
+                (click)="expandParticipant(p)"
+              >
+                <ng-container *ngTemplateOutlet="participantTileMedia; context: { $implicit: p }"></ng-container>
+                <span class="vr-tile-expand" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <div class="vr-tile-overlay">
+                  <span class="vr-chip max-w-[65%] truncate font-medium">
+                    {{ p.name }}{{ p.isLocal ? ' (you)' : '' }}
+                  </span>
+                  <span class="vr-chip shrink-0">
+                    <app-voiceroom-media-icons
+                      [muted]="p.muted"
+                      [cameraOn]="p.cameraOn"
+                      [screenOn]="p.screenOn"
+                      [showScreen]="p.screenOn"
+                      [compact]="true"
+                    />
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Control dock -->
+        <div class="vr-dock-bar">
+          <ng-container *ngTemplateOutlet="callControls"></ng-container>
         </div>
       </div>
-    </div>
-  </div>
+
+      <!-- ─────────────────────── Fullscreen ─────────────────────── -->
+      <div
+        *ngIf="!loading && !errorMessage && connected && isFullscreen"
+        class="fullscreen-layer absolute inset-0 z-40 flex min-h-0 flex-col bg-surface-950"
+        (mousemove)="onFullscreenActivity()"
+        (touchstart)="onFullscreenActivity()"
+        (keydown)="onFullscreenActivity()"
+      >
+        <div class="relative flex h-full min-h-0 flex-1 flex-col">
+
+          <button
+            type="button"
+            class="vr-icon-btn vr-icon-btn--glass fs-chrome absolute right-3 top-3 z-50"
+            [class.fs-chrome--idle]="!fsControlsVisible"
+            aria-label="Close fullscreen"
+            title="Exit fullscreen"
+            (click)="closeFullscreen()"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+            </svg>
+          </button>
+
+          <div class="relative min-h-0 flex-1">
+            <ng-container *ngIf="expandedScreenId && expandedScreen as es">
+              <video class="absolute inset-0 h-full w-full object-contain" autoplay playsinline
+                     [appLkTrack]="es.screenTrack" [lkMuted]="es.isLocal"></video>
+              <div class="fs-chrome absolute left-3 top-3 z-10 flex flex-wrap items-center gap-1.5"
+                   [class.fs-chrome--idle]="!fsControlsVisible">
+                <span class="vr-chip">{{ es.name }}{{ es.isLocal ? ' (you)' : '' }}</span>
+                <span class="vr-chip vr-chip--screen">Screen</span>
+              </div>
+            </ng-container>
+
+            <p
+              *ngIf="expandedParticipantId && !expandedParticipant"
+              class="absolute inset-0 flex items-center justify-center text-sm text-ink-muted"
+            >
+              Participant unavailable
+            </p>
+
+            <ng-container *ngIf="expandedParticipantId && expandedParticipant as ep">
+              <video
+                *ngIf="ep.cameraTrack; else expandedProfile"
+                class="absolute inset-0 h-full w-full object-contain"
+                autoplay
+                playsinline
+                [appLkTrack]="ep.cameraTrack"
+                [lkMuted]="true"
+              ></video>
+              <ng-template #expandedProfile>
+                <div class="absolute inset-0 flex items-center justify-center bg-surface-950">
+                  <div class="vr-avatar vr-avatar--hero" [class.vr-avatar--speaking]="ep.isSpeaking">
+                    <img
+                      *ngIf="participantImage(ep); else expandedInitials"
+                      [src]="participantImage(ep)"
+                      [alt]="ep.name"
+                      class="h-full w-full object-cover"
+                    />
+                    <ng-template #expandedInitials>
+                      <span class="vr-initials text-3xl">{{ initials(ep.name) }}</span>
+                    </ng-template>
+                  </div>
+                </div>
+              </ng-template>
+              <audio *ngIf="ep.audioTrack && !ep.isLocal" class="sr-only" autoplay playsinline [appLkTrack]="ep.audioTrack"></audio>
+              <div class="fs-chrome absolute left-3 top-3 z-10 flex flex-wrap items-center gap-1.5"
+                   [class.fs-chrome--idle]="!fsControlsVisible">
+                <span class="vr-chip">{{ ep.name }}{{ ep.isLocal ? ' (you)' : '' }}</span>
+                <span class="vr-chip">
+                  <app-voiceroom-media-icons
+                    [muted]="ep.muted"
+                    [cameraOn]="ep.cameraOn"
+                    [screenOn]="ep.screenOn"
+                    [showScreen]="ep.screenOn"
+                    [compact]="true"
+                  />
+                </span>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- Call controls, mirrored into fullscreen so they are not stranded
+               underneath the z-40 layer. Fades with the rest of the chrome. -->
+          <div
+            class="vr-dock fs-chrome absolute bottom-4 left-1/2 z-50 -translate-x-1/2"
+            [class.fs-chrome--idle]="!fsControlsVisible"
+          >
+            <ng-container *ngTemplateOutlet="callControls; context: { fullscreen: true }"></ng-container>
+          </div>
+
+          <!-- Unified minimized tray: screens + participants.
+               Toggled from the dock, so there is one control in one place. -->
+          <div
+            *ngIf="showMinimizedTray && !minimizedTrayHidden"
+            class="vr-tray fs-chrome absolute bottom-[4.9rem] left-1/2 z-40 -translate-x-1/2"
+            [class.fs-chrome--idle]="!fsControlsVisible"
+          >
+            <div class="vr-tray-scroll scrollbar-themed">
+              <button
+                *ngFor="let s of fsTrayScreens"
+                type="button"
+                class="vr-tray-tile vr-tray-tile--screen"
+                [attr.title]="s.name + ' — screen'"
+                (click)="expandScreen(s)"
+              >
+                <ng-container *ngTemplateOutlet="trayScreenTile; context: { $implicit: s }"></ng-container>
+                <span class="vr-tray-badge vr-tray-badge--screen">Screen</span>
+              </button>
+              <button
+                *ngFor="let p of fsTrayParticipants"
+                type="button"
+                class="vr-tray-tile"
+                [class.vr-tray-tile--active]="p.identity === expandedParticipantId"
+                [class.vr-tray-tile--speaking]="p.isSpeaking"
+                [attr.title]="p.name"
+                (click)="expandParticipant(p)"
+              >
+                <ng-container *ngTemplateOutlet="trayTileMedia; context: { $implicit: p }"></ng-container>
+                <span class="vr-tray-badge">{{ p.name }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <aside
       *ngIf="chatPanelOpen && channelId"
-      class="flex w-[min(100%,22rem)] shrink-0 flex-col border-l border-zinc-800 bg-zinc-900 min-h-0"
+      class="flex w-[min(100%,22rem)] min-h-0 shrink-0 flex-col border-l border-surface-800 bg-surface-900"
       aria-label="Voice room chat"
     >
       <app-channel-chat-panel
@@ -343,21 +379,107 @@
   </div>
 </div>
 
+<!-- ───────────────────────── Shared controls ───────────────────────── -->
+<ng-template #callControls let-fullscreen="fullscreen">
+  <button
+    type="button"
+    class="vr-ctl"
+    [class.vr-ctl--danger]="voiceroom.localMuted"
+    [attr.aria-pressed]="voiceroom.localMuted"
+    [attr.aria-label]="voiceroom.localMuted ? 'Unmute microphone' : 'Mute microphone'"
+    [title]="voiceroom.localMuted ? 'Unmute' : 'Mute'"
+    (click)="toggleMute()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0v-5a3 3 0 0 1 3-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      <path *ngIf="voiceroom.localMuted" d="M4 4l16 16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+    </svg>
+    <span class="vr-ctl-label">{{ voiceroom.localMuted ? 'Unmute' : 'Mute' }}</span>
+  </button>
+
+  <button
+    type="button"
+    class="vr-ctl"
+    [class.vr-ctl--on]="voiceroom.localCamOn"
+    [attr.aria-pressed]="voiceroom.localCamOn"
+    [attr.aria-label]="voiceroom.localCamOn ? 'Turn camera off' : 'Turn camera on'"
+    [title]="voiceroom.localCamOn ? 'Camera off' : 'Camera on'"
+    (click)="toggleCamera()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="6.5" width="12" height="11" rx="2.5" stroke="currentColor" stroke-width="1.8" />
+      <path d="M15 11l5.5-3v8L15 13v-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+      <path *ngIf="!voiceroom.localCamOn" d="M4 4l16 16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+    </svg>
+    <span class="vr-ctl-label">{{ voiceroom.localCamOn ? 'Cam off' : 'Cam on' }}</span>
+  </button>
+
+  <button
+    type="button"
+    class="vr-ctl"
+    [class.vr-ctl--on]="voiceroom.localScreenOn"
+    [attr.aria-pressed]="voiceroom.localScreenOn"
+    [attr.aria-label]="voiceroom.localScreenOn ? 'Stop sharing screen' : 'Share screen'"
+    [title]="voiceroom.localScreenOn ? 'Stop share' : 'Share screen'"
+    (click)="toggleScreen()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="4.5" width="18" height="12" rx="2.5" stroke="currentColor" stroke-width="1.8" />
+      <path d="M9 20h6M12 16.5V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      <path *ngIf="!voiceroom.localScreenOn" d="M12 12.5v-5M9.5 10l2.5-2.5 2.5 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      <path *ngIf="voiceroom.localScreenOn" d="M9 10.5h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+    </svg>
+    <span class="vr-ctl-label">{{ voiceroom.localScreenOn ? 'Stop share' : 'Share' }}</span>
+  </button>
+
+  <button
+    *ngIf="fullscreen && showMinimizedTray"
+    type="button"
+    class="vr-ctl vr-ctl--badge"
+    [class.vr-ctl--on]="!minimizedTrayHidden"
+    [attr.aria-pressed]="!minimizedTrayHidden"
+    [attr.aria-label]="minimizedTrayHidden ? 'Show other participants' : 'Hide other participants'"
+    title="Switch view"
+    (click)="toggleMinimizedTray()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="4.5" width="8" height="6.5" rx="1.6" stroke="currentColor" stroke-width="1.8" />
+      <rect x="13" y="4.5" width="8" height="6.5" rx="1.6" stroke="currentColor" stroke-width="1.8" />
+      <rect x="3" y="13" width="8" height="6.5" rx="1.6" stroke="currentColor" stroke-width="1.8" />
+      <rect x="13" y="13" width="8" height="6.5" rx="1.6" stroke="currentColor" stroke-width="1.8" />
+    </svg>
+    <span class="vr-ctl-label">Views</span>
+    <span class="vr-ctl-badge">{{ minimizedTrayCount }}</span>
+  </button>
+
+  <span class="vr-dock-sep" aria-hidden="true"></span>
+
+  <button
+    type="button"
+    class="vr-ctl vr-ctl--hangup"
+    aria-label="Leave call"
+    title="Leave call"
+    (click)="leaveCallAndStay()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3.2 10.4c5-3.6 12.6-3.6 17.6 0 .9.6 1.1 1.9.5 2.8l-1 1.4c-.5.8-1.6 1-2.4.5l-2-1.3c-.5-.4-.8-1-.7-1.6l.1-1.2a12.4 12.4 0 0 0-6.6 0l.1 1.2c.1.6-.2 1.2-.7 1.6l-2 1.3c-.8.5-1.9.3-2.4-.5l-1-1.4c-.6-.9-.4-2.2.5-2.8Z"
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+    </svg>
+    <span class="vr-ctl-label">Leave</span>
+  </button>
+</ng-template>
+
 <ng-template #trayScreenTile let-s>
-  <div class="tray-tile-media bg-black">
-    <video
-      class="absolute inset-0 h-full w-full object-contain"
-      autoplay
-      playsinline
-      [appLkTrack]="s.screenTrack"
-      [lkMuted]="s.isLocal"
-    ></video>
+  <div class="vr-tray-media bg-surface-950">
+    <video class="absolute inset-0 h-full w-full object-contain" autoplay playsinline
+           [appLkTrack]="s.screenTrack" [lkMuted]="s.isLocal"></video>
   </div>
 </ng-template>
 
 <ng-template #trayTileMedia let-p>
   <audio *ngIf="p.audioTrack && !p.isLocal" class="sr-only" autoplay playsinline [appLkTrack]="p.audioTrack"></audio>
-  <div class="tray-tile-media" [class.tray-tile-media-dim]="!p.cameraTrack">
+  <div class="vr-tray-media" [class.vr-tray-media--dim]="!p.cameraTrack">
     <video
       *ngIf="p.cameraTrack"
       class="absolute inset-0 h-full w-full object-cover"
@@ -367,7 +489,7 @@
       [lkMuted]="true"
     ></video>
     <div *ngIf="!p.cameraTrack" class="absolute inset-0 flex items-center justify-center p-1">
-      <div class="h-9 w-9 overflow-hidden rounded-full bg-zinc-700">
+      <div class="vr-avatar vr-avatar--xs">
         <img
           *ngIf="participantImage(p); else trayInitials"
           [src]="participantImage(p)"
@@ -375,9 +497,7 @@
           class="h-full w-full object-cover"
         />
         <ng-template #trayInitials>
-          <span class="flex h-full w-full items-center justify-center text-[9px] font-semibold text-zinc-300">
-            {{ initials(p.name) }}
-          </span>
+          <span class="vr-initials text-[10px]">{{ initials(p.name) }}</span>
         </ng-template>
       </div>
     </div>
@@ -386,7 +506,7 @@
 
 <ng-template #participantTileMedia let-p>
   <audio *ngIf="p.audioTrack && !p.isLocal" class="sr-only" autoplay playsinline [appLkTrack]="p.audioTrack"></audio>
-  <div class="tile-media" [class.bg-zinc-900]="!p.cameraTrack">
+  <div class="vr-tile-media" [class.vr-tile-media--empty]="!p.cameraTrack">
     <video
       *ngIf="p.cameraTrack"
       class="absolute inset-0 h-full w-full object-cover"
@@ -396,7 +516,7 @@
       [lkMuted]="true"
     ></video>
     <div *ngIf="!p.cameraTrack" class="absolute inset-0 flex items-center justify-center">
-      <div class="h-[58%] max-h-24 aspect-square w-auto max-w-[58%] overflow-hidden rounded-full bg-zinc-800 ring-2 ring-zinc-700/80">
+      <div class="vr-avatar vr-avatar--tile" [class.vr-avatar--speaking]="p.isSpeaking">
         <img
           *ngIf="participantImage(p); else tileInitials"
           [src]="participantImage(p)"
@@ -404,9 +524,7 @@
           class="h-full w-full object-cover"
         />
         <ng-template #tileInitials>
-          <span class="flex h-full w-full items-center justify-center text-sm font-semibold text-zinc-300">
-            {{ initials(p.name) }}
-          </span>
+          <span class="vr-initials text-base">{{ initials(p.name) }}</span>
         </ng-template>
       </div>
     </div>

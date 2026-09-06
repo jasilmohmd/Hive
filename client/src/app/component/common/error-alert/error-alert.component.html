@@ -2,17 +2,17 @@
   *ngIf="message"
   [ngClass]="{
     'rounded-md px-3 py-2 text-sm': variant === 'inline',
-    'max-w-2xl mx-auto my-6 p-4 rounded-lg border border-red-200 bg-red-50': variant === 'banner'
+    'max-w-2xl mx-auto my-6 p-4 rounded-lg border border-danger/40 bg-danger/10': variant === 'banner'
   }"
-  [class.text-red-100]="variant === 'inline'"
-  [class.bg-red-500]="variant === 'inline'"
+  [class.text-white]="variant === 'inline'"
+  [class.bg-danger]="variant === 'inline'"
   role="alert"
   aria-live="polite"
 >
-  <div *ngIf="variant === 'banner'" class="flex items-start gap-3 text-red-800">
+  <div *ngIf="variant === 'banner'" class="flex items-start gap-3">
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 flex-none"
+      class="h-6 w-6 flex-none text-danger-text"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -26,13 +26,13 @@
       />
     </svg>
     <div class="flex-1">
-      <h3 *ngIf="title" class="font-semibold">{{ title }}</h3>
-      <p [class.mt-1]="title" [class.pl-0]="variant === 'banner'" class="text-red-700">{{ message }}</p>
+      <h3 *ngIf="title" class="font-semibold text-ink">{{ title }}</h3>
+      <p [class.mt-1]="title" [class.pl-0]="variant === 'banner'" class="text-ink-secondary">{{ message }}</p>
     </div>
     <button
       *ngIf="dismissible"
       type="button"
-      class="rounded p-1 text-red-800 hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-brand"
+      class="rounded p-1 text-danger-text hover:bg-danger/20 focus-visible:ring-2 focus-visible:ring-danger-text"
       (click)="dismiss()"
       aria-label="Dismiss error"
     >
@@ -44,7 +44,7 @@
     <button
       *ngIf="dismissible"
       type="button"
-      class="shrink-0 rounded px-2 py-0.5 hover:bg-red-600 focus-visible:ring-2 focus-visible:ring-brand"
+      class="shrink-0 rounded px-2 py-0.5 hover:bg-danger-hover focus-visible:ring-2 focus-visible:ring-white"
       (click)="dismiss()"
       aria-label="Dismiss error"
     >

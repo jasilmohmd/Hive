@@ -4,10 +4,19 @@
   (dismiss)="dismiss.emit()"
 >
   <h3 class="mb-2 text-sm font-medium">Share contact</h3>
-  <p *ngIf="loading" class="text-sm text-zinc-500">Loading…</p>
-  <p *ngIf="error" class="text-sm text-red-400">{{ error }}</p>
-  <button *ngFor="let f of friends" type="button" class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-zinc-800" (click)="picked.emit(f)">
-    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-700 text-xs">{{ f.userName.slice(0,2).toUpperCase() }}</span>
-    {{ f.userName }}
+  <p *ngIf="loading" class="text-sm text-ink-muted">Loading…</p>
+  <p *ngIf="error" class="text-sm text-danger-text">{{ error }}</p>
+  <!-- Previously this sheet just went blank with no friends and no error. -->
+  <p *ngIf="!loading && !error && !friends.length" class="px-2 py-6 text-center text-sm text-ink-muted">
+    No friends to share yet.
+  </p>
+  <button
+    *ngFor="let f of friends"
+    type="button"
+    class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-surface-850 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+    (click)="picked.emit(f)"
+  >
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-700 text-xs">{{ f.userName.slice(0,2).toUpperCase() }}</span>
+    <span class="min-w-0 truncate">{{ f.userName }}</span>
   </button>
 </app-chat-sheet>

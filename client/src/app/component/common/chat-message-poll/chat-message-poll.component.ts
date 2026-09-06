@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { IPollSummary } from '../../../services/chat.service';
+import { ButtonComponent } from '../../common/button/button.component';
 
 @Component({
   selector: 'app-chat-message-poll',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonComponent],
   templateUrl: './chat-message-poll.component.html',
 })
 export class ChatMessagePollComponent {

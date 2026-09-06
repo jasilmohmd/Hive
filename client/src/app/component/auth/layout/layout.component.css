@@ -1,5 +1,3 @@
-.radial-gradient {
-  background: radial-gradient(circle, #F3C70D, #F39B0D);
-  width: 100%;
-  height: 100vh; /* Example height */
-}
+/* The amber ground is set inline on the element in layout.component.html so the
+   honeycomb texture can blend over it. Nothing else is needed here — the old
+   .radial-gradient rule was left behind by the redesign and matched no element. */

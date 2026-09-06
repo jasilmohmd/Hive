@@ -2,16 +2,16 @@
   <button
     *ngFor="let r of reactions"
     type="button"
-    class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
-    [ngClass]="r.reactedByMe ? 'border-indigo-500 bg-indigo-500/20' : 'border-zinc-600'"
+    class="inline-flex items-center gap-1 rounded-full border min-h-6 px-2 py-0.5 text-xs"
+    [ngClass]="r.reactedByMe ? 'border-brand bg-brand/20' : 'border-surface-600'"
     (click)="react.emit(r.emoji)"
   >
     <span>{{ r.emoji }}</span>
-    <span class="text-zinc-400">{{ r.count }}</span>
+    <span class="text-ink-secondary">{{ r.count }}</span>
   </button>
   <button
     type="button"
-    class="rounded-full border border-zinc-600 px-2 py-0.5 text-xs text-zinc-400 hover:bg-zinc-800"
+    class="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full border border-surface-600 px-2 py-0.5 text-xs text-ink-secondary hover:bg-surface-850"
     (click)="togglePicker.emit()"
     aria-label="Add reaction"
   >
@@ -22,7 +22,7 @@
   <button
     *ngFor="let e of quickEmojis"
     type="button"
-    class="rounded-lg px-2 py-1 text-lg hover:bg-zinc-800"
+    class="rounded-lg px-2 py-1 text-lg hover:bg-surface-850"
     (click)="react.emit(e)"
   >
     {{ e }}

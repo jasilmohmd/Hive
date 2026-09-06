@@ -1,50 +1,32 @@
-<div class="flex flex-col items-center justify-center m-4 sm:m-8">
-  <app-error-alert [message]="errorMessage" variant="inline" *ngIf="errorMessage" />
+<div class="auth-shell">
+  <h2 class="auth-heading">Create account</h2>
 
-  <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 sm:mb-10 text-white text-center drop-shadow-md">
-    Create Account
-  </h2>
-  <div
-    class="h-auto sm:h-[60vh] w-[80vw] sm:w-[60vw] lg:w-[40vw] xl:w-[30vw] flex items-center justify-center shadow-lg rounded-2xl bg-gray-600/10 backdrop-blur-lg p-4 sm:p-0"
-  >
-    <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="w-full sm:w-3/4 max-w-sm flex flex-col">
-      <div class="mb-2">
-        <label for="username" class="block text-base sm:text-lg md:text-xl font-light text-slate-50">Username</label>
-        <input
-          formControlName="userName"
-          type="text"
-          id="username"
-          class="mt-1 block w-full h-7 sm:h-10 p-2 bg-white/20 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-transparent"
-        />
-        <p *ngIf="registerForm.get('userName')?.invalid && registerForm.get('userName')?.touched" class="text-red-500 text-xs">
+  <div class="auth-card">
+    <app-error-alert [message]="errorMessage" variant="inline" *ngIf="errorMessage" />
+
+    <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="flex flex-col">
+      <div class="auth-field">
+        <label for="username" class="auth-label">Username</label>
+        <input formControlName="userName" type="text" id="username" class="auth-input" autocomplete="username" />
+        <p *ngIf="registerForm.get('userName')?.invalid && registerForm.get('userName')?.touched" class="auth-error">
           Username is required
         </p>
       </div>
 
-      <div class="mb-3">
-        <label for="password" class="block text-base sm:text-lg md:text-xl font-light text-slate-50">Password</label>
-        <input
-          formControlName="password"
-          type="password"
-          id="password"
-          class="mt-1 block w-full h-7 sm:h-10 p-2 bg-white/20 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-transparent"
-        />
-        <p *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500 text-xs">
+      <div class="auth-field">
+        <label for="password" class="auth-label">Password</label>
+        <input formControlName="password" type="password" id="password" class="auth-input" autocomplete="new-password" />
+        <p *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="auth-error">
           Password must be at least 6 characters
         </p>
       </div>
 
-      <div class="mb-3">
-        <label for="confirm-password" class="block text-base sm:text-lg md:text-xl font-light text-slate-50">Confirm Password</label>
-        <input
-          formControlName="confirmPassword"
-          type="password"
-          id="confirm-password"
-          class="mt-1 block w-full h-7 sm:h-10 p-2 bg-white/20 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-transparent"
-        />
+      <div class="auth-field">
+        <label for="confirm-password" class="auth-label">Confirm password</label>
+        <input formControlName="confirmPassword" type="password" id="confirm-password" class="auth-input" autocomplete="new-password" />
         <p
           *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched"
-          class="text-red-500 text-xs"
+          class="auth-error"
         >
           Passwords do not match
         </p>
@@ -54,16 +36,16 @@
         type="submit"
         variant="primary"
         size="lg"
+        [block]="true"
         [loading]="isSubmitting"
         [disabled]="registerForm.invalid"
-        extraClass="w-3/4 sm:w-1/2 mx-auto drop-shadow-md transition-all duration-300 ease-in-out"
       >
         Continue
       </app-button>
 
-      <p class="text-xs sm:text-sm md:text-base text-slate-100 font-thin mt-6 text-center">
+      <p class="auth-foot">
         Already have an account?
-        <a routerLink="/auth/login" class="text-gray-700 hover:text-blue-600 hover:cursor-pointer">Login</a>
+        <a routerLink="/auth/login" class="auth-link">Log in</a>
       </p>
     </form>
   </div>

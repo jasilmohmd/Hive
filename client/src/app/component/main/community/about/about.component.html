@@ -1,24 +1,24 @@
 <!-- about.component.html -->
-<div class="min-h-full w-full bg-zinc-900 ">
+<div class="min-h-full w-full bg-surface-900 ">
   <!-- Loading State -->
   <div *ngIf="isLoading" class="flex rounded-2xl box-border h-full gap-3 animate-pulse">
     <!-- Skeleton matching parent layout -->
-    <div class="w-full h-64 bg-zinc-800 rounded-2xl">
-      <div class="h-48 bg-zinc-700 rounded-t-2xl"></div>
+    <div class="w-full h-64 bg-surface-800 rounded-2xl">
+      <div class="h-48 bg-surface-700 rounded-t-2xl"></div>
       <div class="p-6 -mt-12">
-        <div class="h-24 w-24 rounded-full bg-zinc-700 border-4 border-zinc-900"></div>
+        <div class="h-24 w-24 rounded-full bg-surface-700 border-4 border-surface-900"></div>
         <div class="ml-32 space-y-3">
-          <div class="h-8 w-64 bg-zinc-700 rounded-lg"></div>
-          <div class="h-4 w-80 bg-zinc-700 rounded"></div>
+          <div class="h-8 w-64 bg-surface-700 rounded-lg"></div>
+          <div class="h-4 w-80 bg-surface-700 rounded"></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Error State -->
-  <div *ngIf="errorMessage" class="max-w-2xl mx-auto my-6 p-4 bg-red-900/20 border border-red-700 rounded-2xl"
+  <div *ngIf="errorMessage" class="max-w-2xl mx-auto my-6 p-4 bg-danger/20 border border-danger rounded-2xl"
     role="alert">
-    <div class="flex items-center gap-3 text-red-400">
+    <div class="flex items-center gap-3 text-danger-text">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-none" fill="none" viewBox="0 0 24 24"
         stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -26,7 +26,7 @@
       </svg>
       <h3 class="font-semibold flex-1">Something went wrong</h3>
     </div>
-    <p class="mt-3 pl-9 text-red-300">{{ errorMessage }}</p>
+    <p class="mt-3 pl-9 text-danger-text">{{ errorMessage }}</p>
   </div>
 
   <!-- Community Details -->
@@ -48,7 +48,7 @@
           <img [src]="community.coverImageUrl || 'default-cover.jpg'" alt="Community cover"
             class="h-full w-full object-cover" />
           <div
-            class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-zinc-900/85 via-zinc-900/15 to-transparent"
+            class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-surface-950/85 via-surface-950/15 to-transparent"
             aria-hidden="true"
           ></div>
         </div>
@@ -57,11 +57,11 @@
 
     <!-- Profile Section -->
     <div #detailsSection
-      class="relative z-10 bg-zinc-800 rounded-xl shadow-xl px-4 md:px-6 pt-16 md:pt-20 pb-6 -mt-12 md:-mt-16 mx-2 md:mx-4 mb-4">
+      class="relative z-10 bg-surface-800 rounded-xl shadow-xl px-4 md:px-6 pt-16 md:pt-20 pb-6 -mt-12 md:-mt-16 mx-2 md:mx-4 mb-4">
 
       <!-- Manage Community Button -->
       <button *ngIf="permissions.includes('MANAGE_COMMUNITY')"
-        class="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all">
+        class="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -71,7 +71,7 @@
       <!-- Community Image -->
       <div class="absolute -top-8 md:-top-12 left-4 md:left-6 z-[2]">
         <ng-container *ngIf="canManageCommunity; else logoReadonly">
-          <div class="rounded-full border-4 border-zinc-900 shadow-xl bg-surface-900 p-0">
+          <div class="rounded-full border-4 border-surface-900 shadow-xl bg-surface-900 p-0">
             <app-image-picker-menu
               variant="avatar"
               [src]="community.imageUrl || null"
@@ -86,14 +86,23 @@
         </ng-container>
         <ng-template #logoReadonly>
           <img [src]="community.imageUrl || 'default-avatar.png'" alt="Community logo"
-            class="w-16 h-16 md:w-24 md:h-24 rounded-full border-4 border-zinc-900 shadow-xl object-cover transition-transform duration-300 hover:scale-105" />
+            class="w-16 h-16 md:w-24 md:h-24 rounded-full border-4 border-surface-900 shadow-xl object-cover transition-transform duration-300 hover:scale-105" />
         </ng-template>
       </div>
 
-      <!-- Header Section -->
-      <div class="ml-20 md:ml-32 pr-8">
-        <h1 class="text-xl md:text-3xl font-bold text-zinc-100 mb-1 md:mb-2">{{ community.name }}</h1>
-        <p *ngIf="community.description" class="text-zinc-400 text-sm md:text-base leading-relaxed">
+      <!--
+        Header Section
+
+        No left margin below md. The card's own pt-16 already clears the 64px
+        avatar vertically (it sits at -top-8, so its bottom edge is 32px above
+        where this text starts), and the old ml-20 + pr-8 was spending 112px of
+        a ~186px column on nothing — the community name was wrapping one word
+        per line. The offset is only needed from md, where the avatar is 96px
+        and the layout is genuinely side-by-side.
+      -->
+      <div class="md:ml-32 md:pr-8">
+        <h1 class="text-lg md:text-3xl font-bold text-ink mb-1 md:mb-2">{{ community.name }}</h1>
+        <p *ngIf="community.description" class="text-ink-secondary text-sm md:text-base leading-relaxed">
           {{ community.description }}
         </p>
       </div>
@@ -103,42 +112,42 @@
         <!-- Left Column -->
         <div class="space-y-3 md:space-y-4">
           <!-- Basic Info Card -->
-          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
-            <h2 class="text-xs md:text-sm font-semibold text-zinc-500 mb-2 md:mb-3">Community Details</h2>
+          <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
+            <h2 class="text-xs md:text-sm font-semibold text-ink-muted mb-2 md:mb-3">Community Details</h2>
             <div class="space-y-1 md:space-y-2 text-sm md:text-base">
               <div class="flex justify-between items-center">
-                <span class="text-zinc-400">Type</span>
-                <span class="text-zinc-200 capitalize">{{ community.type }}</span>
+                <span class="text-ink-secondary">Type</span>
+                <span class="text-ink capitalize">{{ community.type }}</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-zinc-400">Owner</span>
-                <span class="text-zinc-200">{{ community.ownerId?.userName || 'Unknown' }}</span>
+                <span class="text-ink-secondary">Owner</span>
+                <span class="text-ink">{{ community.ownerId?.userName || 'Unknown' }}</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-zinc-400">Created</span>
-                <span class="text-zinc-200">{{ community.createdAt | date:'mediumDate' }}</span>
+                <span class="text-ink-secondary">Created</span>
+                <span class="text-ink">{{ community.createdAt | date:'mediumDate' }}</span>
               </div>
             </div>
           </div>
 
           <!-- Members Card -->
-          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+          <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
             <div class="flex justify-between items-center mb-2 md:mb-3">
-              <h2 class="text-xs md:text-sm font-semibold text-zinc-500">Members</h2>
+              <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Members</h2>
               <div class="flex items-center gap-4">
                 <button *ngIf="permissions.includes('MANAGE_MEMBERS')" (click)="manageMembers()"
-                  class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all"
+                  class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
                   title="Manage members">
                   Manage
                 </button>
-                <span class="text-zinc-400 text-xs md:text-sm m-3">{{ community.members.length }}</span>
+                <span class="text-ink-secondary text-xs md:text-sm m-3">{{ community.members.length }}</span>
               </div>
             </div>
             <div class="flex flex-wrap gap-1.5 md:gap-2">
               <div *ngFor="let member of community.members.slice(0,5)"
-                class="flex items-center gap-2 py-1 bg-zinc-500/30 rounded-full">
-                <div *ngIf="member.userId?.status" class="h-3 w-3 bg-green-600/70 rounded-full ml-2 -mr-3"></div>
-                <span class="text-zinc-400 text-sm px-3">{{ member.userId?.userName || 'Unknown' }}</span>
+                class="flex items-center gap-2 py-1 bg-surface-600/30 rounded-full">
+                <div *ngIf="member.userId?.status" class="h-3 w-3 bg-success/70 rounded-full ml-2 -mr-3"></div>
+                <span class="text-ink-secondary text-sm px-3">{{ member.userId?.userName || 'Unknown' }}</span>
               </div>
             </div>
           </div>
@@ -148,63 +157,63 @@
         <div class="space-y-3 md:space-y-4">
 
           <!-- Tags Card -->
-          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+          <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
             <div class="flex justify-between items-center mb-2 md:mb-3">
-              <h2 class="text-xs md:text-sm font-semibold text-zinc-500">Community Tags</h2>
+              <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Community Tags</h2>
               <div class="flex items-center gap-4">
                 <button *ngIf="permissions.includes('MANAGE_COMMUNITY')"
-                  class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all"
+                  class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
                   title="Manage tags">
                   Manage
                 </button>
-                <span class="text-zinc-400 text-xs md:text-sm mx-3">{{ community.tags.length }}</span>
+                <span class="text-ink-secondary text-xs md:text-sm mx-3">{{ community.tags.length }}</span>
               </div>
             </div>
             <div class="flex flex-wrap gap-2">
               <span *ngFor="let tag of community.tags"
-                class="px-3 py-1 bg-zinc-500/30 text-zinc-400 text-sm rounded-full">
+                class="px-3 py-1 bg-surface-600/30 text-ink-secondary text-sm rounded-full">
                 {{ tag.name }}
               </span>
             </div>
           </div>
 
           <!-- Channels Card -->
-          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+          <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
             <div class="flex justify-between items-center mb-2 md:mb-3">
-              <h2 class="text-xs md:text-sm font-semibold text-zinc-500">Channels</h2>
+              <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Channels</h2>
               <div class="flex items-center gap-4">
                 <button *ngIf="permissions.includes('MANAGE_CHANNELS')" (click)="manageChannels()"
-                  class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all"
+                  class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
                   title="Manage channels">
                   Manage
                 </button>
-                <span class="text-zinc-400 text-xs md:text-sm mx-3">{{ community.channels.length }}</span>
+                <span class="text-ink-secondary text-xs md:text-sm mx-3">{{ community.channels.length }}</span>
               </div>
             </div>
             <div class="flex flex-wrap gap-2">
               <span *ngFor="let channel of community.channels.slice(0,4)"
-                class="px-3 py-1 bg-purple-900/30 text-purple-400 text-sm rounded-full">
+                class="px-3 py-1 bg-brand/10 text-brand text-sm rounded-full">
                 #{{ channel.name }}
               </span>
             </div>
           </div>
 
           <!-- Join Requests Card -->
-          <div class="p-3 md:p-4 bg-zinc-900/50 rounded-lg md:rounded-xl">
+          <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
             <div class="flex justify-between items-center mb-2 md:mb-3">
-              <h2 class="text-xs md:text-sm font-semibold text-zinc-500">Join Requests</h2>
+              <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Join Requests</h2>
               <div class="flex items-center gap-4">
                 <button *ngIf="permissions.includes('MANAGE_MEMBERS')"
-                  class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/40 rounded-lg text-blue-400 text-sm transition-all"
+                  class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
                   title="Manage requests">
                   Manage
                 </button>
-                <span class="text-zinc-400 text-xs md:text-sm mx-3">{{ community.joinRequests.length }}</span>
+                <span class="text-ink-secondary text-xs md:text-sm mx-3">{{ community.joinRequests.length }}</span>
               </div>
             </div>
             <div class="flex flex-wrap gap-2">
               <span *ngFor="let request of community.joinRequests.slice(0,4)"
-                class="px-3 py-1 bg-amber-900/30 text-amber-400 text-sm rounded-full">
+                class="px-3 py-1 bg-surface-700 text-ink-secondary text-sm rounded-full">
                 {{ request }}
               </span>
             </div>

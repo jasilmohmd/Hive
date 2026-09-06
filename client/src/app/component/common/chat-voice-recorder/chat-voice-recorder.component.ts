@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, OnDestroy, Output } from '@angular/core';
 import { CallService } from '../../../services/call.service';
 import { ChatSheetComponent } from '../chat-sheet/chat-sheet.component';
+import { ButtonComponent } from '../../common/button/button.component';
 
 @Component({
   selector: 'app-chat-voice-recorder',
   standalone: true,
-  imports: [CommonModule, ChatSheetComponent],
+  imports: [CommonModule, ChatSheetComponent, ButtonComponent],
   templateUrl: './chat-voice-recorder.component.html',
 })
 export class ChatVoiceRecorderComponent implements OnDestroy {

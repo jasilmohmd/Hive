@@ -87,6 +87,16 @@ export class CommunityUseCase {
   }
 
   /**
+   * Whether the given user is the community's owner.
+   * `ownerId` may be populated to a full user document, so compare on `_id`.
+   */
+  private isCommunityOwner(community: ICommunity, userId: Types.ObjectId): boolean {
+    const owner = community.ownerId as unknown as { _id?: Types.ObjectId } | Types.ObjectId;
+    const ownerId = (owner && (owner as { _id?: Types.ObjectId })._id) || (owner as Types.ObjectId);
+    return new Types.ObjectId(ownerId).equals(userId);
+  }
+
+  /**
    * Get a community by its ID.
    */
   async getCommunityById(communityId: Types.ObjectId): Promise<ICommunity> {
@@ -113,10 +123,7 @@ export class CommunityUseCase {
     try {
       // Assumes communityRepository.searchCommunities is implemented.
       const communities = await this.communityRepository.searchCommunities(searchTerm);
-      if (!communities || communities.length === 0) {
-        throw new NotFoundError("No communities found", "community");
-      }
-      return communities;
+      return communities ?? [];
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error searching communities: ${error.message}`);
@@ -208,10 +215,7 @@ export class CommunityUseCase {
       }
 
       const communities = await this.communityRepository.getCommunitiesByUser(userId);
-      if (!communities || communities.length === 0) {
-        throw new NotFoundError("No communities found for the user", "community");
-      }
-      return communities;
+      return communities ?? [];
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error fetching communities for user: ${error.message}`);
@@ -331,6 +335,13 @@ export class CommunityUseCase {
       const community = await this.communityRepository.getCommunityById(communityId);
       if (!community) throw new NotFoundError("Community not found", "community");
 
+      if (this.isCommunityOwner(community, userId)) {
+        throw new ValidationError(
+          "The community owner cannot leave the community. Transfer ownership or delete the community instead.",
+          "community"
+        );
+      }
+
       const result = await this.communityRepository.removeMember(communityId, userId);
       if (!result) throw new Error("Failed to leave community");
       return result;
@@ -395,6 +406,10 @@ export class CommunityUseCase {
 
       const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_MEMBERS");
       if (!allowed) throw new UnauthorizedError("Permission denied", "community");
+
+      if (this.isCommunityOwner(community, memberId)) {
+        throw new ValidationError("The community owner cannot be removed", "community");
+      }
 
       const result = await this.communityRepository.removeMember(communityId, memberId);
       if (!result) throw new Error("Failed to remove member");
@@ -476,10 +491,7 @@ export class CommunityUseCase {
       }
 
       const communities = await this.communityRepository.filterCommunitiesByTag(tagId);
-      if (!communities || communities.length === 0) {
-        throw new NotFoundError("No communities found for the given tag", "community");
-      }
-      return communities;
+      return communities ?? [];
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error filtering communities by tag: ${error.message}`);
@@ -499,10 +511,7 @@ export class CommunityUseCase {
       }
 
       const communities = await this.communityRepository.filterCommunitiesByCategory(categoryId);
-      if (!communities || communities.length === 0) {
-        throw new NotFoundError("No communities found for the given category", "community");
-      }
-      return communities;
+      return communities ?? [];
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error filtering communities by category: ${error.message}`);

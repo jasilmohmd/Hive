@@ -83,6 +83,13 @@ export class ChannelRepository implements IChannelRepository {
 
   async deleteChannel(id: Types.ObjectId): Promise<boolean> {
     const result = await ChannelModel.findByIdAndDelete(id);
-    return result ? true : false;
+    if (!result) return false;
+
+    // Keep the owning community's channels array in sync.
+    await CommunityModel.updateOne(
+      { _id: result.communityId },
+      { $pull: { channels: id } }
+    );
+    return true;
   }
 }

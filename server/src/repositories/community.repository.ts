@@ -15,7 +15,7 @@ export class CommunityRepository implements ICommunityRepository {
 
   async getCommunityById(id: Types.ObjectId): Promise<ICommunityDocument | null> {
     return (await CommunityModel.findById(id)
-      .populate('ownerId roles channels members.userId members.roleIds tags')) as ICommunityDocument | null;
+      .populate('ownerId roles channels members.userId members.roleIds tags joinRequests')) as ICommunityDocument | null;
   }
 
   async getCommunityByName(name: string): Promise<ICommunityDocument | null> {

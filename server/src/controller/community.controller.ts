@@ -1,12 +1,27 @@
 import { Request, Response, NextFunction } from "express";
 import { Types } from "mongoose";
 import ICommunityUsecase from "../interfaces/usecase/ICommunity.usecase.interface";
+import ICommunityController from "../interfaces/controllers/ICommunityController.interface";
 import StatusCodes from "../constants/auth/statusCodes";
 import IAuthRequest from "../interfaces/common/IAuthRequest.interface";
-import { log } from "console";
 
 
-class CommunityController {
+/**
+ * Parse a route/body param into an ObjectId. On a missing or malformed
+ * value it sends a 400 and returns null, so the caller can `return` early.
+ * (`new Types.ObjectId(undefined)` mints a random id and throws on other
+ * bad input, so the old `if (!id)` guards never actually fired.)
+ */
+function parseObjectId(res: Response, raw: unknown, label: string): Types.ObjectId | null {
+  if (typeof raw !== "string" || !Types.ObjectId.isValid(raw)) {
+    res.status(StatusCodes.BadRequest).json({ error: `${label} is required` });
+    return null;
+  }
+  return new Types.ObjectId(raw);
+}
+
+
+class CommunityController implements ICommunityController {
   private communityUsecase: ICommunityUsecase;
 
   constructor(communityUsecase: ICommunityUsecase) {
@@ -25,13 +40,12 @@ class CommunityController {
       }
 
       const { name, description, type, tags, imageUrl, coverImageUrl } = req.body.data;
-      console.log(req.body.data);
-      
+
       const community = await this.communityUsecase.createCommunity({
         name,
         description,
         type,
-        imageUrl, 
+        imageUrl,
         coverImageUrl,
         ownerId: userId.toString(),
         tags,
@@ -45,15 +59,8 @@ class CommunityController {
   // GET /communities/:id
   public async getCommunityById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { id } = req.params;
-
-      // Validate that id is a valid 24-character hex string
-      if (!id || typeof id !== 'string' || id.length !== 24 || !/^[0-9A-Fa-f]+$/.test(id)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid Community ID" });
-        return;
-      }
-
-      const communityId = new Types.ObjectId(id);
+      const communityId = parseObjectId(res, req.params.id, "Community ID");
+      if (!communityId) return;
 
       const community = await this.communityUsecase.getCommunityById(communityId);
       res.status(StatusCodes.Success).json({community});
@@ -83,16 +90,14 @@ class CommunityController {
 
       const { data } = req.body
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
         return;
       }
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
 
       const updatedCommunity = await this.communityUsecase.updateCommunity(
         userId,
@@ -111,16 +116,14 @@ class CommunityController {
   public async deleteCommunity(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
         return;
       }
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
 
       const result = await this.communityUsecase.deleteCommunity(userId, communityId);
       res.status(StatusCodes.Success).json({ success: result });
@@ -161,21 +164,18 @@ class CommunityController {
   public async requestToJoinCommunity(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
         return;
       }
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
 
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
 
       const result = await this.communityUsecase.requestToJoinCommunity(
-        communityId,
-        userId
+        userId,
+        communityId
       );
 
       res.status(StatusCodes.Success).json({ success: result });
@@ -188,31 +188,24 @@ class CommunityController {
   public async approveJoinRequest(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
 
-      const memberId = new Types.ObjectId(String(req.body.memberId));
-      const roleId = new Types.ObjectId(String(req.body.roleId));
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
         return;
       }
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
 
-      if (!memberId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Member ID is required" })
-        return;
-      }
-      if (!roleId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Role ID is required" })
-        return;
-      }
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
+
+      const memberId = parseObjectId(res, req.body.memberId, "Member ID");
+      if (!memberId) return;
+
+      const roleId = parseObjectId(res, req.body.roleId, "Role ID");
+      if (!roleId) return;
 
       const result = await this.communityUsecase.approveJoinRequest(
-        communityId, userId, memberId, roleId
+        userId, communityId, memberId, roleId
       );
       res.status(StatusCodes.Success).json({ success: result });
     } catch (error) {
@@ -223,21 +216,21 @@ class CommunityController {
   // POST /communities/join/reject
   public async rejectJoinRequest(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const memberId = new Types.ObjectId(String(req.body.memberId));
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
         return;
       }
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
+
+      const memberId = parseObjectId(res, req.body.memberId, "Member ID");
+      if (!memberId) return;
 
       const result = await this.communityUsecase.rejectJoinRequest(
-        communityId, userId, memberId
+        userId, communityId, memberId
       );
       res.status(StatusCodes.Success).json({ success: result });
     } catch (error) {
@@ -249,19 +242,17 @@ class CommunityController {
   public async leaveCommunity(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
         return;
       }
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
 
       const result = await this.communityUsecase.leaveCommunity(
-        communityId, userId
+        userId, communityId
       );
       res.status(StatusCodes.Success).json({ success: result });
     } catch (error) {
@@ -272,19 +263,21 @@ class CommunityController {
   // POST /communities/member/add
   public async addMember(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const memberId = new Types.ObjectId(String(req.body.memberId));
-      const roleId = new Types.ObjectId(String(req.body.roleId));
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
         return;
       }
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
+
+      const memberId = parseObjectId(res, req.body.memberId, "Member ID");
+      if (!memberId) return;
+
+      const roleId = parseObjectId(res, req.body.roleId, "Role ID");
+      if (!roleId) return;
 
       const result = await this.communityUsecase.addMember(
         userId, communityId, memberId, roleId
@@ -298,21 +291,21 @@ class CommunityController {
   // POST /communities/member/remove
   public async removeMember(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const memberId = new Types.ObjectId(String(req.body.memberId));
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
         return;
       }
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
+
+      const memberId = parseObjectId(res, req.body.memberId, "Member ID");
+      if (!memberId) return;
 
       const result = await this.communityUsecase.removeMember(
-        communityId, userId, memberId
+        userId, communityId, memberId
       );
       res.status(StatusCodes.Success).json({ success: result });
     } catch (error) {
@@ -324,14 +317,12 @@ class CommunityController {
   public async addTag(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
 
-      const tagId = new Types.ObjectId(req.params.tagId);
+      const tagId = parseObjectId(res, req.params.tagId, "Tag ID");
+      if (!tagId) return;
 
       const result = await this.communityUsecase.addTag(
         userId,
@@ -349,14 +340,12 @@ class CommunityController {
     try {
 
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
-      if (!communityId) {
-        res.status(StatusCodes.BadRequest).json({ error: "Community ID is required" })
-        return;
-      }
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
 
-      const tagId = new Types.ObjectId(req.params.tagId);
+      const tagId = parseObjectId(res, req.params.tagId, "Tag ID");
+      if (!tagId) return;
 
       const result = await this.communityUsecase.removeTag(
         userId,
@@ -372,7 +361,9 @@ class CommunityController {
   // GET /communities/tag/:tagId
   public async filterCommunitiesByTag(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const tagId = new Types.ObjectId(req.params.tagId);
+      const tagId = parseObjectId(res, req.params.tagId, "Tag ID");
+      if (!tagId) return;
+
       const communities = await this.communityUsecase.filterCommunitiesByTag(tagId);
       res.status(StatusCodes.Success).json({communities});
     } catch (error) {
@@ -383,7 +374,9 @@ class CommunityController {
   // GET /communities/category/:categoryId
   public async filterCommunitiesByCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const categoryId = new Types.ObjectId(req.params.categoryId);
+      const categoryId = parseObjectId(res, req.params.categoryId, "Category ID");
+      if (!categoryId) return;
+
       const communities = await this.communityUsecase.filterCommunitiesByCategory(categoryId);
       res.status(StatusCodes.Success).json({communities});
     } catch (error) {
@@ -422,9 +415,10 @@ class CommunityController {
   public async getTagById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
 
-      const {id} = req.params
+      const tagId = parseObjectId(res, req.params.id, "Tag ID");
+      if (!tagId) return;
 
-      const tag = await this.communityUsecase.getTagById(new Types.ObjectId(id));
+      const tag = await this.communityUsecase.getTagById(tagId);
 
       if (!tag) {
         res.status(StatusCodes.NotFound).json({ message: "No tag found" });

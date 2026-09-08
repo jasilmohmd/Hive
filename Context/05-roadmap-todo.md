@@ -41,12 +41,12 @@ Original list (strikethrough = shipped in PR #6):
 
 ## Tier 2 — finish RBAC / role management (the other thing the owner asked about)
 
-> **Build plan: `08-tier2-plan.md`.** **PR A done (PR #12):** shared `PERMISSIONS` constant, `/role/assign` + `/role/unassign` endpoints (with guards), `deleteRole` member cascade, `POST /community/kick` gated on `KICK_MEMBERS`, `role.service.ts` + `community.service.ts` methods. **Remaining: PR B (roles CRUD screen), PR C (member role-assignment UI, Kick-vs-Remove in member modal, role badges).**
+> **Build plan: `08-tier2-plan.md`.** **PR A (#12):** server endpoints + service methods. **PR B (#13):** roles CRUD screen (modal from About). **Remaining: PR C — member role-assignment UI (replace the mis-wired member-modal "Manage" button), Kick-vs-Remove in the member modal, role badges (colored pills).**
 
 
-1. **Build a Roles screen** for `MANAGE_ROLES` holders: list roles (`listRoles` — needs adding to `role.service.ts`), create a role (`createRole` — needs adding), edit a role's name/permissions (`updateRole` — needs adding, remember `isDefault` roles are already correctly blocked server-side), delete a custom role (`deleteRole` — needs adding). All four backend endpoints exist and are correctly permission-gated; only the frontend is missing.
-2. **Role assignment for existing members.** There's currently no way to change a member's role(s) after they've joined, short of a raw API call. Decide the shape: either extend `addMember`'s role param into a proper "assign role" action reachable from the member-management modal, or add a new endpoint (`role.repository.ts` already has `assignRole` — it's just currently only called internally at community-creation time for the Owner).
-3. **Decide `KICK_MEMBERS`'s fate** (`04-known-bugs.md` #5) — implement it as a real, narrower-than-`MANAGE_MEMBERS` action, or remove it from the seed data so the permission list matches what's actually enforced.
+1. ~~**Build a Roles screen**~~ ✅ **PR #13.** `RolesModalComponent` — list/create/edit/delete, defaults read-only. `role.service.ts` gained all six methods in PR #12.
+2. **Role assignment for existing members** — server side done (PR #12: `POST /role/assign` + `/role/unassign`). **UI still needed (PR C):** replace the member-modal "Manage" button (currently opens the channel-edit modal) with a per-member role editor.
+3. ~~**Decide `KICK_MEMBERS`'s fate**~~ ✅ **PR #12** — implemented as a real narrower kick (`POST /community/kick/:communityId`). UI (Kick vs Remove in the member modal) is PR C.
 4. **Role badges in the member list.** `manageMembers()` already computes `roles: member.roleIds?.map(r => r.name).join(', ')` — worth a small polish pass (colored pills per role, matching whatever visual language the rest of the redesign uses) once assignment actually works.
 5. Confirm intent for `VIEW_CONTENT`/`SEND_MESSAGES` (`03-rbac-status.md`) — either find/add their enforcement points or document that they're reserved for future use.
 

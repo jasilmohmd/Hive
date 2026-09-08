@@ -2,7 +2,7 @@
   <div class="max-w-4xl mx-auto">
     <h1 class="text-2xl font-semibold mb-2">Discover communities</h1>
     <p class="text-ink-secondary text-sm mb-6">
-      Browse public communities you can explore and join from community pages.
+      Search communities by name or tag. Open any community to explore it, or request to join a private one.
     </p>
 
     <app-loading-state *ngIf="loading" variant="spinner" message="Loading communities…" containerClass="py-4" />
@@ -13,6 +13,35 @@
       variant="banner"
       title="Could not load communities"
     />
+
+    <div *ngIf="!loading && !errorMessage && allCommunities.length" class="mb-6 flex flex-col gap-2 sm:flex-row">
+      <input
+        type="search"
+        [(ngModel)]="search"
+        (ngModelChange)="applyFilter()"
+        placeholder="Search by name or description"
+        class="flex-1 rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+        aria-label="Search communities"
+      />
+      <select
+        *ngIf="tagOptions.length"
+        [(ngModel)]="tagFilter"
+        (ngModelChange)="applyFilter()"
+        class="rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+        aria-label="Filter by tag"
+      >
+        <option value="">All tags</option>
+        <option *ngFor="let t of tagOptions" [value]="t._id">{{ t.name }}</option>
+      </select>
+      <button
+        *ngIf="hasActiveFilter"
+        type="button"
+        (click)="clearFilters()"
+        class="rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink-secondary hover:text-ink"
+      >
+        Clear
+      </button>
+    </div>
 
     <ul *ngIf="!loading && communities.length" class="space-y-3">
       <li
@@ -45,9 +74,15 @@
     </ul>
 
     <app-empty-state
-      *ngIf="!loading && !communities.length && !errorMessage"
+      *ngIf="!loading && !communities.length && !errorMessage && !hasActiveFilter"
       title="No communities yet"
       description="Create one from the sidebar plus button when you are ready."
+    />
+
+    <app-empty-state
+      *ngIf="!loading && !communities.length && !errorMessage && hasActiveFilter"
+      title="No matches"
+      description="No communities match your search or tag filter."
     />
   </div>
 </div>

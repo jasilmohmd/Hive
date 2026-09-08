@@ -41,6 +41,9 @@ Original list (strikethrough = shipped in PR #6):
 
 ## Tier 2 — finish RBAC / role management (the other thing the owner asked about)
 
+> **Build plan agreed: `08-tier2-plan.md`.** Decisions: new `/role/assign` + `/role/unassign` routes for member role assignment; `KICK_MEMBERS` gets a real narrower-than-`MANAGE_MEMBERS` kick action. Not started.
+
+
 1. **Build a Roles screen** for `MANAGE_ROLES` holders: list roles (`listRoles` — needs adding to `role.service.ts`), create a role (`createRole` — needs adding), edit a role's name/permissions (`updateRole` — needs adding, remember `isDefault` roles are already correctly blocked server-side), delete a custom role (`deleteRole` — needs adding). All four backend endpoints exist and are correctly permission-gated; only the frontend is missing.
 2. **Role assignment for existing members.** There's currently no way to change a member's role(s) after they've joined, short of a raw API call. Decide the shape: either extend `addMember`'s role param into a proper "assign role" action reachable from the member-management modal, or add a new endpoint (`role.repository.ts` already has `assignRole` — it's just currently only called internally at community-creation time for the Owner).
 3. **Decide `KICK_MEMBERS`'s fate** (`04-known-bugs.md` #5) — implement it as a real, narrower-than-`MANAGE_MEMBERS` action, or remove it from the seed data so the permission list matches what's actually enforced.

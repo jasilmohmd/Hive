@@ -13,7 +13,8 @@ Generated 2026-09-08 at commit `597fb1b` (branch `main`) by a Claude review sess
 | `03-rbac-status.md` | Deep dive: the permission model, where it's enforced, where it isn't, and the gaps between the 5 predefined roles and what the UI/API actually need. |
 | `04-known-bugs.md` | Every concrete, file-and-line bug found this pass, **not duplicating** `HANDOFF.md`'s "Known open issues" table (read that one too — it's still valid, verified against the current HEAD below). |
 | `05-roadmap-todo.md` | A prioritized punch list to work from, split into "fix before anything else" / "finish the half-built features" / "nice to have". |
-| `07-tier1-plan.md` | Agreed build plan for the Tier 1 membership-lifecycle slice (join requests, remove-member fix, request-to-join, leave), with decisions locked. |
+| `07-tier1-plan.md` | Tier 1 build plan (membership lifecycle) — **shipped**, PRs #6–#10. |
+| `08-tier2-plan.md` | Tier 2 build plan (RBAC / role management) — decisions locked, **not started**. |
 
 ## The one-paragraph version
 

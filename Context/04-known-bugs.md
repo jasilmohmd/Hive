@@ -3,8 +3,8 @@
 New findings from this review, verified by reading the actual code at commit `597fb1b`. These are **in addition to** `HANDOFF.md`'s "Known open issues" table (14 items, still valid — see `00-START-HERE.md`), not a replacement for it. Ordered by severity/impact.
 
 > **Update 2026-09-08 — Tier 0 landed (PR #2, `aecbd00`); Tier 1 lifecycle landed (PR #6, `915355e`).**
-> Fixed: **#1** (`e9ecffd`), **#2** (PR #6 `fdf0900`), **#3** (server `f3013a5` + UI PR #6 `1c90265`), **#4** (`429ed97`), **#6** (`17831cf`), **#7** (`e9ecffd`/`f653285`), **#8** (`89454a5`).
-> Still open: **#5** (`KICK_MEMBERS` unused — decision needed), **#9** (new — password-hash leak in `getCommunityById`).
+> Fixed: **#1** (`e9ecffd`), **#2** (PR #6 `fdf0900`), **#3** (server `f3013a5` + UI PR #6 `1c90265`), **#4** (`429ed97`), **#6** (`17831cf`), **#7** (`e9ecffd`/`f653285`), **#8** (`89454a5`), **#9** (PR #8 `aef7301`).
+> Still open: **#5** (`KICK_MEMBERS` unused — decision needed).
 > Per-item notes inline below.
 
 ---
@@ -130,6 +130,8 @@ Neither method checked whether the acting-on user is the community's `Owner` (or
 ---
 
 ## 9. `GET /community/:id` returns members' (and now requesters') bcrypt password hashes (security)
+
+> **FIXED — PR #8 `aef7301`.** Added a `toJSON` transform to the User schema that deletes `password`. Covers every response path (including User docs populated into other resources) in one place; auth's direct `user.password` access is unaffected. Verified live: login still works, `GET /community/:id` no longer contains `password`.
 
 **File:** `server/src/repositories/community.repository.ts` (`getCommunityById` populate), `server/src/framework/models/user.model.ts`
 

@@ -2,7 +2,9 @@ import { ChangeDetectorRef, Component, ElementRef, inject, Input, ViewChild } fr
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { IRole } from '../../../../models/role';
+import { ITag } from '../../../../models/tag';
 import { CommunityStateService } from '../../../../services/shared/community-state.service';
 import { RoleStateService } from '../../../../services/shared/role-state.service';
 import { ListModalComponent } from '../list-modal/list-modal.component';
@@ -22,7 +24,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule, ListModalComponent, CommonModalComponent, ImagePickerMenuComponent],
+  imports: [CommonModule, FormsModule, ListModalComponent, CommonModalComponent, ImagePickerMenuComponent],
   templateUrl: './about.component.html',
   styleUrl: './about.component.css'
 })
@@ -43,6 +45,19 @@ export class AboutComponent {
   showLeaveModal: boolean = false;
   /** Current user id, resolved once; used for the "is this the owner?" check. */
   private currentUserId: string | null = null;
+
+  // Manage-community (edit details) + delete
+  showEditCommunity: boolean = false;
+  showDeleteCommunityModal: boolean = false;
+  editForm: { name: string; description: string; type: 'public' | 'private' } = {
+    name: '', description: '', type: 'public',
+  };
+  savingCommunity: boolean = false;
+
+  // Tag management
+  showTagModal: boolean = false;
+  allTags: ITag[] = [];
+  tagToAdd: string = '';
 
   // Modal related properties
   showModal: boolean = false;
@@ -163,6 +178,103 @@ export class AboutComponent {
         this.router.navigate(['/main/discover']);
       },
       error: (err: Error) => this.toast.error(err.message || 'Failed to leave the community'),
+    });
+  }
+
+  // --- Manage community: edit details ---
+
+  openManageCommunity(): void {
+    this.editForm = {
+      name: this.community?.name || '',
+      description: this.community?.description || '',
+      type: this.community?.type === 'private' ? 'private' : 'public',
+    };
+    this.showEditCommunity = true;
+  }
+
+  saveCommunityDetails(): void {
+    const name = this.editForm.name.trim();
+    if (name.length < 3) {
+      this.toast.error('Community name must be at least 3 characters');
+      return;
+    }
+    this.savingCommunity = true;
+    this.communityService.updateCommunity(this.communityId, {
+      name,
+      description: this.editForm.description.trim(),
+      type: this.editForm.type,
+    }).subscribe({
+      next: () => {
+        this.savingCommunity = false;
+        this.showEditCommunity = false;
+        this.toast.success('Community updated');
+        this.reloadCommunity();
+        this.communityStateService.notifyMembershipChanged();
+      },
+      error: (err: Error) => {
+        this.savingCommunity = false;
+        this.toast.error(err.message || 'Update failed');
+      },
+    });
+  }
+
+  // --- Manage community: delete ---
+
+  promptDeleteCommunity(): void {
+    this.showEditCommunity = false;
+    this.showDeleteCommunityModal = true;
+  }
+
+  onDeleteCommunityConfirmed(): void {
+    this.showDeleteCommunityModal = false;
+    this.communityService.deleteCommunity(this.communityId).subscribe({
+      next: () => {
+        this.toast.success('Community deleted');
+        this.communityStateService.notifyMembershipChanged();
+        this.router.navigate(['/main/discover']);
+      },
+      error: (err: Error) => this.toast.error(err.message || 'Failed to delete the community'),
+    });
+  }
+
+  // --- Tag management ---
+
+  openTagModal(): void {
+    this.tagToAdd = '';
+    this.showTagModal = true;
+    if (!this.allTags.length) {
+      this.communityService.getAllTags().subscribe({
+        next: (tags) => { this.allTags = tags; },
+        error: () => { /* the picker just stays empty */ },
+      });
+    }
+  }
+
+  get availableTags(): ITag[] {
+    const current = new Set((this.community?.tags || []).map((t: any) => t?._id || t));
+    return this.allTags.filter(t => !current.has(t._id));
+  }
+
+  addTagToCommunity(): void {
+    if (!this.tagToAdd) return;
+    this.communityService.addTag(this.communityId, this.tagToAdd).subscribe({
+      next: () => {
+        this.tagToAdd = '';
+        this.toast.success('Tag added');
+        this.reloadCommunity();
+      },
+      error: (err: Error) => this.toast.error(err.message || 'Failed to add tag'),
+    });
+  }
+
+  removeTagFromCommunity(tag: any): void {
+    const tagId = tag?._id || tag;
+    this.communityService.removeTag(this.communityId, tagId).subscribe({
+      next: () => {
+        this.toast.success('Tag removed');
+        this.reloadCommunity();
+      },
+      error: (err: Error) => this.toast.error(err.message || 'Failed to remove tag'),
     });
   }
 

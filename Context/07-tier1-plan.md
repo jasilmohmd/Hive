@@ -4,7 +4,9 @@ Written 2026-09-08 after Tier 0 landed (`main` at `4e5ad84`). This is the agreed
 
 > **✅ DONE — PR #6, merged to `main` at `915355e` (2026-09-08).** All five items shipped. Commits: `d0e5aeb` (service methods), `fdf0900` (remove-member fix), `1c90265` (join-request panel), `9afdb3b` (request-to-join), `c3d3a77` (leave UI). Verified live end-to-end (register → private community → request → approve → member leaves; owner-leave/remove rejected) plus a Playwright UI pass with screenshots. `ng test` 79/79.
 >
-> **New follow-up found during verification:** `GET /community/:id` returns bcrypt **password hashes** for every member (pre-existing, via the `members.userId` populate) and now also every join requester (the `joinRequests` populate added in PR #2). Fix with a `-password` projection or a User-model `toJSON` transform. Tracked in `04-known-bugs.md` (new item) and `HANDOFF.md`.
+> **Follow-up found during verification — FIXED (PR #8 `aef7301`):** `GET /community/:id` leaked bcrypt password hashes for members + requesters. Fixed with a User-schema `toJSON` transform.
+>
+> **Beyond items 1–5 — the rest of community admin also shipped (PR #9):** edit name/description/type, delete community (type-to-confirm; server-side `deleteCommunity` now cascades `Role` + `Channel` docs), tag add/remove, plus a reusable `confirmPhrase` on `common-modal`. Verified live (API + Playwright). **Only Tier 1 item left: community search / filter-by-tag/category** (`05-roadmap-todo.md` item 7).
 
 ## Decisions locked
 

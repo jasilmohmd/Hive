@@ -62,7 +62,7 @@
       <!-- Profile-card action buttons -->
       <div class="absolute top-4 right-4 flex items-center gap-2">
         <!-- Manage Community Button -->
-        <button *ngIf="permissions.includes('MANAGE_COMMUNITY')"
+        <button *ngIf="permissions.includes('MANAGE_COMMUNITY')" (click)="openManageCommunity()"
           class="flex items-center gap-2 px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -175,7 +175,7 @@
             <div class="flex justify-between items-center mb-2 md:mb-3">
               <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Community Tags</h2>
               <div class="flex items-center gap-4">
-                <button *ngIf="permissions.includes('MANAGE_COMMUNITY')"
+                <button *ngIf="permissions.includes('MANAGE_COMMUNITY')" (click)="openTagModal()"
                   class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
                   title="Manage tags">
                   Manage
@@ -297,3 +297,89 @@
   (cancelled)="onLeaveCancelled()"
   class="animate-fade-in-up">
 </app-common-modal>
+
+<!-- Manage community: edit details -->
+<div *ngIf="showEditCommunity"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 p-4 animate-fade-in"
+  (click)="showEditCommunity = false" role="presentation">
+  <div class="relative w-full max-w-md rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
+    role="dialog" aria-modal="true" aria-label="Manage community" (click)="$event.stopPropagation()">
+    <h2 class="mb-4 text-xl font-bold">Manage community</h2>
+
+    <label class="mb-1 block text-sm text-ink-secondary">Name</label>
+    <input type="text" [(ngModel)]="editForm.name" maxlength="50"
+      class="mb-4 w-full rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none" />
+
+    <label class="mb-1 block text-sm text-ink-secondary">Description</label>
+    <textarea [(ngModel)]="editForm.description" rows="3" maxlength="500"
+      class="mb-4 w-full rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none"></textarea>
+
+    <label class="mb-1 block text-sm text-ink-secondary">Type</label>
+    <select [(ngModel)]="editForm.type"
+      class="mb-6 w-full rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none">
+      <option value="public">Public</option>
+      <option value="private">Private</option>
+    </select>
+
+    <div class="flex items-center justify-between">
+      <button (click)="promptDeleteCommunity()"
+        class="px-3 py-2 text-sm text-danger-text hover:bg-danger/10 rounded-md transition-colors">
+        Delete community
+      </button>
+      <div class="flex gap-2">
+        <button (click)="showEditCommunity = false"
+          class="px-4 py-2 text-sm rounded-md bg-surface-800 hover:bg-surface-700 transition-colors">Cancel</button>
+        <button (click)="saveCommunityDetails()" [disabled]="savingCommunity"
+          class="px-4 py-2 text-sm rounded-md bg-brand text-surface-950 hover:bg-brand-hover disabled:opacity-60 transition-colors">
+          {{ savingCommunity ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-common-modal
+  *ngIf="showDeleteCommunityModal"
+  title="Delete community"
+  [message]="'This permanently deletes ' + (community?.name || 'the community') + ', its channels and its roles. This cannot be undone.'"
+  [confirmPhrase]="community?.name || ''"
+  confirmText="Delete community"
+  cancelText="Cancel"
+  (confirmed)="onDeleteCommunityConfirmed()"
+  (cancelled)="showDeleteCommunityModal = false"
+  class="animate-fade-in-up">
+</app-common-modal>
+
+<!-- Tag management -->
+<div *ngIf="showTagModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 p-4 animate-fade-in"
+  (click)="showTagModal = false" role="presentation">
+  <div class="relative w-full max-w-md rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
+    role="dialog" aria-modal="true" aria-label="Manage tags" (click)="$event.stopPropagation()">
+    <h2 class="mb-4 text-xl font-bold">Community tags</h2>
+
+    <div class="mb-4 flex flex-wrap gap-2">
+      <span *ngFor="let tag of community?.tags"
+        class="inline-flex items-center gap-1.5 rounded-full bg-surface-700 px-3 py-1 text-sm text-ink-secondary">
+        {{ tag.name || tag }}
+        <button (click)="removeTagFromCommunity(tag)" class="text-ink-muted hover:text-danger-text" aria-label="Remove tag">×</button>
+      </span>
+      <span *ngIf="!community?.tags?.length" class="text-sm text-ink-muted">No tags yet</span>
+    </div>
+
+    <div class="flex gap-2">
+      <select [(ngModel)]="tagToAdd"
+        class="flex-1 rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none">
+        <option value="">Add a tag…</option>
+        <option *ngFor="let tag of availableTags" [value]="tag._id">{{ tag.name }}</option>
+      </select>
+      <button (click)="addTagToCommunity()" [disabled]="!tagToAdd"
+        class="px-4 py-2 text-sm rounded-md bg-brand text-surface-950 hover:bg-brand-hover disabled:opacity-60 transition-colors">Add</button>
+    </div>
+
+    <div class="mt-6 flex justify-end">
+      <button (click)="showTagModal = false"
+        class="px-4 py-2 text-sm rounded-md bg-surface-800 hover:bg-surface-700 transition-colors">Done</button>
+    </div>
+  </div>
+</div>

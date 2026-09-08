@@ -45,6 +45,18 @@ const userSchema: Schema = new Schema<IUser>({
     required: false,
   },
 
+}, {
+  // Never serialise the password hash. This covers every response path,
+  // including User docs populated into other resources (e.g. a community's
+  // members / joinRequests). Direct property access (auth's
+  // bcrypt.compare(plain, user.password)) is unaffected, and repositories
+  // that genuinely need the hash read it before serialisation.
+  toJSON: {
+    transform(_doc, ret: Record<string, unknown>) {
+      delete ret['password'];
+      return ret;
+    },
+  },
 });
 
 const Users = mongoose.model<IUser>('User', userSchema);

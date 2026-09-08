@@ -22,17 +22,19 @@ Line-ending noise from the `.gitattributes` added in the redesign pass was norma
 
 ## Tier 1 — finish community management (the feature the owner asked about) — ⏳ IN PROGRESS
 
-**Items 1–5 (membership lifecycle) — ✅ DONE, PR #6, `main` at `915355e`.** Join-request panel, remove-member fix, request-to-join (private only), leave-community, plus the four `CommunityService` methods. See `07-tier1-plan.md`. **Remaining Tier 1: items 4 (delete community, + orphan cascade), 5 (edit name/description/type), 6 (tag management), 7 (search/filter)** — renumbered below as originally written; the *lifecycle* items among them are done.
+**Items 1–5 (membership lifecycle) — ✅ DONE, PR #6.** Join-request panel, remove-member fix, request-to-join (private only), leave-community, + four `CommunityService` methods.
+**Items delete / edit-details / tag-management — ✅ DONE, PR #9.** (+ server-side delete cascade, + `common-modal` `confirmPhrase`, + password-leak fix PR #8.)
+**Only remaining Tier 1: community search + filter-by-tag/category** (item 7 below).
 
 Original list (strikethrough = shipped in PR #6):
 
 1. ~~**Join-request UI.**~~ ✅ Panel + Approve/Reject + `requestToJoinCommunity`/`approveJoinRequest`/`rejectJoinRequest` service methods. "Request to join" added to Discover for private communities. A community's About page (or a dedicated "Requests" panel) needs: a list of pending requesters (fix the populate first — #4 above — so you get usernames/avatars, not ids), and Approve/Reject buttons wired to `CommunityService` methods that don't exist yet (`requestToJoinCommunity`, `approveJoinRequest`, `rejectJoinRequest` need to be added to `community.service.ts` — they're missing entirely, see `01-backend-frontend-gap-analysis.md`). Also add a "Request to join" button somewhere reachable for `type: 'private'` communities discovered via `discover` — right now the only join path is direct-add by an existing member with `MANAGE_MEMBERS`.
 2. ~~**Fix "Remove member"**~~ ✅ Own confirm modal + state, calls `removeMember` with the member's user id, hidden on the owner row (`04-known-bugs.md` #2).
 3. ~~**"Leave community" UI**~~ ✅ Button on About (hidden for owner), confirm → `leaveCommunity` → navigate to Discover; sidebar refreshes via `CommunityStateService.membershipChanged$`.
-4. **"Delete community" UI** — `deleteCommunity` has no client caller at all. Gate on `MANAGE_COMMUNITY`, put it somewhere deliberately hard to hit by accident (confirm modal, type-the-name-to-confirm pattern is common for this).
-5. **Edit community details** — currently only icon/cover can be changed from the UI. Add a form for name/description/type, reusing the existing `updateCommunity` call (it already accepts `Partial<ICommunity>`).
-6. **Tag management on an existing community** — `addTag`/`removeTag` have no client callers; add them to `community.service.ts` once Tier 0 #2 makes them grantable.
-7. Lower priority: community search (`GET /community/search`), filter-by-tag/filter-by-category, and the categories endpoint (`GET /community/categories` — decide whether the `CommunityCategory` model is still part of the plan or should be removed if categories were abandoned as a concept).
+4. ~~**"Delete community" UI**~~ ✅ **PR #9.** Type-the-name-to-confirm modal (`common-modal` gained a `confirmPhrase` input), gated `MANAGE_COMMUNITY`; navigates to Discover + refreshes the sidebar. Server-side `deleteCommunity` now cascades the community's `Role` + `Channel` docs (was orphaning them). Channel messages/chats still not cascaded — same gap as `deleteChannel`.
+5. ~~**Edit community details**~~ ✅ **PR #9.** "Manage Community" button opens a name/description/type form (reuses `updateCommunity`).
+6. ~~**Tag management on an existing community**~~ ✅ **PR #9.** Tags card "Manage" button opens a modal — removable chips + add-from-all-tags picker. `addTag`/`removeTag` added to `community.service.ts`. Works for communities created after PR #2 (Owner/Admin have `MANAGE_TAG`); older communities need a role backfill.
+7. **Still open — lower priority:** community search (`GET /community/search`), filter-by-tag/filter-by-category, and the categories endpoint (`GET /community/categories` — decide whether the `CommunityCategory` model is still part of the plan). **This is all that's left of Tier 1.**
 
 ## Tier 2 — finish RBAC / role management (the other thing the owner asked about)
 

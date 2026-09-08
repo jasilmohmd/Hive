@@ -20,9 +20,9 @@ Verified: `tsc --noEmit` clean, `npm run build` clean. No endpoint tests exist i
 
 Line-ending noise from the `.gitattributes` added in the redesign pass was normalized separately in PR #3 (`chore/normalize-line-endings`, merged).
 
-## Tier 1 — finish community management (the feature the owner asked about) — ⏳ NEXT
+## Tier 1 — finish community management (the feature the owner asked about) — ⏳ IN PROGRESS
 
-Tier 0 is done, so these are now unblocked. Ordered as a sensible build sequence:
+Tier 0 is done, so these are now unblocked. **Items 1–5 (membership lifecycle) have an agreed build plan in `07-tier1-plan.md`** — decisions: private-only join requests, auto-assign Member on approve, delete/edit/tags deferred. Ordered as a sensible build sequence:
 
 1. **Join-request UI.** A community's About page (or a dedicated "Requests" panel) needs: a list of pending requesters (fix the populate first — #4 above — so you get usernames/avatars, not ids), and Approve/Reject buttons wired to `CommunityService` methods that don't exist yet (`requestToJoinCommunity`, `approveJoinRequest`, `rejectJoinRequest` need to be added to `community.service.ts` — they're missing entirely, see `01-backend-frontend-gap-analysis.md`). Also add a "Request to join" button somewhere reachable for `type: 'private'` communities discovered via `discover` — right now the only join path is direct-add by an existing member with `MANAGE_MEMBERS`.
 2. **Fix "Remove member"** to call `communityService.removeMember()` instead of `deleteChannel()` (`04-known-bugs.md` #2) — give it its own confirm-dialog state rather than sharing `channelToDelete`.

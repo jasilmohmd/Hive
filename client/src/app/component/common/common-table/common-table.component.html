@@ -98,6 +98,15 @@
                   </ng-template>
                 </div>
 
+                <div *ngSwitchCase="'roleBadges'" class="flex flex-wrap gap-1">
+                  <span *ngFor="let badge of row[col.field]"
+                    class="rounded-full px-2 py-0.5 text-xs font-medium"
+                    [ngClass]="badge.class || 'bg-surface-700 text-ink-secondary'">
+                    {{ badge.label }}
+                  </span>
+                  <span *ngIf="!row[col.field]?.length" class="text-xs text-ink-muted">—</span>
+                </div>
+
                 <!-- max-w gives `truncate` something to truncate against: in a
                      table-layout:auto cell it would otherwise just widen. -->
                 <div *ngSwitchDefault class="max-w-[10rem] truncate md:max-w-none">

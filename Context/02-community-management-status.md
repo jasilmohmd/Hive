@@ -2,7 +2,7 @@
 
 Answering directly: **community management is a skeleton, not a feature.** The data model and most backend rules are there; the membership lifecycle is broken server-side and the client only implements a fraction of it.
 
-> **Update 2026-09-08 (PR #2 → `main` `aecbd00`).** The **server-side** half of this is now fixed: the argument-order bug that broke `POST /community/request|approve_request|reject_request|leave|member/remove` is corrected, owner-loss guards are in place on leave/remove, `joinRequests` is populated, and `MANAGE_TAG` is grantable (new communities). So "What's broken server-side" below is **no longer accurate** — those five endpoints now work. Everything under **"What exists in the UI but doesn't do anything"** and **"What's missing outright"** is unchanged and is the Tier 1 work.
+> **Update 2026-09-08 (PR #2 `aecbd00`, PR #6 `915355e`).** The **server-side** half is fixed (PR #2): the argument-order bug is corrected, owner-loss guards are in place, `joinRequests` is populated, `MANAGE_TAG` is grantable. The **membership-lifecycle UI** is now built (PR #6): join-request panel with Approve/Reject, "Remove member" fixed to actually remove members, "Request to join" for private communities in Discover, "Leave community" on the About page. So "What's broken server-side" and most of "What exists in the UI but doesn't do anything" below are **no longer accurate**. Still missing (Tier 1 remainder): delete community, edit name/description/type, tag management, search/filter. And member **role reassignment** is Tier 2.
 
 ## What actually works today
 

@@ -2,6 +2,10 @@
 
 Written 2026-09-08 after Tier 0 landed (`main` at `4e5ad84`). This is the agreed build plan for the **membership lifecycle** slice of Tier 1 (`05-roadmap-todo.md` Tier 1 items 1–5). Delete-community, edit-details, tag management and search/filter are **deferred** to a later pass.
 
+> **✅ DONE — PR #6, merged to `main` at `915355e` (2026-09-08).** All five items shipped. Commits: `d0e5aeb` (service methods), `fdf0900` (remove-member fix), `1c90265` (join-request panel), `9afdb3b` (request-to-join), `c3d3a77` (leave UI). Verified live end-to-end (register → private community → request → approve → member leaves; owner-leave/remove rejected) plus a Playwright UI pass with screenshots. `ng test` 79/79.
+>
+> **New follow-up found during verification:** `GET /community/:id` returns bcrypt **password hashes** for every member (pre-existing, via the `members.userId` populate) and now also every join requester (the `joinRequests` populate added in PR #2). Fix with a `-password` projection or a User-model `toJSON` transform. Tracked in `04-known-bugs.md` (new item) and `HANDOFF.md`.
+
 ## Decisions locked
 
 | Decision | Choice |

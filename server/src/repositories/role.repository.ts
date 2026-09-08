@@ -42,6 +42,13 @@ export class RoleRepository implements IRoleRepository {
     return result ? true : false;
   }
 
+  async detachRoleFromAllMembers(communityId: Types.ObjectId, roleId: Types.ObjectId): Promise<void> {
+    await CommunityModel.updateOne(
+      { _id: communityId },
+      { $pull: { 'members.$[].roleIds': roleId } }
+    );
+  }
+
   /**
    * Assign a role to a user in a given community.
    * This creates an entry in the UserRole collection.

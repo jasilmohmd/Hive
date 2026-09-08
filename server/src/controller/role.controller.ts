@@ -179,7 +179,69 @@ export default class RoleController implements IRoleController {
         return;
       }
       const roles = await this.roleUsecase.listRoles(userId, new Types.ObjectId(communityId));
-      res.status(StatusCodes.Success).json(roles);
+      res.status(StatusCodes.Success).json({ roles });
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
+  /**
+   * Assign a role to an existing member.
+   * Expects communityId in req.params and { memberId, roleId } in req.body.
+   */
+  public async assignRole(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.userId!;
+      const communityId = req.params.communityId;
+      const { memberId, roleId } = req.body;
+
+      if (!Types.ObjectId.isValid(communityId)) {
+        res.status(StatusCodes.BadRequest).json({ error: "Invalid community ID" });
+        return;
+      }
+      if (!Types.ObjectId.isValid(String(memberId)) || !Types.ObjectId.isValid(String(roleId))) {
+        res.status(StatusCodes.BadRequest).json({ error: "memberId and roleId are required" });
+        return;
+      }
+
+      const result = await this.roleUsecase.assignRole(
+        userId,
+        new Types.ObjectId(communityId),
+        new Types.ObjectId(String(memberId)),
+        new Types.ObjectId(String(roleId))
+      );
+      res.status(StatusCodes.Success).json({ success: result });
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
+  /**
+   * Remove a role from an existing member.
+   * Expects communityId in req.params and { memberId, roleId } in req.body.
+   */
+  public async unassignRole(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.userId!;
+      const communityId = req.params.communityId;
+      const { memberId, roleId } = req.body;
+
+      if (!Types.ObjectId.isValid(communityId)) {
+        res.status(StatusCodes.BadRequest).json({ error: "Invalid community ID" });
+        return;
+      }
+      if (!Types.ObjectId.isValid(String(memberId)) || !Types.ObjectId.isValid(String(roleId))) {
+        res.status(StatusCodes.BadRequest).json({ error: "memberId and roleId are required" });
+        return;
+      }
+
+      const result = await this.roleUsecase.unassignRole(
+        userId,
+        new Types.ObjectId(communityId),
+        new Types.ObjectId(String(memberId)),
+        new Types.ObjectId(String(roleId))
+      );
+      res.status(StatusCodes.Success).json({ success: result });
     } catch (error: any) {
       next(error);
     }

@@ -8,4 +8,6 @@ export default interface IRoleUsecase {
   updateRole(userId: Types.ObjectId, communityId: Types.ObjectId, roleId: Types.ObjectId, data: Partial<IRole>): Promise<IRole>;
   deleteRole(userId: Types.ObjectId, communityId: Types.ObjectId, roleId: Types.ObjectId): Promise<boolean>;
   listRoles(userId: Types.ObjectId, communityId: Types.ObjectId): Promise<IRole[]>;
+  assignRole(userId: Types.ObjectId, communityId: Types.ObjectId, memberId: Types.ObjectId, roleId: Types.ObjectId): Promise<boolean>;
+  unassignRole(userId: Types.ObjectId, communityId: Types.ObjectId, memberId: Types.ObjectId, roleId: Types.ObjectId): Promise<boolean>;
 }

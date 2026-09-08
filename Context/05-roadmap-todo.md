@@ -24,7 +24,8 @@ Line-ending noise from the `.gitattributes` added in the redesign pass was norma
 
 **Items 1–5 (membership lifecycle) — ✅ DONE, PR #6.** Join-request panel, remove-member fix, request-to-join (private only), leave-community, + four `CommunityService` methods.
 **Items delete / edit-details / tag-management — ✅ DONE, PR #9.** (+ server-side delete cascade, + `common-modal` `confirmPhrase`, + password-leak fix PR #8.)
-**Only remaining Tier 1: community search + filter-by-tag/category** (item 7 below).
+**Community search + tag filter — ✅ DONE, PR #10** (client-side over the loaded list; server search endpoints left unused by design — item 7 below).
+**Tier 1 is complete.** Next: Tier 2 (RBAC / role management).
 
 Original list (strikethrough = shipped in PR #6):
 
@@ -34,7 +35,9 @@ Original list (strikethrough = shipped in PR #6):
 4. ~~**"Delete community" UI**~~ ✅ **PR #9.** Type-the-name-to-confirm modal (`common-modal` gained a `confirmPhrase` input), gated `MANAGE_COMMUNITY`; navigates to Discover + refreshes the sidebar. Server-side `deleteCommunity` now cascades the community's `Role` + `Channel` docs (was orphaning them). Channel messages/chats still not cascaded — same gap as `deleteChannel`.
 5. ~~**Edit community details**~~ ✅ **PR #9.** "Manage Community" button opens a name/description/type form (reuses `updateCommunity`).
 6. ~~**Tag management on an existing community**~~ ✅ **PR #9.** Tags card "Manage" button opens a modal — removable chips + add-from-all-tags picker. `addTag`/`removeTag` added to `community.service.ts`. Works for communities created after PR #2 (Owner/Admin have `MANAGE_TAG`); older communities need a role backfill.
-7. **Still open — lower priority:** community search (`GET /community/search`), filter-by-tag/filter-by-category, and the categories endpoint (`GET /community/categories` — decide whether the `CommunityCategory` model is still part of the plan). **This is all that's left of Tier 1.**
+7. ~~**Community search + filter-by-tag**~~ ✅ **PR #10.** Discover now has a name/description search box and a tag-filter dropdown, both applied **client-side** over the already-loaded `listCommunities()` result (instant, composable, no extra requests for a small list). **Decision:** the server endpoints `GET /community/search`, `/filter_by_tag/:tagId`, `/filter_by_category/:categoryId` remain **unused by design** — if the community count ever grows large enough to need server-side paging, switch Discover to them then. The `CommunityCategory` model + `GET /community/categories` + `/filter_by_category` have no UI and no plausible near-term use — **recommend deleting them** in a cleanup pass (seed script `seedCategories.ts`, `communityCategory.model.ts`, the category usecase/repo/controller methods, the two routes).
+
+**Tier 1 is now complete** except the deliberately-deferred category removal above.
 
 ## Tier 2 — finish RBAC / role management (the other thing the owner asked about)
 

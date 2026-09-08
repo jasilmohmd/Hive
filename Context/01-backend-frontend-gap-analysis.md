@@ -11,7 +11,7 @@ Legend: ✅ used from a component · 🟡 service method exists but no component
 | Route | Usecase call | Frontend | Notes |
 |---|---|---|---|
 | `POST /create` | `createCommunity` | ✅ | via `create-community` wizard |
-| `GET /search` | `searchCommunitiesByName` | ❌ | no client method; `discover` filters client-side instead |
+| `GET /search` | `searchCommunitiesByName` | ❌ (by design, PR #10) | `discover` filters the already-loaded list client-side; endpoint kept for a future server-side-paging switch |
 | `GET /` | `listCommunities` | ✅ | `discover` |
 | `GET /user` | `getCommunitiesByUser` | ✅ | sidebar/community list |
 | `GET /tags` | `getAllTags` | ✅ | create-community step 3 |

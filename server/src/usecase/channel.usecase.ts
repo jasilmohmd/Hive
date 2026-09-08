@@ -9,6 +9,7 @@ import IChannelUsecase from '../interfaces/usecase/IChannel.usecase.interface';
 import { IChatRepository } from '../interfaces/repository/IChat.repository.interface';
 import { ICommunityRepository } from '../interfaces/repository/ICommunity.repository.interface';
 import { userHasChannelAccess } from '../framework/utils/channelAccess.util';
+import { PERMISSIONS } from '../constants/permissions';
 
 export class ChannelUseCase implements IChannelUsecase{
   constructor(
@@ -35,7 +36,7 @@ export class ChannelUseCase implements IChannelUsecase{
       }
 
       // Check if the user has permission to create a channel.
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_CHANNELS");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_CHANNELS);
       if (!allowed) throw new UnauthorizedError("Permission denied", "channel");
 
       const createdBy = userId.toString()
@@ -176,7 +177,7 @@ export class ChannelUseCase implements IChannelUsecase{
       if (!Types.ObjectId.isValid(channelId)) {
         throw new ValidationError("Invalid channel ID", "channel");
       }
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_CHANNELS");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_CHANNELS);
       if (!allowed) throw new UnauthorizedError("Permission denied", "channel");
 
       const channel = await this.channelRepository.getChannelById(channelId);
@@ -217,7 +218,7 @@ export class ChannelUseCase implements IChannelUsecase{
       if (!Types.ObjectId.isValid(channelId)) {
         throw new ValidationError("Invalid channel ID", "channel");
       }
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_CHANNELS");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_CHANNELS);
       if (!allowed) throw new UnauthorizedError("Permission denied", "channel");
 
       const result = await this.channelRepository.deleteChannel(channelId);

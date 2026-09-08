@@ -17,6 +17,7 @@ export default interface ICommunityUsecase {
   leaveCommunity(userId: Types.ObjectId, communityId: Types.ObjectId): Promise<boolean>;
   addMember(userId: Types.ObjectId, communityId: Types.ObjectId, memberId: Types.ObjectId, roleId: Types.ObjectId): Promise<boolean>;
   removeMember(userId: Types.ObjectId, communityId: Types.ObjectId, memberId: Types.ObjectId): Promise<boolean>;
+  kickMember(userId: Types.ObjectId, communityId: Types.ObjectId, memberId: Types.ObjectId): Promise<boolean>;
   addTag(userId: Types.ObjectId, communityId: Types.ObjectId, tagId: Types.ObjectId): Promise<boolean>;
   removeTag(userId: Types.ObjectId, communityId: Types.ObjectId, tagId: Types.ObjectId): Promise<boolean>;
   filterCommunitiesByTag(tagId: Types.ObjectId): Promise<ICommunity[]>;

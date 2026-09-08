@@ -58,6 +58,7 @@ communityRouter.route("/reject_request/:communityId").post(communityController.r
 communityRouter.route("/leave/:communityId").post(communityController.leaveCommunity.bind(communityController));
 communityRouter.route("/member/add/:communityId").post(communityController.addMember.bind(communityController));
 communityRouter.route("/member/remove/:communityId").post(communityController.removeMember.bind(communityController));
+communityRouter.route("/kick/:communityId").post(communityController.kickMember.bind(communityController));
 
 // Community tag routes
 communityRouter.route("/add_tag/:communityId/:tagId").post(communityController.addTag.bind(communityController));

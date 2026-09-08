@@ -7,6 +7,7 @@ import { IRoleRepository } from '../interfaces/repository/IRole.repository.inter
 import { ICommunityDocument } from '../framework/models/community.model';
 import { communityValidator, communityUpdateValidator } from '../framework/utils/validators/community.validator';
 import { defaultRolesData } from '../constants/predifinedRoles';
+import { PERMISSIONS } from '../constants/permissions';
 import IRBACService from '../interfaces/utils/IRBAC.service';
 import { ITag } from '../entity/Tag.entity';
 import { ICategory } from '../entity/CommunityCategory.entity';
@@ -148,7 +149,7 @@ export class CommunityUseCase {
       const community = await this.communityRepository.getCommunityById(communityId);
       if (!community) throw new NotFoundError("Community not found", "community");
 
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_COMMUNITY");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_COMMUNITY);
       if (!allowed) throw new UnauthorizedError("Permission denied", "community");
 
       const validatedData = communityUpdateValidator.parse(data);
@@ -180,7 +181,7 @@ export class CommunityUseCase {
       const community = await this.communityRepository.getCommunityById(communityId);
       if (!community) throw new NotFoundError("Community not found", "community");
 
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_COMMUNITY");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_COMMUNITY);
       if (!allowed) throw new UnauthorizedError("Permission denied", "community");
 
       const result = await this.communityRepository.deleteCommunity(communityId);
@@ -278,7 +279,7 @@ export class CommunityUseCase {
       if (!community) throw new NotFoundError("Community not found", "community");
 
       // Check if admin has permission
-      const hasPermission = await this.rbacService.hasPermission(userId, communityId, "MANAGE_MEMBERS");
+      const hasPermission = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_MEMBERS);
       if (!hasPermission) throw new UnauthorizedError("Permission denied", "community");
 
       return await this.communityRepository.approveJoinRequest(communityId, memberId, roleId);
@@ -307,7 +308,7 @@ export class CommunityUseCase {
       if (!community) throw new NotFoundError("Community not found", "community");
 
       // Check if admin has permission
-      const hasPermission = await this.rbacService.hasPermission(userId, communityId, "MANAGE_MEMBERS");
+      const hasPermission = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_MEMBERS);
       if (!hasPermission) throw new UnauthorizedError("Permission denied", "community");
 
       return await this.communityRepository.removeJoinRequest(communityId, memberId);
@@ -374,7 +375,7 @@ export class CommunityUseCase {
       // const community = await this.communityRepository.getCommunityById(communityId);
       // if (!community) throw new NotFoundError("Community not found", "community");
 
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_MEMBERS");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_MEMBERS);
       if (!allowed) throw new UnauthorizedError("Permission denied", "community");
 
       const result = await this.communityRepository.addMember(communityId, memberId, roleId);
@@ -404,7 +405,7 @@ export class CommunityUseCase {
       const community = await this.communityRepository.getCommunityById(communityId);
       if (!community) throw new NotFoundError("Community not found", "community");
 
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_MEMBERS");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_MEMBERS);
       if (!allowed) throw new UnauthorizedError("Permission denied", "community");
 
       if (this.isCommunityOwner(community, memberId)) {
@@ -417,6 +418,37 @@ export class CommunityUseCase {
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error removing member: ${error.message}`);
+    }
+  }
+
+  /**
+   * Kick a member. Narrower than removeMember: gated on KICK_MEMBERS rather
+   * than MANAGE_MEMBERS, so a Moderator can remove members without also being
+   * able to approve join requests or manage the member roster. Ends up in the
+   * same repository call as removeMember.
+   */
+  async kickMember(userId: Types.ObjectId, communityId: Types.ObjectId, memberId: Types.ObjectId): Promise<boolean> {
+    try {
+      if (!Types.ObjectId.isValid(userId)) throw new ValidationError("Invalid User ID", "user");
+      if (!Types.ObjectId.isValid(communityId)) throw new ValidationError("Invalid Community ID", "community");
+      if (!Types.ObjectId.isValid(memberId)) throw new ValidationError("Invalid Member ID", "member");
+
+      const community = await this.communityRepository.getCommunityById(communityId);
+      if (!community) throw new NotFoundError("Community not found", "community");
+
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.KICK_MEMBERS);
+      if (!allowed) throw new UnauthorizedError("Permission denied", "community");
+
+      if (this.isCommunityOwner(community, memberId)) {
+        throw new ValidationError("The community owner cannot be removed", "community");
+      }
+
+      const result = await this.communityRepository.removeMember(communityId, memberId);
+      if (!result) throw new Error("Failed to kick member");
+      return result;
+    } catch (error: any) {
+      if (error instanceof CustomError) throw error;
+      throw new Error(`Error kicking member: ${error.message}`);
     }
   }
 
@@ -439,7 +471,7 @@ export class CommunityUseCase {
       const community = await this.communityRepository.getCommunityById(communityId);
       if (!community) throw new NotFoundError("Community not found", "community");
 
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_TAG");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_TAG);
       if (!allowed) throw new UnauthorizedError("Permission denied", "tag");
 
       const result = await this.communityRepository.addTag(communityId, tagId);
@@ -468,7 +500,7 @@ export class CommunityUseCase {
       const community = await this.communityRepository.getCommunityById(communityId);
       if (!community) throw new NotFoundError("Community not found", "community");
 
-      const allowed = await this.rbacService.hasPermission(userId, communityId, "MANAGE_TAG");
+      const allowed = await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.MANAGE_TAG);
       if (!allowed) throw new UnauthorizedError("Permission denied", "tag");
 
       const result = await this.communityRepository.removeTag(communityId, tagId);

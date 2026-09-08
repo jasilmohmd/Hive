@@ -17,6 +17,7 @@ import { CommonModalComponent } from '../../../common/common-modal/common-modal.
 import { FriendService } from '../../../../services/friends.service';
 import { CommunityService } from '../../../../services/community.service';
 import { ImagePickerMenuComponent } from '../../../common/image-picker-menu/image-picker-menu.component';
+import { RolesModalComponent } from '../roles-modal/roles-modal.component';
 import { ToastService } from '../../../../services/toast.service';
 import { UserAuthService } from '../../../../services/user-auth.service';
 import { Router } from '@angular/router';
@@ -24,7 +25,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule, FormsModule, ListModalComponent, CommonModalComponent, ImagePickerMenuComponent],
+  imports: [CommonModule, FormsModule, ListModalComponent, CommonModalComponent, ImagePickerMenuComponent, RolesModalComponent],
   templateUrl: './about.component.html',
   styleUrl: './about.component.css'
 })
@@ -58,6 +59,8 @@ export class AboutComponent {
   showTagModal: boolean = false;
   allTags: ITag[] = [];
   tagToAdd: string = '';
+
+  showRolesModal: boolean = false;
 
   // Modal related properties
   showModal: boolean = false;
@@ -163,6 +166,12 @@ export class AboutComponent {
 
   promptLeaveCommunity(): void {
     this.showLeaveModal = true;
+  }
+
+  /** Roles changed in the roles modal — refresh community + the current user's permissions. */
+  onRolesChanged(): void {
+    this.reloadCommunity();
+    this.roleStateService.loadUserRoles(this.communityId).subscribe();
   }
 
   onLeaveCancelled(): void {

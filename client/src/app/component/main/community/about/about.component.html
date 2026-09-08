@@ -70,6 +70,17 @@
           <span class="hidden md:inline">Manage Community</span>
         </button>
 
+        <!-- Roles Button -->
+        <button *ngIf="permissions.includes('MANAGE_ROLES')" (click)="showRolesModal = true"
+          class="flex items-center gap-2 px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
+          title="Manage roles">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z" />
+          </svg>
+          <span class="hidden md:inline">Roles</span>
+        </button>
+
         <!-- Leave Community Button (not shown to the owner — the server rejects it) -->
         <button *ngIf="!isOwner" (click)="promptLeaveCommunity()"
           class="flex items-center gap-2 px-3 py-1.5 bg-danger/20 hover:bg-danger/30 rounded-lg text-danger-text text-sm transition-all"
@@ -286,6 +297,13 @@
   (cancelled)="onRemoveMemberCancelled()"
   class="animate-fade-in-up">
 </app-common-modal>
+
+<app-roles-modal
+  *ngIf="showRolesModal"
+  [communityId]="communityId"
+  (changed)="onRolesChanged()"
+  (close)="showRolesModal = false">
+</app-roles-modal>
 
 <app-common-modal
   *ngIf="showLeaveModal"

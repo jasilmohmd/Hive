@@ -1,0 +1,86 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 p-4 animate-fade-in"
+  (click)="close.emit()" role="presentation">
+  <div
+    class="relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
+    role="dialog" aria-modal="true" aria-label="Community roles" (click)="$event.stopPropagation()">
+
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-xl font-bold">
+        {{ mode === 'list' ? 'Roles' : mode === 'edit' ? 'Edit role' : 'New role' }}
+      </h2>
+      <button (click)="close.emit()" class="text-ink-muted hover:text-ink" aria-label="Close">✕</button>
+    </div>
+
+    <!-- List -->
+    <ng-container *ngIf="mode === 'list'">
+      <div *ngIf="loading" class="py-6 text-center text-sm text-ink-muted">Loading roles…</div>
+
+      <ul *ngIf="!loading" class="flex-1 space-y-2 overflow-y-auto">
+        <li *ngFor="let role of roles"
+          class="flex items-center justify-between rounded-lg bg-surface-950/40 px-3 py-2">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="truncate font-medium">{{ role.name }}</span>
+              <span *ngIf="role.isDefault"
+                class="rounded-full bg-surface-700 px-2 py-0.5 text-[11px] uppercase tracking-wide text-ink-muted">Default</span>
+            </div>
+            <p class="truncate text-xs text-ink-secondary">
+              {{ role.permissions.length }} permission{{ role.permissions.length === 1 ? '' : 's' }}
+            </p>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <button *ngIf="!role.isDefault" (click)="startEdit(role)"
+              class="rounded-md bg-surface-700 px-2.5 py-1 text-sm hover:bg-surface-600">Edit</button>
+            <button *ngIf="!role.isDefault" (click)="promptDelete(role)"
+              class="rounded-md bg-danger/20 px-2.5 py-1 text-sm text-danger-text hover:bg-danger/30">Delete</button>
+          </div>
+        </li>
+      </ul>
+
+      <button (click)="startCreate()"
+        class="mt-4 rounded-lg bg-brand px-4 py-2 text-sm text-surface-950 hover:bg-brand-hover">
+        New role
+      </button>
+    </ng-container>
+
+    <!-- Create / edit form -->
+    <ng-container *ngIf="mode !== 'list'">
+      <label class="mb-1 block text-sm text-ink-secondary">Name</label>
+      <input type="text" [(ngModel)]="form.name" maxlength="40"
+        class="mb-4 w-full rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none" />
+
+      <p class="mb-2 text-sm text-ink-secondary">Permissions</p>
+      <div class="mb-6 flex-1 space-y-1.5 overflow-y-auto">
+        <label *ngFor="let p of permissionList"
+          class="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 hover:bg-surface-950/40">
+          <input type="checkbox" [checked]="form.permissions.has(p.key)" (change)="togglePermission(p.key)"
+            class="mt-0.5 h-4 w-4 rounded-sm border-surface-600 bg-surface-800 text-brand" />
+          <span class="min-w-0">
+            <span class="block text-sm">{{ p.label }}</span>
+            <span class="block text-xs text-ink-muted">{{ p.description }}</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button (click)="cancelForm()"
+          class="rounded-md bg-surface-800 px-4 py-2 text-sm hover:bg-surface-700">Cancel</button>
+        <button (click)="save()" [disabled]="!canSave"
+          class="rounded-md bg-brand px-4 py-2 text-sm text-surface-950 hover:bg-brand-hover disabled:opacity-60">
+          {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<app-common-modal
+  *ngIf="roleToDelete"
+  title="Delete role"
+  [message]="'Delete the ' + roleToDelete.name + ' role? Members who have it will lose it.'"
+  confirmText="Delete"
+  cancelText="Cancel"
+  (confirmed)="confirmDelete()"
+  (cancelled)="roleToDelete = null">
+</app-common-modal>

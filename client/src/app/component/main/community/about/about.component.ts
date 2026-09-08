@@ -16,6 +16,8 @@ import { FriendService } from '../../../../services/friends.service';
 import { CommunityService } from '../../../../services/community.service';
 import { ImagePickerMenuComponent } from '../../../common/image-picker-menu/image-picker-menu.component';
 import { ToastService } from '../../../../services/toast.service';
+import { UserAuthService } from '../../../../services/user-auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-about',
@@ -37,6 +39,10 @@ export class AboutComponent {
 
   showRemoveMemberModal: boolean = false;
   memberToRemove: any = null;
+
+  showLeaveModal: boolean = false;
+  /** Current user id, resolved once; used for the "is this the owner?" check. */
+  private currentUserId: string | null = null;
 
   // Modal related properties
   showModal: boolean = false;
@@ -74,9 +80,16 @@ export class AboutComponent {
     private channelService: ChannelService,
     private friendService: FriendService,
     private cd: ChangeDetectorRef,
+    private userAuthService: UserAuthService,
+    private router: Router,
   ) { }
 
   ngOnInit(): void {
+    this.userAuthService.getUserDetails().subscribe({
+      next: (res) => { this.currentUserId = res.userData?._id ?? null; },
+      error: () => { this.currentUserId = null; },
+    });
+
     const communitySub = this.route.parent?.params.subscribe(params => {
       // Tear down the previous community's subscriptions before creating new ones,
       // since this component is reused (not recreated) when switching communities.
@@ -125,6 +138,32 @@ export class AboutComponent {
 
   get canManageCommunity(): boolean {
     return this.permissions.includes('MANAGE_COMMUNITY');
+  }
+
+  /** True when the signed-in user owns this community (owner can't leave). */
+  get isOwner(): boolean {
+    const ownerId = this.community?.ownerId?._id || this.community?.ownerId;
+    return !!ownerId && !!this.currentUserId && String(ownerId) === String(this.currentUserId);
+  }
+
+  promptLeaveCommunity(): void {
+    this.showLeaveModal = true;
+  }
+
+  onLeaveCancelled(): void {
+    this.showLeaveModal = false;
+  }
+
+  onLeaveConfirmed(): void {
+    this.showLeaveModal = false;
+    this.communityService.leaveCommunity(this.communityId).subscribe({
+      next: () => {
+        this.toast.success(`You left ${this.community?.name || 'the community'}`);
+        this.communityStateService.notifyMembershipChanged();
+        this.router.navigate(['/main/discover']);
+      },
+      error: (err: Error) => this.toast.error(err.message || 'Failed to leave the community'),
+    });
   }
 
   onCommunityIconUploaded(url: string): void {

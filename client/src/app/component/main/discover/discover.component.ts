@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -16,14 +17,21 @@ type RequestState = 'idle' | 'pending' | 'sent';
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [CommonModule, RouterLink, LoadingStateComponent, EmptyStateComponent, ErrorAlertComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingStateComponent, EmptyStateComponent, ErrorAlertComponent],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.css'
 })
 export class DiscoverComponent implements OnInit {
+  /** The full list from the server. */
+  allCommunities: ICommunity[] = [];
+  /** The filtered view rendered in the template. */
   communities: ICommunity[] = [];
   loading = true;
   errorMessage: string | null = null;
+
+  /** Name search and tag filter, both applied client-side against `allCommunities`. */
+  search = '';
+  tagFilter = '';
 
   /** Current user id, resolved once on init; used for membership / pending-request checks. */
   private userId: string | null = null;
@@ -46,8 +54,9 @@ export class DiscoverComponent implements OnInit {
       ),
     }).subscribe({
       next: ({ communities, user }) => {
-        this.communities = communities ?? [];
+        this.allCommunities = communities ?? [];
         this.userId = user;
+        this.applyFilter();
         this.loading = false;
       },
       error: (e: Error) => {
@@ -55,6 +64,38 @@ export class DiscoverComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  /** Distinct tags across all loaded communities, for the filter dropdown. */
+  get tagOptions(): { _id: string; name: string }[] {
+    const seen = new Map<string, string>();
+    for (const c of this.allCommunities) {
+      for (const t of (c.tags || []) as any[]) {
+        if (t && t._id && !seen.has(t._id)) seen.set(t._id, t.name || t._id);
+      }
+    }
+    return [...seen].map(([_id, name]) => ({ _id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  applyFilter(): void {
+    const term = this.search.trim().toLowerCase();
+    this.communities = this.allCommunities.filter(c => {
+      const matchesName = !term || c.name.toLowerCase().includes(term)
+        || (c.description || '').toLowerCase().includes(term);
+      const matchesTag = !this.tagFilter
+        || ((c.tags || []) as any[]).some(t => (t?._id || t) === this.tagFilter);
+      return matchesName && matchesTag;
+    });
+  }
+
+  clearFilters(): void {
+    this.search = '';
+    this.tagFilter = '';
+    this.applyFilter();
+  }
+
+  get hasActiveFilter(): boolean {
+    return !!this.search.trim() || !!this.tagFilter;
   }
 
   private isMember(c: ICommunity): boolean {

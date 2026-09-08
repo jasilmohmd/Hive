@@ -56,4 +56,25 @@ describe('CommunityService', () => {
     expect(req.request.method).toBe('POST');
     req.flush({ success: true });
   });
+
+  it('deleteCommunity DELETEs /delete/:id', () => {
+    service.deleteCommunity('c1').subscribe();
+    const req = httpMock.expectOne(`${base}/delete/c1`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ success: true });
+  });
+
+  it('addTag POSTs /add_tag/:id/:tagId', () => {
+    service.addTag('c1', 't1').subscribe();
+    const req = httpMock.expectOne(`${base}/add_tag/c1/t1`);
+    expect(req.request.method).toBe('POST');
+    req.flush({ success: true });
+  });
+
+  it('removeTag DELETEs /remove_tag/:id/:tagId', () => {
+    service.removeTag('c1', 't1').subscribe();
+    const req = httpMock.expectOne(`${base}/remove_tag/c1/t1`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ success: true });
+  });
 });

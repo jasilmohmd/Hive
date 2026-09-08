@@ -126,6 +126,30 @@ export class CommunityService {
     );
   }
 
+  /** Delete a community (and its roles/channels). Requires MANAGE_COMMUNITY. */
+  deleteCommunity(communityId: string): Observable<{ success: boolean }> {
+    const url = `${this.baseUrl}/delete/${communityId}`;
+    return this.http.delete<{ success: boolean }>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /** Attach an existing tag to a community. Requires MANAGE_TAG. */
+  addTag(communityId: string, tagId: string): Observable<{ success: boolean }> {
+    const url = `${this.baseUrl}/add_tag/${communityId}/${tagId}`;
+    return this.http.post<{ success: boolean }>(url, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /** Remove a tag from a community. Requires MANAGE_TAG. */
+  removeTag(communityId: string, tagId: string): Observable<{ success: boolean }> {
+    const url = `${this.baseUrl}/remove_tag/${communityId}/${tagId}`;
+    return this.http.delete<{ success: boolean }>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   updateCommunity(
     communityId: string,
     data: Partial<ICommunity>

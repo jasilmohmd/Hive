@@ -8,4 +8,6 @@ export default interface IRoleController {
   updateRole(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
   deleteRole(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
   listRoles(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
+  assignRole(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
+  unassignRole(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
 }

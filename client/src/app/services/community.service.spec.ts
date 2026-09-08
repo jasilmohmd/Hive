@@ -77,4 +77,12 @@ describe('CommunityService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush({ success: true });
   });
+
+  it('kickMember POSTs memberId to /kick/:id', () => {
+    service.kickMember('c1', 'm1').subscribe();
+    const req = httpMock.expectOne(`${base}/kick/c1`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ memberId: 'm1' });
+    req.flush({ success: true });
+  });
 });

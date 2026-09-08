@@ -313,6 +313,28 @@ class CommunityController implements ICommunityController {
     }
   }
 
+  // POST /community/kick/:communityId
+  public async kickMember(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.userId!;
+      if (!userId) {
+        res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" })
+        return;
+      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "Community ID");
+      if (!communityId) return;
+
+      const memberId = parseObjectId(res, req.body.memberId, "Member ID");
+      if (!memberId) return;
+
+      const result = await this.communityUsecase.kickMember(userId, communityId, memberId);
+      res.status(StatusCodes.Success).json({ success: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // POST /communities/:communityId/tag/:tagId
   public async addTag(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {

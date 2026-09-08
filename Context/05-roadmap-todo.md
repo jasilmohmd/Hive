@@ -41,7 +41,7 @@ Original list (strikethrough = shipped in PR #6):
 
 ## Tier 2 — finish RBAC / role management (the other thing the owner asked about)
 
-> **Build plan agreed: `08-tier2-plan.md`.** Decisions: new `/role/assign` + `/role/unassign` routes for member role assignment; `KICK_MEMBERS` gets a real narrower-than-`MANAGE_MEMBERS` kick action. Not started.
+> **Build plan: `08-tier2-plan.md`.** **PR A done (PR #12):** shared `PERMISSIONS` constant, `/role/assign` + `/role/unassign` endpoints (with guards), `deleteRole` member cascade, `POST /community/kick` gated on `KICK_MEMBERS`, `role.service.ts` + `community.service.ts` methods. **Remaining: PR B (roles CRUD screen), PR C (member role-assignment UI, Kick-vs-Remove in member modal, role badges).**
 
 
 1. **Build a Roles screen** for `MANAGE_ROLES` holders: list roles (`listRoles` — needs adding to `role.service.ts`), create a role (`createRole` — needs adding), edit a role's name/permissions (`updateRole` — needs adding, remember `isDefault` roles are already correctly blocked server-side), delete a custom role (`deleteRole` — needs adding). All four backend endpoints exist and are correctly permission-gated; only the frontend is missing.

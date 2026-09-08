@@ -87,6 +87,14 @@ export class CommunityService {
     );
   }
 
+  /** Kick a member — the narrower KICK_MEMBERS path (vs removeMember's MANAGE_MEMBERS). */
+  kickMember(communityId: string, memberId: string): Observable<{ success: boolean }> {
+    const url = `${this.baseUrl}/kick/${communityId}`;
+    return this.http.post<{ success: boolean }>(url, { memberId }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   /** Send a join request for a (private) community. */
   requestToJoinCommunity(communityId: string): Observable<{ success: boolean }> {
     const url = `${this.baseUrl}/request/${communityId}`;

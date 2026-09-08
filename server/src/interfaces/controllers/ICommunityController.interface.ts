@@ -15,6 +15,7 @@ export default interface ICommunityController {
   leaveCommunity(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
   addMember(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
   removeMember(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
+  kickMember(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
   addTag(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
   removeTag(req: IAuthRequest, res: Response, next: NextFunction): Promise<void>;
   filterCommunitiesByTag(req: Request, res: Response, next: NextFunction): Promise<void>;

@@ -23,7 +23,7 @@ const jwtService: IJWTService = new JWTService();
 const authMiddleware: IAuthMiddleware = new AuthMiddleware(jwtService);
 const rbacService: IRBACService = new RBACService(roleRepository,communityRepository);
 
-const roleUsecase: IRoleUsecase = new RoleUseCase(roleRepository, rbacService);
+const roleUsecase: IRoleUsecase = new RoleUseCase(roleRepository, rbacService, communityRepository);
 
 const roleController: IRoleController = new RoleController(roleUsecase);
 
@@ -36,5 +36,7 @@ roleRouter.route("/user/:communityId").get(roleController.getUserRoles.bind(role
 roleRouter.route("/update/:communityId/:roleId").put(roleController.updateRole.bind(roleController));
 roleRouter.route("/delete/:communityId/:roleId").delete(roleController.deleteRole.bind(roleController));
 roleRouter.route("/list/:communityId").get(roleController.listRoles.bind(roleController));
+roleRouter.route("/assign/:communityId").post(roleController.assignRole.bind(roleController));
+roleRouter.route("/unassign/:communityId").post(roleController.unassignRole.bind(roleController));
 
 export default roleRouter;

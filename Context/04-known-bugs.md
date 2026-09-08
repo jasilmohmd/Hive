@@ -2,9 +2,9 @@
 
 New findings from this review, verified by reading the actual code at commit `597fb1b`. These are **in addition to** `HANDOFF.md`'s "Known open issues" table (14 items, still valid — see `00-START-HERE.md`), not a replacement for it. Ordered by severity/impact.
 
-> **Update 2026-09-08 — Tier 0 landed (PR #2, merged to `main` at `aecbd00`).**
-> Fixed: **#1** (`e9ecffd`), **#3** (server half — `joinRequests` now populated, `f3013a5`; the UI half is still open), **#4** (`429ed97`), **#6** (`17831cf`), **#7** (`e9ecffd` + partly folded into the controller cleanup), **#8** (`89454a5`).
-> Still open: **#2** (frontend — Remove-member wired to `deleteChannel`), **#3** (the approve/reject UI itself), **#5** (`KICK_MEMBERS` unused — decision needed).
+> **Update 2026-09-08 — Tier 0 landed (PR #2, `aecbd00`); Tier 1 lifecycle landed (PR #6, `915355e`).**
+> Fixed: **#1** (`e9ecffd`), **#2** (PR #6 `fdf0900`), **#3** (server `f3013a5` + UI PR #6 `1c90265`), **#4** (`429ed97`), **#6** (`17831cf`), **#7** (`e9ecffd`/`f653285`), **#8** (`89454a5`).
+> Still open: **#5** (`KICK_MEMBERS` unused — decision needed), **#9** (new — password-hash leak in `getCommunityById`).
 > Per-item notes inline below.
 
 ---
@@ -37,7 +37,7 @@ Because `userId` and `communityId` are both plain `Types.ObjectId`, TypeScript's
 
 ## 2. "Remove member" button calls channel deletion, not member removal
 
-> **STILL OPEN** — frontend fix, part of Tier 1. The backend `removeMember` usecase it should call is now correct (bug #1) and has an owner-loss guard (bug #8).
+> **FIXED — PR #6 `fdf0900`.** Member removal has its own `memberToRemove` / `showRemoveMemberModal` state and confirm modal, calls `communityService.removeMember(communityId, member.userId)` (note: the member's **user** id, not the subdoc `_id`), and is hidden on the owner's row (`TableAction` gained an optional `hidden` predicate). `mapMembers()` extracted so the row-shaping isn't copied three ways.
 
 **File:** `client/src/app/component/main/community/about/about.component.ts` (`manageMembers()`, `handleModalAction()`)
 
@@ -58,7 +58,7 @@ When invoked from the member table's "Remove" button, `event.item` is a member r
 
 ## 3. Join Requests card shows raw ObjectIds and its "Manage" button does nothing
 
-> **PARTLY FIXED.** Server half done — PR #2 `f3013a5` adds `joinRequests` to the populate list in `getCommunityById`, so the array now carries full User docs. **Still open:** the template still renders `{{ request }}` and the "Manage" button still has no `(click)` handler — the actual approve/reject UI is Tier 1 work.
+> **FIXED.** Server half — PR #2 `f3013a5` populates `joinRequests`. UI half — PR #6 `1c90265`: the "Manage" button opens a "Manage Join Requests" modal listing requesters (avatar + username) with Approve / Reject; Approve auto-assigns the "Member" role. Card body now renders `{{ request.userName }}` with an explicit empty state. `community.service.ts` gained `requestToJoinCommunity` / `approveJoinRequest` / `rejectJoinRequest` (PR #6 `d0e5aeb`).
 
 **File:** `client/src/app/component/main/community/about/about.component.html` (Join Requests card), `server/src/repositories/community.repository.ts:16-19`
 
@@ -126,3 +126,15 @@ Not a functional bug, but worth a cleanup pass before this becomes a habit copie
 **File:** `server/src/usecase/community.usecase.ts` (`leaveCommunity`, `removeMember`)
 
 Neither method checked whether the acting-on user is the community's `Owner` (or the last holder of `MANAGE_COMMUNITY`/`MANAGE_ROLES`).
+
+---
+
+## 9. `GET /community/:id` returns members' (and now requesters') bcrypt password hashes (security)
+
+**File:** `server/src/repositories/community.repository.ts` (`getCommunityById` populate), `server/src/framework/models/user.model.ts`
+
+`getCommunityById` does `.populate('ownerId roles channels members.userId members.roleIds tags joinRequests')` with no field projection, so the response includes the full User document for the owner, every member, and — since PR #2 added `joinRequests` to the list — every pending requester. That document contains `password` (the bcrypt hash), `email`, `blocked`, `friendRequests`, etc. Any authenticated user who can `GET /community/:id` receives hashes for everyone in the community.
+
+Found during PR #6 verification (`members.userId` was already leaking pre-PR-#2; the `joinRequests` path is new). Not exploitable to log in directly (bcrypt), but it's a credential-material disclosure and should not ship.
+
+**Fix:** project the populate (`.populate({ path: 'members.userId', select: '-password' })`, same for `ownerId` / `joinRequests`), or — better, fixes it everywhere at once — add a `toJSON` transform on the User schema that deletes `password`. Check other populates of `User` (`chat`, `friends`, `voiceroom`) while doing this.

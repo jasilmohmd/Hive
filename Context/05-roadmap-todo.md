@@ -22,11 +22,13 @@ Line-ending noise from the `.gitattributes` added in the redesign pass was norma
 
 ## Tier 1 — finish community management (the feature the owner asked about) — ⏳ IN PROGRESS
 
-Tier 0 is done, so these are now unblocked. **Items 1–5 (membership lifecycle) have an agreed build plan in `07-tier1-plan.md`** — decisions: private-only join requests, auto-assign Member on approve, delete/edit/tags deferred. Ordered as a sensible build sequence:
+**Items 1–5 (membership lifecycle) — ✅ DONE, PR #6, `main` at `915355e`.** Join-request panel, remove-member fix, request-to-join (private only), leave-community, plus the four `CommunityService` methods. See `07-tier1-plan.md`. **Remaining Tier 1: items 4 (delete community, + orphan cascade), 5 (edit name/description/type), 6 (tag management), 7 (search/filter)** — renumbered below as originally written; the *lifecycle* items among them are done.
 
-1. **Join-request UI.** A community's About page (or a dedicated "Requests" panel) needs: a list of pending requesters (fix the populate first — #4 above — so you get usernames/avatars, not ids), and Approve/Reject buttons wired to `CommunityService` methods that don't exist yet (`requestToJoinCommunity`, `approveJoinRequest`, `rejectJoinRequest` need to be added to `community.service.ts` — they're missing entirely, see `01-backend-frontend-gap-analysis.md`). Also add a "Request to join" button somewhere reachable for `type: 'private'` communities discovered via `discover` — right now the only join path is direct-add by an existing member with `MANAGE_MEMBERS`.
-2. **Fix "Remove member"** to call `communityService.removeMember()` instead of `deleteChannel()` (`04-known-bugs.md` #2) — give it its own confirm-dialog state rather than sharing `channelToDelete`.
-3. **"Leave community" UI** — doesn't exist anywhere in the client today. Add `leaveCommunity` to `community.service.ts` and a button (probably in the About page's overflow menu or a settings screen).
+Original list (strikethrough = shipped in PR #6):
+
+1. ~~**Join-request UI.**~~ ✅ Panel + Approve/Reject + `requestToJoinCommunity`/`approveJoinRequest`/`rejectJoinRequest` service methods. "Request to join" added to Discover for private communities. A community's About page (or a dedicated "Requests" panel) needs: a list of pending requesters (fix the populate first — #4 above — so you get usernames/avatars, not ids), and Approve/Reject buttons wired to `CommunityService` methods that don't exist yet (`requestToJoinCommunity`, `approveJoinRequest`, `rejectJoinRequest` need to be added to `community.service.ts` — they're missing entirely, see `01-backend-frontend-gap-analysis.md`). Also add a "Request to join" button somewhere reachable for `type: 'private'` communities discovered via `discover` — right now the only join path is direct-add by an existing member with `MANAGE_MEMBERS`.
+2. ~~**Fix "Remove member"**~~ ✅ Own confirm modal + state, calls `removeMember` with the member's user id, hidden on the owner row (`04-known-bugs.md` #2).
+3. ~~**"Leave community" UI**~~ ✅ Button on About (hidden for owner), confirm → `leaveCommunity` → navigate to Discover; sidebar refreshes via `CommunityStateService.membershipChanged$`.
 4. **"Delete community" UI** — `deleteCommunity` has no client caller at all. Gate on `MANAGE_COMMUNITY`, put it somewhere deliberately hard to hit by accident (confirm modal, type-the-name-to-confirm pattern is common for this).
 5. **Edit community details** — currently only icon/cover can be changed from the UI. Add a form for name/description/type, reusing the existing `updateCommunity` call (it already accepts `Partial<ICommunity>`).
 6. **Tag management on an existing community** — `addTag`/`removeTag` have no client callers; add them to `community.service.ts` once Tier 0 #2 makes them grantable.
@@ -42,6 +44,7 @@ Tier 0 is done, so these are now unblocked. **Items 1–5 (membership lifecycle)
 
 ## Tier 3 — smaller things worth doing opportunistically
 
+- **`GET /community/:id` leaks bcrypt password hashes** for every populated member and (since PR #2) every join requester. Add a `-password` projection to the `getCommunityById` populate, or a `toJSON`/`toObject` transform on the User model that strips `password`. Found during PR #6 verification. Also in `04-known-bugs.md` / `HANDOFF.md`.
 - `channel.service.ts` is missing a `search` method for `GET /channel/search/:communityId` — cheap to add if/when a channel search box is wanted.
 - Resolve what `GET /auth/userDetails/:id` is for (`01-backend-frontend-gap-analysis.md`) — wire it up or remove it.
 - Tighten the four "empty result → 404" usecases (`04-known-bugs.md` #6) to return `[]`, and have `layout.component.ts`'s `loadCommunities()` explicitly handle its error case instead of only logging.

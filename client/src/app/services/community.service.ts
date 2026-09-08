@@ -87,6 +87,45 @@ export class CommunityService {
     );
   }
 
+  /** Send a join request for a (private) community. */
+  requestToJoinCommunity(communityId: string): Observable<{ success: boolean }> {
+    const url = `${this.baseUrl}/request/${communityId}`;
+    return this.http.post<{ success: boolean }>(url, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /** Approve a pending join request, assigning the given role to the new member. */
+  approveJoinRequest(
+    communityId: string,
+    memberId: string,
+    roleId: string
+  ): Observable<{ success: boolean }> {
+    const url = `${this.baseUrl}/approve_request/${communityId}`;
+    return this.http.post<{ success: boolean }>(url, { memberId, roleId }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /** Reject a pending join request. */
+  rejectJoinRequest(
+    communityId: string,
+    memberId: string
+  ): Observable<{ success: boolean }> {
+    const url = `${this.baseUrl}/reject_request/${communityId}`;
+    return this.http.post<{ success: boolean }>(url, { memberId }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /** Leave a community. Rejected server-side if the caller is the owner. */
+  leaveCommunity(communityId: string): Observable<{ success: boolean }> {
+    const url = `${this.baseUrl}/leave/${communityId}`;
+    return this.http.post<{ success: boolean }>(url, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   updateCommunity(
     communityId: string,
     data: Partial<ICommunity>

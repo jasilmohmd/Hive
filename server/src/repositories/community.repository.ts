@@ -4,6 +4,8 @@ import { ICommunityRepository } from '../interfaces/repository/ICommunity.reposi
 import { CommunityModel, ICommunityDocument } from '../framework/models/community.model';
 import { TagModel } from '../framework/models/tag.model';
 import { CategoryModel } from '../framework/models/communityCategory.model';
+import { RoleModel } from '../framework/models/role.model';
+import { ChannelModel } from '../framework/models/channel.model';
 import { ICategory } from '../entity/CommunityCategory.entity';
 import { ITag } from '../entity/Tag.entity';
 
@@ -97,7 +99,14 @@ export class CommunityRepository implements ICommunityRepository {
 
   async deleteCommunity(id: Types.ObjectId): Promise<boolean> {
     const result = await CommunityModel.findByIdAndDelete(id);
-    return result ? true : false;
+    if (!result) return false;
+    // Cascade the community's own documents. Channel messages/chats are not
+    // cascaded here (deleteChannel has the same limitation) — tracked separately.
+    await Promise.all([
+      RoleModel.deleteMany({ communityId: id }),
+      ChannelModel.deleteMany({ communityId: id }),
+    ]);
+    return true;
   }
 
 

@@ -4,7 +4,7 @@ Answering directly: **the enforcement mechanism is real and mostly correct where
 
 > **Update 2026-09-08 (PR #2 `aecbd00`).** `MANAGE_TAG` added to Owner/Admin (new communities only); `approve`/`rejectJoinRequest` reachable again.
 >
-> **Update 2026-09-09 (Tier 2 PR A, PR #12).** `KICK_MEMBERS` is now a **real permission** — `POST /community/kick/:communityId` gated on it (narrower than `MANAGE_MEMBERS`, Moderator-accessible). **Member role assignment** exists server-side: `POST /role/assign` + `/role/unassign` (`MANAGE_ROLES`-gated; owner's roles locked; member keeps ≥1 role). `deleteRole` no longer orphans member `roleIds`. Shared `PERMISSIONS` constant added (server + client). **Still open (Tier 2 PR B/C):** the role-management UI, the member role-assignment UI, role badges. `VIEW_CONTENT`/`SEND_MESSAGES` enforcement intent still unconfirmed.
+> **Update 2026-09-09 (Tier 2, PRs #12–#14) — RBAC is now feature-complete on both sides.** `KICK_MEMBERS` is a real permission (`POST /community/kick/:communityId`, narrower than `MANAGE_MEMBERS`, Moderator-accessible). Member **role assignment**: `POST /role/assign` + `/role/unassign` (`MANAGE_ROLES`; owner's roles locked; member keeps ≥1 role), with a per-member checkbox editor in the member modal. **Roles CRUD UI**: `RolesModalComponent` from the About page — list/create/edit/delete, defaults read-only. `deleteRole` cascades to member `roleIds`. Shared `PERMISSIONS` constant (server + client, client has display labels). Member list shows coloured role pills; member modal shows Kick or Remove per the viewer's permission. **Still open:** `VIEW_CONTENT`/`SEND_MESSAGES` are seeded but only enforced via channel-membership checks — confirm whether that's intentional or add explicit gates.
 
 ## The model
 

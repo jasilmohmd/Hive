@@ -85,7 +85,7 @@ Two independent problems:
 
 ## 5. `KICK_MEMBERS` permission is declared, seeded, and never checked
 
-> **STILL OPEN** — deliberately left for Tier 2, needs a product decision (implement a narrower kick action, or drop from seed data).
+> **FIXED — Tier 2 PR #12 + #14.** `POST /community/kick/:communityId` is gated on `KICK_MEMBERS` (narrower than `MANAGE_MEMBERS`); the member modal shows "Kick" instead of "Remove" for a viewer who has `KICK_MEMBERS` but not `MANAGE_MEMBERS`.
 
 **File:** `server/src/constants/predifinedRoles.ts` and every usecase file (absence, not presence)
 

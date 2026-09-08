@@ -41,13 +41,13 @@ Original list (strikethrough = shipped in PR #6):
 
 ## Tier 2 — finish RBAC / role management (the other thing the owner asked about)
 
-> **Build plan: `08-tier2-plan.md`.** **PR A (#12):** server endpoints + service methods. **PR B (#13):** roles CRUD screen (modal from About). **Remaining: PR C — member role-assignment UI (replace the mis-wired member-modal "Manage" button), Kick-vs-Remove in the member modal, role badges (colored pills).**
+> **Tier 2 COMPLETE.** `08-tier2-plan.md`. **PR A (#12):** server endpoints + service methods. **PR B (#13):** roles CRUD screen. **PR C (#14):** member role editor, Kick-vs-Remove, role badges. Remaining RBAC items are the opportunistic ones in Tier 3 (dead `CommunityCategory`, `VIEW_CONTENT`/`SEND_MESSAGES` enforcement intent).
 
 
 1. ~~**Build a Roles screen**~~ ✅ **PR #13.** `RolesModalComponent` — list/create/edit/delete, defaults read-only. `role.service.ts` gained all six methods in PR #12.
-2. **Role assignment for existing members** — server side done (PR #12: `POST /role/assign` + `/role/unassign`). **UI still needed (PR C):** replace the member-modal "Manage" button (currently opens the channel-edit modal) with a per-member role editor.
-3. ~~**Decide `KICK_MEMBERS`'s fate**~~ ✅ **PR #12** — implemented as a real narrower kick (`POST /community/kick/:communityId`). UI (Kick vs Remove in the member modal) is PR C.
-4. **Role badges in the member list.** `manageMembers()` already computes `roles: member.roleIds?.map(r => r.name).join(', ')` — worth a small polish pass (colored pills per role, matching whatever visual language the rest of the redesign uses) once assignment actually works.
+2. ~~**Role assignment for existing members**~~ ✅ server PR #12, UI PR #14 (member modal "Roles" per-member checkbox editor).
+3. ~~**Decide `KICK_MEMBERS`'s fate**~~ ✅ **PR #12** — real narrower kick (`POST /community/kick/:communityId`); UI (Kick vs Remove) **PR #14**.
+4. ~~**Role badges in the member list**~~ ✅ **PR #14** — coloured pills per role via a `common-table` `roleBadges` column.
 5. Confirm intent for `VIEW_CONTENT`/`SEND_MESSAGES` (`03-rbac-status.md`) — either find/add their enforcement points or document that they're reserved for future use.
 
 ## Tier 3 — smaller things worth doing opportunistically

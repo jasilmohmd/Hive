@@ -61,7 +61,9 @@ Written 2026-09-09, after Tier 1 completed (`main` at `e6f254e`). Covers `05-roa
 
 - **PR A — ✅ done (PR #12).** Shared `PERMISSIONS` constant (server + client mirror w/ labels); `POST /role/assign` + `/role/unassign` (guards: role-in-community, owner's roles locked, member keeps ≥1 role); `deleteRole` now `$pull`s from members + checks role-in-community; `roleValidator` failures → 400 not 500; `GET /role/list` → `{ roles }`; `POST /community/kick/:communityId` gated on `KICK_MEMBERS`; `role.service.ts` (list/create/update/delete/assign/unassign) + `community.service.ts` `kickMember` + spec tests. Verified live (create/assign/unassign/kick/delete-cascade, default-role + owner-role + last-role + narrower-kick guards). `ng test` 90/90.
 - **PR B — ✅ done (PR #13).** `RolesModalComponent` — "Roles" button on About (gated `MANAGE_ROLES`) opens a modal: list roles + permission counts ("Default" badge, read-only for defaults), create/edit/delete custom roles (name + permission checkboxes from `PERMISSION_LIST`, ≥1 required). `onRolesChanged()` reloads community + current-user permissions. Verified live (list all 5 defaults, create → edit → delete). `ng test` 93/93.
-- **PR C** — member role assignment + kick UI + role badges.
+- **PR C — ✅ done (PR #14).** Member modal "Manage"→"Roles" per-member checkbox editor (`assignRole`/`unassignRole`); Kick-vs-Remove (Remove if `MANAGE_MEMBERS`, else Kick if `KICK_MEMBERS`, both hidden on owner); Members-card "Manage" opens for `MANAGE_MEMBERS`/`KICK_MEMBERS`/`MANAGE_ROLES` ("Add" stays `MANAGE_MEMBERS`-only); role pills (`common-table` `roleBadges` column). Verified live (assign/unassign incl. last-role rejection; Moderator sees only Kick + multi-role pills). `ng test` 93/93.
+
+**Tier 2 complete.** Remaining RBAC odds and ends are the opportunistic items below (dead `CommunityCategory`, `VIEW_CONTENT`/`SEND_MESSAGES` enforcement intent).
 
 ### Sub-decisions to settle during build
 

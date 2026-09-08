@@ -11,6 +11,7 @@ import { CallService } from '../../../services/call.service';
 import { ChatService } from '../../../services/chat.service';
 import { Subscription } from 'rxjs';
 import { ChannelSidebarService } from '../../../services/shared/channel-sidebar.service';
+import { CommunityStateService } from '../../../services/shared/community-state.service';
 
 @Component({
   selector: 'app-layout',
@@ -49,7 +50,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private call: CallService,
     private chat: ChatService,
-    private channelSidebar: ChannelSidebarService
+    private channelSidebar: ChannelSidebarService,
+    private communityState: CommunityStateService
   ) {}
 
   ngOnInit(): void {
@@ -69,6 +71,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.channelSidebar.collapsed$.subscribe((collapsed) => {
         this.channelSidebarCollapsed = collapsed;
       })
+    );
+    this.subs.add(
+      this.communityState.membershipChanged$.subscribe(() => this.loadCommunities())
     );
   }
 

@@ -24,12 +24,23 @@
           <p class="text-ink-secondary text-sm line-clamp-2">{{ c.description || 'No description' }}</p>
           <span class="inline-block mt-2 text-xs uppercase tracking-wide text-ink-muted">{{ c.type }}</span>
         </div>
-        <a
-          [routerLink]="['/main/community', c._id]"
-          class="shrink-0 px-4 py-2 rounded-lg bg-brand hover:bg-brand-hover text-surface-950 text-sm text-center focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          Open
-        </a>
+        <div class="shrink-0 flex items-center gap-2">
+          <button
+            *ngIf="c.type === 'private' && (canRequestToJoin(c) || hasSentRequest(c))"
+            type="button"
+            (click)="requestToJoin(c)"
+            [disabled]="!canRequestToJoin(c) || requestState[c._id] === 'pending'"
+            class="px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 disabled:opacity-60 disabled:hover:bg-surface-800 text-ink text-sm focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            {{ requestButtonLabel(c) }}
+          </button>
+          <a
+            [routerLink]="['/main/community', c._id]"
+            class="px-4 py-2 rounded-lg bg-brand hover:bg-brand-hover text-surface-950 text-sm text-center focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            Open
+          </a>
+        </div>
       </li>
     </ul>
 

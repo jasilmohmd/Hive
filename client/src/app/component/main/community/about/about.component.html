@@ -59,14 +59,28 @@
     <div #detailsSection
       class="relative z-10 bg-surface-800 rounded-xl shadow-xl px-4 md:px-6 pt-16 md:pt-20 pb-6 -mt-12 md:-mt-16 mx-2 md:mx-4 mb-4">
 
-      <!-- Manage Community Button -->
-      <button *ngIf="permissions.includes('MANAGE_COMMUNITY')"
-        class="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        <span class="hidden md:inline">Manage Community</span>
-      </button>
+      <!-- Profile-card action buttons -->
+      <div class="absolute top-4 right-4 flex items-center gap-2">
+        <!-- Manage Community Button -->
+        <button *ngIf="permissions.includes('MANAGE_COMMUNITY')"
+          class="flex items-center gap-2 px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          <span class="hidden md:inline">Manage Community</span>
+        </button>
+
+        <!-- Leave Community Button (not shown to the owner — the server rejects it) -->
+        <button *ngIf="!isOwner" (click)="promptLeaveCommunity()"
+          class="flex items-center gap-2 px-3 py-1.5 bg-danger/20 hover:bg-danger/30 rounded-lg text-danger-text text-sm transition-all"
+          title="Leave community">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span class="hidden md:inline">Leave</span>
+        </button>
+      </div>
 
       <!-- Community Image -->
       <div class="absolute -top-8 md:-top-12 left-4 md:left-6 z-[2]">
@@ -203,7 +217,7 @@
             <div class="flex justify-between items-center mb-2 md:mb-3">
               <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Join Requests</h2>
               <div class="flex items-center gap-4">
-                <button *ngIf="permissions.includes('MANAGE_MEMBERS')"
+                <button *ngIf="permissions.includes('MANAGE_MEMBERS')" (click)="manageJoinRequests()"
                   class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
                   title="Manage requests">
                   Manage
@@ -214,7 +228,10 @@
             <div class="flex flex-wrap gap-2">
               <span *ngFor="let request of community.joinRequests.slice(0,4)"
                 class="px-3 py-1 bg-surface-700 text-ink-secondary text-sm rounded-full">
-                {{ request }}
+                {{ request.userName || 'Pending user' }}
+              </span>
+              <span *ngIf="community.joinRequests.length === 0" class="text-ink-muted text-sm">
+                No pending requests
               </span>
             </div>
           </div>
@@ -248,7 +265,7 @@
 </div>
 
 
-<app-common-modal 
+<app-common-modal
   *ngIf="showConfirmModal"
   title="Confirm Deletion"
   message="Are you sure you want to delete this channel?"
@@ -256,5 +273,27 @@
   cancelText="Cancel"
   (confirmed)="onDeleteConfirmed()"
   (cancelled)="onDeleteCancelled()"
+  class="animate-fade-in-up">
+</app-common-modal>
+
+<app-common-modal
+  *ngIf="showRemoveMemberModal"
+  title="Remove member"
+  [message]="'Remove ' + (memberToRemove?.userName || 'this member') + ' from the community?'"
+  confirmText="Remove"
+  cancelText="Cancel"
+  (confirmed)="onRemoveMemberConfirmed()"
+  (cancelled)="onRemoveMemberCancelled()"
+  class="animate-fade-in-up">
+</app-common-modal>
+
+<app-common-modal
+  *ngIf="showLeaveModal"
+  title="Leave community"
+  [message]="'Leave ' + (community?.name || 'this community') + '? You will need to be re-added or request to join again.'"
+  confirmText="Leave"
+  cancelText="Cancel"
+  (confirmed)="onLeaveConfirmed()"
+  (cancelled)="onLeaveCancelled()"
   class="animate-fade-in-up">
 </app-common-modal>

@@ -16,6 +16,8 @@ import { FriendService } from '../../../../services/friends.service';
 import { CommunityService } from '../../../../services/community.service';
 import { ImagePickerMenuComponent } from '../../../common/image-picker-menu/image-picker-menu.component';
 import { ToastService } from '../../../../services/toast.service';
+import { UserAuthService } from '../../../../services/user-auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-about',
@@ -34,6 +36,13 @@ export class AboutComponent {
 
   showConfirmModal: boolean = false;
   channelToDelete: any = null;
+
+  showRemoveMemberModal: boolean = false;
+  memberToRemove: any = null;
+
+  showLeaveModal: boolean = false;
+  /** Current user id, resolved once; used for the "is this the owner?" check. */
+  private currentUserId: string | null = null;
 
   // Modal related properties
   showModal: boolean = false;
@@ -71,9 +80,16 @@ export class AboutComponent {
     private channelService: ChannelService,
     private friendService: FriendService,
     private cd: ChangeDetectorRef,
+    private userAuthService: UserAuthService,
+    private router: Router,
   ) { }
 
   ngOnInit(): void {
+    this.userAuthService.getUserDetails().subscribe({
+      next: (res) => { this.currentUserId = res.userData?._id ?? null; },
+      error: () => { this.currentUserId = null; },
+    });
+
     const communitySub = this.route.parent?.params.subscribe(params => {
       // Tear down the previous community's subscriptions before creating new ones,
       // since this component is reused (not recreated) when switching communities.
@@ -122,6 +138,32 @@ export class AboutComponent {
 
   get canManageCommunity(): boolean {
     return this.permissions.includes('MANAGE_COMMUNITY');
+  }
+
+  /** True when the signed-in user owns this community (owner can't leave). */
+  get isOwner(): boolean {
+    const ownerId = this.community?.ownerId?._id || this.community?.ownerId;
+    return !!ownerId && !!this.currentUserId && String(ownerId) === String(this.currentUserId);
+  }
+
+  promptLeaveCommunity(): void {
+    this.showLeaveModal = true;
+  }
+
+  onLeaveCancelled(): void {
+    this.showLeaveModal = false;
+  }
+
+  onLeaveConfirmed(): void {
+    this.showLeaveModal = false;
+    this.communityService.leaveCommunity(this.communityId).subscribe({
+      next: () => {
+        this.toast.success(`You left ${this.community?.name || 'the community'}`);
+        this.communityStateService.notifyMembershipChanged();
+        this.router.navigate(['/main/discover']);
+      },
+      error: (err: Error) => this.toast.error(err.message || 'Failed to leave the community'),
+    });
   }
 
   onCommunityIconUploaded(url: string): void {
@@ -277,6 +319,36 @@ export class AboutComponent {
     this.showConfirmModal = false;
   }
 
+  promptRemoveMember(member: any) {
+    this.memberToRemove = member;
+    this.showRemoveMemberModal = true;
+  }
+
+  onRemoveMemberConfirmed() {
+    const member = this.memberToRemove;
+    this.showRemoveMemberModal = false;
+    this.memberToRemove = null;
+    if (!member?.userId) {
+      return;
+    }
+    this.communityService.removeMember(this.communityId, member.userId).subscribe({
+      next: () => {
+        this.toast.success(`${member.userName} removed from the community`);
+        this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
+          this.community = community;
+          this.modalData.data = this.mapMembers(community);
+          this.cd.detectChanges();
+        });
+      },
+      error: (err: Error) => this.toast.error(err.message || 'Failed to remove member'),
+    });
+  }
+
+  onRemoveMemberCancelled() {
+    this.memberToRemove = null;
+    this.showRemoveMemberModal = false;
+  }
+
 
   createChannel(communityId: string, data: any): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -345,13 +417,24 @@ export class AboutComponent {
     });
   }
 
+  /** Shape a community's `members` array into rows for the member-management table. */
+  private mapMembers(community: any): any[] {
+    const ownerId = community?.ownerId?._id || community?.ownerId;
+    return (community?.members || []).map((member: any) => {
+      const userId = member.userId?._id || member.userId;
+      return {
+        _id: member._id,
+        userId,
+        userName: member.userId?.userName || 'Unknown',
+        roles: member.roleIds?.map((role: any) => role.name).join(', ') || 'No roles',
+        isOwner: !!ownerId && String(userId) === String(ownerId),
+      };
+    });
+  }
+
   manageMembers() {
 
-    const mappedMembers = this.community.members.map((member: any) => ({
-      _id: member._id,
-      userName: member.userId?.userName || 'Unknown',
-      roles: member.roleIds?.map((role: any) => role.name).join(', ') || 'No roles'
-    }));
+    const mappedMembers = this.mapMembers(this.community);
 
     const columns: TableColumn[] = [
       { field: 'userName', header: 'Name' },
@@ -365,7 +448,8 @@ export class AboutComponent {
       },
       {
         label: 'Remove',
-        action: (member: any) => this.handleModalAction({ action: 'delete', item: member }),
+        hidden: (member: any) => !!member.isOwner,
+        action: (member: any) => this.promptRemoveMember(member),
         class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
       }
     ];
@@ -385,6 +469,86 @@ export class AboutComponent {
       mode: 'add'
     };
     this.showModal = true;
+  }
+
+  /** Shape a community's populated `joinRequests` into rows for the requests table. */
+  private mapJoinRequests(community: any): any[] {
+    return (community?.joinRequests || []).map((request: any) => ({
+      _id: request?._id || request,
+      userId: request?._id || request,
+      userName: request?.userName || 'Unknown',
+      profilePicture: request?.profilePicture || null,
+    }));
+  }
+
+  manageJoinRequests() {
+    const columns: TableColumn[] = [
+      { field: 'profilePicture', header: '' },
+      { field: 'userName', header: 'Name' },
+    ];
+    const primaryActions: TableAction[] = [
+      {
+        label: 'Approve',
+        action: (request: any) => this.approveJoinRequest(request),
+        class: 'px-3 py-1 bg-success text-surface-950 rounded-xl hover:bg-success-hover transition-colors'
+      },
+      {
+        label: 'Reject',
+        action: (request: any) => this.rejectJoinRequest(request),
+        class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
+      }
+    ];
+
+    this.modalData = {
+      title: 'Join Request',
+      data: this.mapJoinRequests(this.community),
+      columns,
+      primaryActions,
+      secondaryActions: [],
+      showFallbackInitial: true,
+      searchFields: ['userName'],
+      mode: 'add'
+    };
+    this.showModal = true;
+  }
+
+  private refreshJoinRequests(): void {
+    this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
+      this.community = community;
+      this.modalData.data = this.mapJoinRequests(community);
+      this.cd.detectChanges();
+    });
+  }
+
+  approveJoinRequest(request: any) {
+    const memberRole = this.community.roles?.find(
+      (role: any) => role.name?.toLowerCase() === 'member'
+    );
+    if (!memberRole?._id) {
+      this.toast.error('No default "Member" role found for this community');
+      return;
+    }
+    this.communityService
+      .approveJoinRequest(this.communityId, request.userId, memberRole._id)
+      .subscribe({
+        next: () => {
+          this.toast.success(`${request.userName} added to the community`);
+          this.refreshJoinRequests();
+        },
+        error: (err: Error) => this.toast.error(err.message || 'Failed to approve request'),
+      });
+  }
+
+  rejectJoinRequest(request: any) {
+    this.communityService
+      .rejectJoinRequest(this.communityId, request.userId)
+      .subscribe({
+        next: () => {
+          this.toast.success(`Request from ${request.userName} rejected`);
+          this.refreshJoinRequests();
+        },
+        error: (err: Error) => this.toast.error(err.message || 'Failed to reject request'),
+      });
   }
 
   openAddMemberModal(item: any) {
@@ -425,12 +589,7 @@ export class AboutComponent {
         console.log(response);
         this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
           this.community = community;
-          const mappedMembers = this.community.members.map((member: any) => ({
-            _id: member._id,
-            userName: member.userId?.userName || 'Unknown',
-            roles: member.roleIds?.map((role: any) => role.name).join(', ') || 'No roles'
-          }));
-          this.modalData.data = community ? mappedMembers : [];
+          this.modalData.data = this.mapMembers(community);
           this.cd.detectChanges();
         });
       },

@@ -115,17 +115,19 @@
             "
           >
             <div class="flex flex-nowrap items-center justify-end gap-1 md:gap-2">
-              <button
-                *ngFor="let act of primaryActions"
-                type="button"
-                (click)="act.action(row); $event.stopPropagation()"
-                [ngClass]="act.class"
-                class="shrink-0 whitespace-nowrap rounded-md bg-surface-600 p-1.5 transition-colors"
-                [title]="act.label"
-              >
-                <img *ngIf="act.icon" [src]="act.icon" alt="icon" class="h-5 w-5" />
-                <span *ngIf="!act.icon">{{ act.label }}</span>
-              </button>
+              <ng-container *ngFor="let act of primaryActions">
+                <button
+                  *ngIf="!act.hidden || !act.hidden(row)"
+                  type="button"
+                  (click)="act.action(row); $event.stopPropagation()"
+                  [ngClass]="act.class"
+                  class="shrink-0 whitespace-nowrap rounded-md bg-surface-600 p-1.5 transition-colors"
+                  [title]="act.label"
+                >
+                  <img *ngIf="act.icon" [src]="act.icon" alt="icon" class="h-5 w-5" />
+                  <span *ngIf="!act.icon">{{ act.label }}</span>
+                </button>
+              </ng-container>
 
               <div class="dropdown-container relative shrink-0" *ngIf="secondaryActions?.length">
                 <app-common-dropdown

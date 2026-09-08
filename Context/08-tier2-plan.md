@@ -59,7 +59,7 @@ Written 2026-09-09, after Tier 1 completed (`main` at `e6f254e`). Covers `05-roa
 
 ### PR structure
 
-- **PR A** — server (permissions constant, assign/unassign, kick, deleteRole cascade, listRoles shape) + `role.service.ts`/`community.service.ts` methods.
+- **PR A — ✅ done (PR #12).** Shared `PERMISSIONS` constant (server + client mirror w/ labels); `POST /role/assign` + `/role/unassign` (guards: role-in-community, owner's roles locked, member keeps ≥1 role); `deleteRole` now `$pull`s from members + checks role-in-community; `roleValidator` failures → 400 not 500; `GET /role/list` → `{ roles }`; `POST /community/kick/:communityId` gated on `KICK_MEMBERS`; `role.service.ts` (list/create/update/delete/assign/unassign) + `community.service.ts` `kickMember` + spec tests. Verified live (create/assign/unassign/kick/delete-cascade, default-role + owner-role + last-role + narrower-kick guards). `ng test` 90/90.
 - **PR B** — Roles CRUD screen.
 - **PR C** — member role assignment + kick UI + role badges.
 

@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { Types } from "mongoose";
 import ICommunityUsecase from "../interfaces/usecase/ICommunity.usecase.interface";
+import ICommunityController from "../interfaces/controllers/ICommunityController.interface";
 import StatusCodes from "../constants/auth/statusCodes";
 import IAuthRequest from "../interfaces/common/IAuthRequest.interface";
-import { log } from "console";
 
 
-class CommunityController {
+class CommunityController implements ICommunityController {
   private communityUsecase: ICommunityUsecase;
 
   constructor(communityUsecase: ICommunityUsecase) {
@@ -25,8 +25,7 @@ class CommunityController {
       }
 
       const { name, description, type, tags, imageUrl, coverImageUrl } = req.body.data;
-      console.log(req.body.data);
-      
+
       const community = await this.communityUsecase.createCommunity({
         name,
         description,
@@ -174,8 +173,8 @@ class CommunityController {
 
 
       const result = await this.communityUsecase.requestToJoinCommunity(
-        communityId,
-        userId
+        userId,
+        communityId
       );
 
       res.status(StatusCodes.Success).json({ success: result });
@@ -212,7 +211,7 @@ class CommunityController {
       }
 
       const result = await this.communityUsecase.approveJoinRequest(
-        communityId, userId, memberId, roleId
+        userId, communityId, memberId, roleId
       );
       res.status(StatusCodes.Success).json({ success: result });
     } catch (error) {
@@ -237,7 +236,7 @@ class CommunityController {
       }
 
       const result = await this.communityUsecase.rejectJoinRequest(
-        communityId, userId, memberId
+        userId, communityId, memberId
       );
       res.status(StatusCodes.Success).json({ success: result });
     } catch (error) {
@@ -261,7 +260,7 @@ class CommunityController {
       }
 
       const result = await this.communityUsecase.leaveCommunity(
-        communityId, userId
+        userId, communityId
       );
       res.status(StatusCodes.Success).json({ success: result });
     } catch (error) {
@@ -312,7 +311,7 @@ class CommunityController {
       }
 
       const result = await this.communityUsecase.removeMember(
-        communityId, userId, memberId
+        userId, communityId, memberId
       );
       res.status(StatusCodes.Success).json({ success: result });
     } catch (error) {

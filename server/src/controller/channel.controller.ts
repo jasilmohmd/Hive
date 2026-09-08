@@ -20,9 +20,6 @@ export default class ChannelController implements IChannelController {
 
       const { ...channelData } = req.body.data as Partial<IChannel>;
 
-      console.log(channelData);
-      
-
       const userId = req.userId!;
       const communityId = new Types.ObjectId(req.params.communityId)
 

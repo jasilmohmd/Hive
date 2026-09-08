@@ -7,6 +7,21 @@ import IChannelUsecase from "../interfaces/usecase/IChannel.usecase.interface";
 import StatusCodes from "../constants/auth/statusCodes";
 
 
+/**
+ * Parse a route param into an ObjectId. On a missing or malformed value it
+ * sends a 400 and returns null so the caller can `return` early. Guards the
+ * raw string before construction, since `new Types.ObjectId()` mints a
+ * random id for `undefined` and throws for other malformed input.
+ */
+function parseObjectId(res: Response, raw: unknown, label: string): Types.ObjectId | null {
+  if (typeof raw !== "string" || !Types.ObjectId.isValid(raw)) {
+    res.status(StatusCodes.BadRequest).json({ error: `Invalid or missing ${label}` });
+    return null;
+  }
+  return new Types.ObjectId(raw);
+}
+
+
 export default class ChannelController implements IChannelController {
   constructor(private channelUseCase: IChannelUsecase) {}
 
@@ -21,16 +36,15 @@ export default class ChannelController implements IChannelController {
       const { ...channelData } = req.body.data as Partial<IChannel>;
 
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" });
         return;
       }
-      if (!communityId || !Types.ObjectId.isValid(communityId)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid or missing community ID" });
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "community ID");
+      if (!communityId) return;
+
       const createdChannel = await this.channelUseCase.createChannel(
         channelData as Partial<IChannel>,
         userId,
@@ -48,12 +62,11 @@ export default class ChannelController implements IChannelController {
   public async getChannelById(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.userId!;
-      const { id } = req.params;
-      if (!Types.ObjectId.isValid(id)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid channel ID" });
-        return;
-      }
-      const channel = await this.channelUseCase.getChannelById(userId, new Types.ObjectId(id));
+
+      const channelId = parseObjectId(res, req.params.id, "channel ID");
+      if (!channelId) return;
+
+      const channel = await this.channelUseCase.getChannelById(userId, channelId);
       res.status(StatusCodes.Success).json(channel);
     } catch (error: any) {
       next(error);
@@ -67,16 +80,15 @@ export default class ChannelController implements IChannelController {
   public async getAccessibleChannels(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" });
         return;
       }
-      if (!communityId || !Types.ObjectId.isValid(communityId)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid community ID" });
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "community ID");
+      if (!communityId) return;
+
       const groupedChannels = await this.channelUseCase.getAccessibleChannels(
         communityId,
         userId
@@ -95,17 +107,16 @@ export default class ChannelController implements IChannelController {
     try {
 
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
-      const { searchTerm } = req.query;
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" });
         return;
       }
-      if (typeof communityId !== "string" || !Types.ObjectId.isValid(communityId)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid community ID" });
-        return;
-      }
+
+      const communityId = parseObjectId(res, req.params.communityId, "community ID");
+      if (!communityId) return;
+
+      const { searchTerm } = req.query;
       if (!searchTerm || typeof searchTerm !== "string") {
         res.status(StatusCodes.BadRequest).json({ error: "Invalid search term" });
         return;
@@ -127,23 +138,21 @@ export default class ChannelController implements IChannelController {
    */
   public async updateChannel(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const channelId = new Types.ObjectId(req.params.channelId); // channel ID
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
-      const { ...data } = req.body.data;
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" });
         return;
       }
-      if (!channelId || !Types.ObjectId.isValid(channelId)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid channel ID" });
-        return;
-      }
-      if (!communityId || !Types.ObjectId.isValid(communityId)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid or missing community ID" });
-        return;
-      }
+
+      const channelId = parseObjectId(res, req.params.channelId, "channel ID");
+      if (!channelId) return;
+
+      const communityId = parseObjectId(res, req.params.communityId, "community ID");
+      if (!communityId) return;
+
+      const { ...data } = req.body.data;
+
       const updatedChannel = await this.channelUseCase.updateChannel(
         userId,
         communityId,
@@ -162,22 +171,19 @@ export default class ChannelController implements IChannelController {
    */
   public async deleteChannel(req: IAuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const channelId = new Types.ObjectId(req.params.channelId); // channel ID
       const userId = req.userId!;
-      const communityId = new Types.ObjectId(req.params.communityId)
 
       if (!userId) {
         res.status(StatusCodes.Unauthorized).json({ error: "Unauthorized" });
         return;
       }
-      if (!channelId || !Types.ObjectId.isValid(channelId)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid channel ID" });
-        return;
-      }
-      if (!communityId || !Types.ObjectId.isValid(communityId)) {
-        res.status(StatusCodes.BadRequest).json({ error: "Invalid or missing community ID" });
-        return;
-      }
+
+      const channelId = parseObjectId(res, req.params.channelId, "channel ID");
+      if (!channelId) return;
+
+      const communityId = parseObjectId(res, req.params.communityId, "community ID");
+      if (!communityId) return;
+
       const result = await this.channelUseCase.deleteChannel(
         userId,
         communityId,

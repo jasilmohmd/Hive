@@ -2,6 +2,8 @@
 
 Answering directly: **community management is a skeleton, not a feature.** The data model and most backend rules are there; the membership lifecycle is broken server-side and the client only implements a fraction of it.
 
+> **Update 2026-09-08 (PR #2 → `main` `aecbd00`).** The **server-side** half of this is now fixed: the argument-order bug that broke `POST /community/request|approve_request|reject_request|leave|member/remove` is corrected, owner-loss guards are in place on leave/remove, `joinRequests` is populated, and `MANAGE_TAG` is grantable (new communities). So "What's broken server-side" below is **no longer accurate** — those five endpoints now work. Everything under **"What exists in the UI but doesn't do anything"** and **"What's missing outright"** is unchanged and is the Tier 1 work.
+
 ## What actually works today
 
 - **Create a community** — full wizard (`create-community/step-one|two|three`), creates the community, seeds 5 default roles, assigns the creator the `Owner` role. Works.
@@ -11,7 +13,9 @@ Answering directly: **community management is a skeleton, not a feature.** The d
 - **Add a member directly** — `about.component.ts` → `openAddMemberModal()` → search any user by username/email (`FriendService.searchUserByUsername`, not restricted to friends) → `addUserToCommunity()` → `POST /community/member/add/:communityId` with the community's `Member` role. This works and is, today, **the only way anyone joins a community that isn't the creator** — including `type: 'private'` communities, which per the data model should require approval instead.
 - **Channel CRUD inside a community** — create/edit/delete channel, gated on `MANAGE_CHANNELS`. Works and is reasonably complete.
 
-## What's broken server-side (would fail even with correct frontend calls)
+## ~~What's broken server-side~~ — FIXED in PR #2 (kept for history)
+
+> Every endpoint in this section now works. The argument-order bug (`04-known-bugs.md` #1) is fixed. Text below describes the pre-fix state.
 
 See `04-known-bugs.md` #1 for the full trace, but in short: `community.controller.ts` calls five of its six membership usecase methods with `communityId` and `userId` swapped relative to what `ICommunityUsecase` (and the usecase implementation) declares. Concretely:
 
@@ -45,4 +49,4 @@ Only `POST /community/member/add/:communityId` has its arguments in the right or
 
 ## Bottom line
 
-Treat "community management" as roughly **40% done**: creation, browsing, channel management, and a workaround join flow (direct-add) work. Everything about the *lifecycle* of membership — public join requests, approvals, leaving, removal, role changes, community deletion/editing — is either not called from the UI, not wired to the right handler, or broken in the controller layer server-side. Fixing the argument-order bug (`04-known-bugs.md` #1) is a prerequisite for almost everything else in this list; it should be first.
+Treat "community management" as roughly **50% done** post-PR-#2: creation, browsing, channel management, a workaround join flow (direct-add), **and the full server-side membership lifecycle** (request / approve / reject / leave / remove, with owner protection) now work. What's left is entirely **frontend**: the UI never calls the join-request endpoints, "Remove member" is wired to `deleteChannel`, the "Manage" button on Join Requests has no handler, and there's no leave/delete/edit-details UI. That's Tier 1 in `05-roadmap-todo.md`.

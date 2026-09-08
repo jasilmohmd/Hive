@@ -137,9 +137,9 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 | 2 | `server/src/usecase/auth.usecase.ts:~121` | Login returns distinct "user not found" vs "password incorrect" → email enumeration. |
 | 3 | `server/src/framework/utils/jwt.service.ts:23` | `jwt.verify` doesn't pin `algorithms: ['HS256']` (defense-in-depth). |
 | 4 | `server/src/usecase/auth.usecase.ts:236` | `console.log("Sending mail with options:", mailOptions)` — plaintext OTP to stdout. |
-| 5 | `server/src/repositories/channel.repository.ts:84` | `deleteChannel` removes the doc but never `$pull`s the id from `Community.channels` → dangling refs, `populate` yields nulls. |
+| 5 | ~~`server/src/repositories/channel.repository.ts:84`~~ | **FIXED** (PR #2, `d8c9c33`) — `deleteChannel` now `$pull`s the id from `Community.channels`. |
 | 6 | `server/src/usecase/chat.usecase.ts` (~216) | Queries the `Users` model directly instead of via a repository (layering violation; also in `voiceroom.usecase.ts`, `voiceroomPresence.ts`). |
-| 7 | `server/src/controller/community.controller.ts` | `new Types.ObjectId(undefined)` generates a *random* id, so the `if (!id)` guards below are dead code. Same pattern in `channel.controller.ts`. |
+| 7 | ~~`server/src/controller/community.controller.ts`~~ | **FIXED** (PR #2, `f653285`) — both controllers now route every id param through a `parseObjectId` helper that validates the raw string with `Types.ObjectId.isValid` and returns 400 before construction. Also fixed `searchAccessibleChannels`, which 400'd every call. |
 | 8 | `server/src/usecase/channel.usecase.ts:~84` | `getAccessibleChannels` return type says key `voice`; runtime key is `voiceroom`. |
 | 9 | client `call.service` / `voiceroom.service` | No mutual exclusion — a DM call started while in a voiceroom fights over the microphone (`NotReadableError`). |
 | 10 | `client/.../chat-forward-picker` | Unlike its 7 siblings it has no full-viewport dismiss backdrop (left deliberately — different design, not a mechanical fix). |

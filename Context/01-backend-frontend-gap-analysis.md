@@ -4,6 +4,8 @@ Every mounted Express route (`server/src/framework/router/*.ts`), against whethe
 
 Legend: ✅ used from a component · 🟡 service method exists but no component calls it (dead code) · ❌ no frontend service method at all · — not applicable (internal/health).
 
+> **Update 2026-09-08 (PR #2 → `main` `aecbd00`):** the "also broken server-side" annotations on the community membership routes are now stale — `POST /community/request|approve_request|reject_request|leave|member/remove` all work server-side. Frontend-caller status (❌/🟡) is unchanged; that's the Tier 1 gap.
+
 ## `/community` (`community.router.ts` ↔ `community.service.ts`)
 
 | Route | Usecase call | Frontend | Notes |
@@ -18,13 +20,13 @@ Legend: ✅ used from a component · 🟡 service method exists but no component
 | `PUT /update/:communityId` | `updateCommunity` | ✅ | icon/cover upload only (`about.component.ts`); no "edit name/description/type" UI |
 | `DELETE /delete/:communityId` | `deleteCommunity` | ❌ | no client method — a community, once created, can never be deleted from the UI |
 | `GET /tag/:id` | `getTagById` | ✅ | |
-| `POST /request/:communityId` | `requestToJoinCommunity` | ❌ | **also broken server-side, see `04-known-bugs.md` #1** |
-| `POST /approve_request/:communityId` | `approveJoinRequest` | ❌ | same |
-| `POST /reject_request/:communityId` | `rejectJoinRequest` | ❌ | same |
-| `POST /leave/:communityId` | `leaveCommunity` | ❌ | no "Leave community" UI exists anywhere |
+| `POST /request/:communityId` | `requestToJoinCommunity` | ❌ | server-side now works (PR #2); no `community.service.ts` method yet |
+| `POST /approve_request/:communityId` | `approveJoinRequest` | ❌ | server-side now works (PR #2); no client method |
+| `POST /reject_request/:communityId` | `rejectJoinRequest` | ❌ | server-side now works (PR #2); no client method |
+| `POST /leave/:communityId` | `leaveCommunity` | ❌ | server-side now works (PR #2, incl. owner guard); no "Leave community" UI exists anywhere |
 | `POST /member/add/:communityId` | `addMember` | ✅ | `about.component.ts` `addUserToCommunity()` — this is the *only* way members join today, bypassing `joinRequests` entirely, even for `type: 'private'` communities |
-| `POST /member/remove/:communityId` | `removeMember` | 🟡 | method exists in `community.service.ts` but the "Remove" button in `about.component.ts` calls `deleteChannel()` instead (see `02-community-management-status.md`) — genuinely dead code |
-| `POST /add_tag/:communityId/:tagId` | `addTag` | ❌ | also can't succeed for any predefined role — no role has `MANAGE_TAG` (see `03-rbac-status.md`) |
+| `POST /member/remove/:communityId` | `removeMember` | 🟡 | server-side now works (PR #2, incl. owner guard); method exists in `community.service.ts` but the "Remove" button in `about.component.ts` calls `deleteChannel()` instead (see `02-community-management-status.md`) — genuinely dead code |
+| `POST /add_tag/:communityId/:tagId` | `addTag` | ❌ | `MANAGE_TAG` now granted to Owner/Admin for new communities (PR #2); still no client method |
 | `DELETE /remove_tag/:communityId/:tagId` | `removeTag` | ❌ | same |
 | `GET /filter_by_tag/:tagId` | `filterCommunitiesByTag` | ❌ | |
 | `GET /filter_by_category/:categoryId` | `filterCommunitiesByCategory` | ❌ | |

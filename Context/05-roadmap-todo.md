@@ -2,20 +2,27 @@
 
 A prioritized punch list built from `01`–`04` in this folder plus `HANDOFF.md`'s existing issue table. Structured so a Claude Code session can work top-down.
 
-## Tier 0 — fix before building anything new on top
+## Tier 0 — ✅ DONE (PR #2, merged to `main` at `aecbd00`, 2026-09-08)
 
-These are cheap, high-leverage, and everything in Tier 1 depends on at least one of them.
+All Tier 0 items shipped. Seven commits on `fix/community-management-tier0`:
 
-1. **Fix the argument-order bug in `community.controller.ts`** (`04-known-bugs.md` #1). Five call sites, one-line swaps each. Unblocks join requests, approve/reject, leave, and remove-member.
-2. **Add `"MANAGE_TAG"` to the `Owner`/`Admin` permission sets** in `predifinedRoles.ts` (`04-known-bugs.md` #4). One line.
-3. **Add owner-loss guards** to `leaveCommunity`/`removeMember` while you're already touching that file for #1 (`04-known-bugs.md` #8) — don't ship the argument fix without this, or you'll immediately regress into "owner can accidentally orphan their own community."
-4. **Populate `joinRequests` in `CommunityRepository.getCommunityById`** (`04-known-bugs.md` #3) so the data is even usable once a UI exists.
+| Item | Commit | Note |
+|---|---|---|
+| Argument-order bug (`04` #1) | `e9ecffd` | 5 call sites swapped; `implements ICommunityController`; debug logs removed |
+| `MANAGE_TAG` grant (`04` #4) | `429ed97` | Owner + Admin. **New communities only** — existing role docs not backfilled |
+| Owner-loss guard (`04` #8) | `89454a5` | `isCommunityOwner` check in `leaveCommunity` / `removeMember` |
+| Populate `joinRequests` (`04` #3) | `f3013a5` | server half only; the approve/reject UI is Tier 1 |
+| `deleteChannel` `$pull` (`HANDOFF` #5) | `d8c9c33` | |
+| Empty list → `[]` (`04` #6) | `17831cf` | server half; `layout.component.ts` error handling still Tier 3 |
+| `parseObjectId` validation (`HANDOFF` #7) | `f653285` | also fixed `searchAccessibleChannels` 400-on-every-call |
 
-Also apply while in these files: the existing `HANDOFF.md` items that are one-liners in the same neighborhood — `channel.repository.ts` `deleteChannel` not `$pull`ing from `Community.channels` (their #5), the `Types.ObjectId(undefined)` dead-guard pattern in `community.controller.ts`/`channel.controller.ts` (their #7).
+Verified: `tsc --noEmit` clean, `npm run build` clean. No endpoint tests exist in the repo.
 
-## Tier 1 — finish community management (the feature the owner asked about)
+Line-ending noise from the `.gitattributes` added in the redesign pass was normalized separately in PR #3 (`chore/normalize-line-endings`, merged).
 
-Ordered as a sensible build sequence, each depending on Tier 0 being done first:
+## Tier 1 — finish community management (the feature the owner asked about) — ⏳ NEXT
+
+Tier 0 is done, so these are now unblocked. Ordered as a sensible build sequence:
 
 1. **Join-request UI.** A community's About page (or a dedicated "Requests" panel) needs: a list of pending requesters (fix the populate first — #4 above — so you get usernames/avatars, not ids), and Approve/Reject buttons wired to `CommunityService` methods that don't exist yet (`requestToJoinCommunity`, `approveJoinRequest`, `rejectJoinRequest` need to be added to `community.service.ts` — they're missing entirely, see `01-backend-frontend-gap-analysis.md`). Also add a "Request to join" button somewhere reachable for `type: 'private'` communities discovered via `discover` — right now the only join path is direct-add by an existing member with `MANAGE_MEMBERS`.
 2. **Fix "Remove member"** to call `communityService.removeMember()` instead of `deleteChannel()` (`04-known-bugs.md` #2) — give it its own confirm-dialog state rather than sharing `channelToDelete`.

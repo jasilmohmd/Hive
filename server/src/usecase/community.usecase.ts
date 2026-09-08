@@ -123,10 +123,7 @@ export class CommunityUseCase {
     try {
       // Assumes communityRepository.searchCommunities is implemented.
       const communities = await this.communityRepository.searchCommunities(searchTerm);
-      if (!communities || communities.length === 0) {
-        throw new NotFoundError("No communities found", "community");
-      }
-      return communities;
+      return communities ?? [];
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error searching communities: ${error.message}`);
@@ -218,10 +215,7 @@ export class CommunityUseCase {
       }
 
       const communities = await this.communityRepository.getCommunitiesByUser(userId);
-      if (!communities || communities.length === 0) {
-        throw new NotFoundError("No communities found for the user", "community");
-      }
-      return communities;
+      return communities ?? [];
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error fetching communities for user: ${error.message}`);
@@ -497,10 +491,7 @@ export class CommunityUseCase {
       }
 
       const communities = await this.communityRepository.filterCommunitiesByTag(tagId);
-      if (!communities || communities.length === 0) {
-        throw new NotFoundError("No communities found for the given tag", "community");
-      }
-      return communities;
+      return communities ?? [];
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error filtering communities by tag: ${error.message}`);
@@ -520,10 +511,7 @@ export class CommunityUseCase {
       }
 
       const communities = await this.communityRepository.filterCommunitiesByCategory(categoryId);
-      if (!communities || communities.length === 0) {
-        throw new NotFoundError("No communities found for the given category", "community");
-      }
-      return communities;
+      return communities ?? [];
     } catch (error: any) {
       if (error instanceof CustomError) throw error;
       throw new Error(`Error filtering communities by category: ${error.message}`);

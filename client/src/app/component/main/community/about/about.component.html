@@ -248,7 +248,7 @@
 </div>
 
 
-<app-common-modal 
+<app-common-modal
   *ngIf="showConfirmModal"
   title="Confirm Deletion"
   message="Are you sure you want to delete this channel?"
@@ -256,5 +256,16 @@
   cancelText="Cancel"
   (confirmed)="onDeleteConfirmed()"
   (cancelled)="onDeleteCancelled()"
+  class="animate-fade-in-up">
+</app-common-modal>
+
+<app-common-modal
+  *ngIf="showRemoveMemberModal"
+  title="Remove member"
+  [message]="'Remove ' + (memberToRemove?.userName || 'this member') + ' from the community?'"
+  confirmText="Remove"
+  cancelText="Cancel"
+  (confirmed)="onRemoveMemberConfirmed()"
+  (cancelled)="onRemoveMemberCancelled()"
   class="animate-fade-in-up">
 </app-common-modal>

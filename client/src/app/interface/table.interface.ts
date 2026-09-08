@@ -12,4 +12,5 @@ export interface TableAction {
   class?: string;
   icon?: string; // URL/path to the icon image
   display?: 'icon' | 'label' | 'both'; // How to display the action (default: both)
+  hidden?: (row: any) => boolean; // If it returns true, the action is not rendered for that row
 }

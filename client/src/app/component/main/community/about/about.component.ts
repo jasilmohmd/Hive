@@ -35,6 +35,9 @@ export class AboutComponent {
   showConfirmModal: boolean = false;
   channelToDelete: any = null;
 
+  showRemoveMemberModal: boolean = false;
+  memberToRemove: any = null;
+
   // Modal related properties
   showModal: boolean = false;
   modalData: {
@@ -277,6 +280,36 @@ export class AboutComponent {
     this.showConfirmModal = false;
   }
 
+  promptRemoveMember(member: any) {
+    this.memberToRemove = member;
+    this.showRemoveMemberModal = true;
+  }
+
+  onRemoveMemberConfirmed() {
+    const member = this.memberToRemove;
+    this.showRemoveMemberModal = false;
+    this.memberToRemove = null;
+    if (!member?.userId) {
+      return;
+    }
+    this.communityService.removeMember(this.communityId, member.userId).subscribe({
+      next: () => {
+        this.toast.success(`${member.userName} removed from the community`);
+        this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
+          this.community = community;
+          this.modalData.data = this.mapMembers(community);
+          this.cd.detectChanges();
+        });
+      },
+      error: (err: Error) => this.toast.error(err.message || 'Failed to remove member'),
+    });
+  }
+
+  onRemoveMemberCancelled() {
+    this.memberToRemove = null;
+    this.showRemoveMemberModal = false;
+  }
+
 
   createChannel(communityId: string, data: any): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -345,13 +378,24 @@ export class AboutComponent {
     });
   }
 
+  /** Shape a community's `members` array into rows for the member-management table. */
+  private mapMembers(community: any): any[] {
+    const ownerId = community?.ownerId?._id || community?.ownerId;
+    return (community?.members || []).map((member: any) => {
+      const userId = member.userId?._id || member.userId;
+      return {
+        _id: member._id,
+        userId,
+        userName: member.userId?.userName || 'Unknown',
+        roles: member.roleIds?.map((role: any) => role.name).join(', ') || 'No roles',
+        isOwner: !!ownerId && String(userId) === String(ownerId),
+      };
+    });
+  }
+
   manageMembers() {
 
-    const mappedMembers = this.community.members.map((member: any) => ({
-      _id: member._id,
-      userName: member.userId?.userName || 'Unknown',
-      roles: member.roleIds?.map((role: any) => role.name).join(', ') || 'No roles'
-    }));
+    const mappedMembers = this.mapMembers(this.community);
 
     const columns: TableColumn[] = [
       { field: 'userName', header: 'Name' },
@@ -365,7 +409,8 @@ export class AboutComponent {
       },
       {
         label: 'Remove',
-        action: (member: any) => this.handleModalAction({ action: 'delete', item: member }),
+        hidden: (member: any) => !!member.isOwner,
+        action: (member: any) => this.promptRemoveMember(member),
         class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
       }
     ];
@@ -425,12 +470,7 @@ export class AboutComponent {
         console.log(response);
         this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
           this.community = community;
-          const mappedMembers = this.community.members.map((member: any) => ({
-            _id: member._id,
-            userName: member.userId?.userName || 'Unknown',
-            roles: member.roleIds?.map((role: any) => role.name).join(', ') || 'No roles'
-          }));
-          this.modalData.data = community ? mappedMembers : [];
+          this.modalData.data = this.mapMembers(community);
           this.cd.detectChanges();
         });
       },

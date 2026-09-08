@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { ButtonComponent, ButtonVariant } from '../button/button.component';
 import {
@@ -16,7 +17,7 @@ import {
 @Component({
   selector: 'app-common-modal',
   standalone: true,
-  imports: [CommonModule, ButtonComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent],
   templateUrl: './common-modal.component.html',
   styleUrl: './common-modal.component.css',
 })
@@ -29,6 +30,14 @@ export class CommonModalComponent implements AfterViewInit, OnDestroy {
   @Input() loading = false;
   @Input() closeOnBackdrop = true;
   @Input() closeOnEscape = true;
+  /** When set, the user must type this exact phrase before confirm is enabled. */
+  @Input() confirmPhrase = '';
+
+  typed = '';
+
+  get confirmDisabled(): boolean {
+    return this.loading || (!!this.confirmPhrase && this.typed !== this.confirmPhrase);
+  }
 
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
@@ -79,7 +88,7 @@ export class CommonModalComponent implements AfterViewInit, OnDestroy {
   }
 
   confirm(): void {
-    if (this.loading) return;
+    if (this.confirmDisabled) return;
     this.confirmed.emit();
   }
 

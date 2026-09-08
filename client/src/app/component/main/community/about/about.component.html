@@ -160,7 +160,7 @@
             <div class="flex justify-between items-center mb-2 md:mb-3">
               <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Members</h2>
               <div class="flex items-center gap-4">
-                <button *ngIf="permissions.includes('MANAGE_MEMBERS')" (click)="manageMembers()"
+                <button *ngIf="canOpenMembers" (click)="manageMembers()"
                   class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
                   title="Manage members">
                   Manage
@@ -284,6 +284,44 @@
   cancelText="Cancel"
   (confirmed)="onDeleteConfirmed()"
   (cancelled)="onDeleteCancelled()"
+  class="animate-fade-in-up">
+</app-common-modal>
+
+<!-- Per-member role editor -->
+<div *ngIf="showMemberRoles"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 p-4 animate-fade-in"
+  (click)="closeMemberRoles()" role="presentation">
+  <div class="relative w-full max-w-sm rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
+    role="dialog" aria-modal="true" aria-label="Member roles" (click)="$event.stopPropagation()">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-bold">Roles — {{ memberBeingEdited?.userName }}</h2>
+      <button (click)="closeMemberRoles()" class="text-ink-muted hover:text-ink" aria-label="Close">✕</button>
+    </div>
+    <div class="space-y-1.5">
+      <label *ngFor="let role of assignableRoles"
+        class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-surface-950/40">
+        <input type="checkbox" [checked]="memberHasRole(role._id)"
+          [disabled]="memberRoleSaving === role._id"
+          (change)="toggleMemberRole(role)"
+          class="h-4 w-4 rounded-sm border-surface-600 bg-surface-800 text-brand" />
+        <span class="text-sm">{{ role.name }}</span>
+      </label>
+    </div>
+    <div class="mt-6 flex justify-end">
+      <button (click)="closeMemberRoles()"
+        class="rounded-md bg-surface-800 px-4 py-2 text-sm hover:bg-surface-700">Done</button>
+    </div>
+  </div>
+</div>
+
+<app-common-modal
+  *ngIf="showKickModal"
+  title="Kick member"
+  [message]="'Kick ' + (memberToKick?.userName || 'this member') + ' from the community? They can be re-added later.'"
+  confirmText="Kick"
+  cancelText="Cancel"
+  (confirmed)="onKickConfirmed()"
+  (cancelled)="onKickCancelled()"
   class="animate-fade-in-up">
 </app-common-modal>
 

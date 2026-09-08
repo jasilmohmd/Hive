@@ -16,6 +16,7 @@ import { ChannelStateService } from '../../../../services/shared/channel-state.s
 import { CommonModalComponent } from '../../../common/common-modal/common-modal.component';
 import { FriendService } from '../../../../services/friends.service';
 import { CommunityService } from '../../../../services/community.service';
+import { RoleService } from '../../../../services/role.service';
 import { ImagePickerMenuComponent } from '../../../common/image-picker-menu/image-picker-menu.component';
 import { RolesModalComponent } from '../roles-modal/roles-modal.component';
 import { ToastService } from '../../../../services/toast.service';
@@ -62,6 +63,15 @@ export class AboutComponent {
 
   showRolesModal: boolean = false;
 
+  // Per-member role editor
+  showMemberRoles: boolean = false;
+  memberBeingEdited: any = null;
+  memberRoleSaving: string | null = null;
+
+  // Kick (narrower than Remove)
+  showKickModal: boolean = false;
+  memberToKick: any = null;
+
   // Modal related properties
   showModal: boolean = false;
   modalData: {
@@ -100,6 +110,7 @@ export class AboutComponent {
     private cd: ChangeDetectorRef,
     private userAuthService: UserAuthService,
     private router: Router,
+    private roleService: RoleService,
   ) { }
 
   ngOnInit(): void {
@@ -156,6 +167,13 @@ export class AboutComponent {
 
   get canManageCommunity(): boolean {
     return this.permissions.includes('MANAGE_COMMUNITY');
+  }
+
+  /** Any reason to open the member roster: manage, kick, or assign roles. */
+  get canOpenMembers(): boolean {
+    return this.permissions.includes('MANAGE_MEMBERS')
+      || this.permissions.includes('KICK_MEMBERS')
+      || this.permissions.includes('MANAGE_ROLES');
   }
 
   /** True when the signed-in user owns this community (owner can't leave). */
@@ -470,6 +488,92 @@ export class AboutComponent {
     this.showRemoveMemberModal = false;
   }
 
+  // --- Kick (KICK_MEMBERS, narrower than Remove) ---
+
+  promptKickMember(member: any) {
+    this.memberToKick = member;
+    this.showKickModal = true;
+  }
+
+  onKickConfirmed() {
+    const member = this.memberToKick;
+    this.showKickModal = false;
+    this.memberToKick = null;
+    if (!member?.userId) return;
+    this.communityService.kickMember(this.communityId, member.userId).subscribe({
+      next: () => {
+        this.toast.success(`${member.userName} was kicked`);
+        this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
+          this.community = community;
+          this.modalData.data = this.mapMembers(community);
+          this.cd.detectChanges();
+        });
+      },
+      error: (err: Error) => this.toast.error(err.message || 'Failed to kick member'),
+    });
+  }
+
+  onKickCancelled() {
+    this.memberToKick = null;
+    this.showKickModal = false;
+  }
+
+  // --- Per-member role editor ---
+
+  /** Roles available to assign (from the community's populated roles list). */
+  get assignableRoles(): { _id: string; name: string }[] {
+    return (this.community?.roles || []).map((r: any) => ({ _id: r?._id || r, name: r?.name || '' }));
+  }
+
+  openMemberRoles(member: any) {
+    this.memberBeingEdited = { ...member, roleIds: [...(member.roleIds || [])] };
+    this.showMemberRoles = true;
+  }
+
+  closeMemberRoles() {
+    this.showMemberRoles = false;
+    this.memberBeingEdited = null;
+  }
+
+  memberHasRole(roleId: string): boolean {
+    return (this.memberBeingEdited?.roleIds || []).some((r: any) => (r._id || r) === roleId);
+  }
+
+  toggleMemberRole(role: { _id: string; name: string }) {
+    const member = this.memberBeingEdited;
+    if (!member || this.memberRoleSaving) return;
+    const has = this.memberHasRole(role._id);
+    this.memberRoleSaving = role._id;
+    const req = has
+      ? this.roleService.unassignRole(this.communityId, member.userId, role._id)
+      : this.roleService.assignRole(this.communityId, member.userId, role._id);
+    req.subscribe({
+      next: () => {
+        this.memberRoleSaving = null;
+        member.roleIds = has
+          ? member.roleIds.filter((r: any) => (r._id || r) !== role._id)
+          : [...member.roleIds, { _id: role._id, name: role.name }];
+        this.toast.success(has ? `Removed ${role.name}` : `Assigned ${role.name}`);
+        this.refreshAfterRoleChange(member.userId);
+      },
+      error: (err: Error) => {
+        this.memberRoleSaving = null;
+        this.toast.error(err.message || 'Could not update roles');
+      },
+    });
+  }
+
+  private refreshAfterRoleChange(affectedUserId: string): void {
+    this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
+      this.community = community;
+      this.modalData.data = this.mapMembers(community);
+      this.cd.detectChanges();
+    });
+    if (affectedUserId === this.currentUserId) {
+      this.roleStateService.loadUserRoles(this.communityId).subscribe();
+    }
+  }
+
 
   createChannel(communityId: string, data: any): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -538,19 +642,60 @@ export class AboutComponent {
     });
   }
 
+  /** Fixed colours for the seeded roles; custom roles get a neutral pill. */
+  private roleBadgeClass(name: string): string {
+    switch ((name || '').toLowerCase()) {
+      case 'owner': return 'bg-amber-500/20 text-amber-300';
+      case 'admin': return 'bg-brand/20 text-brand';
+      case 'moderator': return 'bg-sky-500/20 text-sky-300';
+      case 'member': return 'bg-surface-600/40 text-ink-secondary';
+      case 'guest': return 'bg-surface-700 text-ink-muted';
+      default: return 'bg-violet-500/20 text-violet-300';
+    }
+  }
+
   /** Shape a community's `members` array into rows for the member-management table. */
   private mapMembers(community: any): any[] {
     const ownerId = community?.ownerId?._id || community?.ownerId;
     return (community?.members || []).map((member: any) => {
       const userId = member.userId?._id || member.userId;
+      const roleIds = (member.roleIds || []).map((r: any) => ({ _id: r?._id || r, name: r?.name || '' }));
       return {
         _id: member._id,
         userId,
         userName: member.userId?.userName || 'Unknown',
-        roles: member.roleIds?.map((role: any) => role.name).join(', ') || 'No roles',
+        roleIds,
+        roleBadges: roleIds.map((r: any) => ({ label: r.name || 'role', class: this.roleBadgeClass(r.name) })),
         isOwner: !!ownerId && String(userId) === String(ownerId),
       };
     });
+  }
+
+  private memberPrimaryActions(): TableAction[] {
+    const actions: TableAction[] = [
+      {
+        label: 'Roles',
+        hidden: (member: any) => !!member.isOwner || !this.permissions.includes('MANAGE_ROLES'),
+        action: (member: any) => this.openMemberRoles(member),
+        class: 'px-3 py-1 bg-brand text-surface-950 rounded-xl hover:bg-brand-hover transition-colors'
+      },
+    ];
+    if (this.permissions.includes('MANAGE_MEMBERS')) {
+      actions.push({
+        label: 'Remove',
+        hidden: (member: any) => !!member.isOwner,
+        action: (member: any) => this.promptRemoveMember(member),
+        class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
+      });
+    } else if (this.permissions.includes('KICK_MEMBERS')) {
+      actions.push({
+        label: 'Kick',
+        hidden: (member: any) => !!member.isOwner,
+        action: (member: any) => this.promptKickMember(member),
+        class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
+      });
+    }
+    return actions;
   }
 
   manageMembers() {
@@ -559,28 +704,15 @@ export class AboutComponent {
 
     const columns: TableColumn[] = [
       { field: 'userName', header: 'Name' },
-      { field: 'roles', header: 'Roles' }
+      { field: 'roleBadges', header: 'Roles' }
     ];
-    const primaryActions: TableAction[] = [
-      {
-        label: 'Manage',
-        action: (member: any) => this.handleModalAction({ action: 'edit', item: member }),
-        class: 'px-3 py-1 bg-brand text-surface-950 rounded-xl hover:bg-brand-hover transition-colors'
-      },
-      {
-        label: 'Remove',
-        hidden: (member: any) => !!member.isOwner,
-        action: (member: any) => this.promptRemoveMember(member),
-        class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
-      }
-    ];
+    const primaryActions = this.memberPrimaryActions();
 
     this.modalData = {
       title: 'Member',
-      addAction: {
-        label: 'Add',
-        action: (item) => this.openAddMemberModal(item)
-      },
+      addAction: this.permissions.includes('MANAGE_MEMBERS')
+        ? { label: 'Add', action: (item) => this.openAddMemberModal(item) }
+        : undefined,
       data: mappedMembers,
       columns: columns,
       primaryActions: primaryActions,

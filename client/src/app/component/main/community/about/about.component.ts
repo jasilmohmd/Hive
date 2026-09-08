@@ -432,6 +432,86 @@ export class AboutComponent {
     this.showModal = true;
   }
 
+  /** Shape a community's populated `joinRequests` into rows for the requests table. */
+  private mapJoinRequests(community: any): any[] {
+    return (community?.joinRequests || []).map((request: any) => ({
+      _id: request?._id || request,
+      userId: request?._id || request,
+      userName: request?.userName || 'Unknown',
+      profilePicture: request?.profilePicture || null,
+    }));
+  }
+
+  manageJoinRequests() {
+    const columns: TableColumn[] = [
+      { field: 'profilePicture', header: '' },
+      { field: 'userName', header: 'Name' },
+    ];
+    const primaryActions: TableAction[] = [
+      {
+        label: 'Approve',
+        action: (request: any) => this.approveJoinRequest(request),
+        class: 'px-3 py-1 bg-success text-surface-950 rounded-xl hover:bg-success-hover transition-colors'
+      },
+      {
+        label: 'Reject',
+        action: (request: any) => this.rejectJoinRequest(request),
+        class: 'px-3 py-1 bg-danger text-white rounded-xl hover:bg-danger-hover transition-colors'
+      }
+    ];
+
+    this.modalData = {
+      title: 'Join Request',
+      data: this.mapJoinRequests(this.community),
+      columns,
+      primaryActions,
+      secondaryActions: [],
+      showFallbackInitial: true,
+      searchFields: ['userName'],
+      mode: 'add'
+    };
+    this.showModal = true;
+  }
+
+  private refreshJoinRequests(): void {
+    this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
+      this.community = community;
+      this.modalData.data = this.mapJoinRequests(community);
+      this.cd.detectChanges();
+    });
+  }
+
+  approveJoinRequest(request: any) {
+    const memberRole = this.community.roles?.find(
+      (role: any) => role.name?.toLowerCase() === 'member'
+    );
+    if (!memberRole?._id) {
+      this.toast.error('No default "Member" role found for this community');
+      return;
+    }
+    this.communityService
+      .approveJoinRequest(this.communityId, request.userId, memberRole._id)
+      .subscribe({
+        next: () => {
+          this.toast.success(`${request.userName} added to the community`);
+          this.refreshJoinRequests();
+        },
+        error: (err: Error) => this.toast.error(err.message || 'Failed to approve request'),
+      });
+  }
+
+  rejectJoinRequest(request: any) {
+    this.communityService
+      .rejectJoinRequest(this.communityId, request.userId)
+      .subscribe({
+        next: () => {
+          this.toast.success(`Request from ${request.userName} rejected`);
+          this.refreshJoinRequests();
+        },
+        error: (err: Error) => this.toast.error(err.message || 'Failed to reject request'),
+      });
+  }
+
   openAddMemberModal(item: any) {
     console.log('Opening user search modal to add a member.');
     this.modalData = {

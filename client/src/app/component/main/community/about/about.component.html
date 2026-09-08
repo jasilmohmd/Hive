@@ -203,7 +203,7 @@
             <div class="flex justify-between items-center mb-2 md:mb-3">
               <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Join Requests</h2>
               <div class="flex items-center gap-4">
-                <button *ngIf="permissions.includes('MANAGE_MEMBERS')"
+                <button *ngIf="permissions.includes('MANAGE_MEMBERS')" (click)="manageJoinRequests()"
                   class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
                   title="Manage requests">
                   Manage
@@ -214,7 +214,10 @@
             <div class="flex flex-wrap gap-2">
               <span *ngFor="let request of community.joinRequests.slice(0,4)"
                 class="px-3 py-1 bg-surface-700 text-ink-secondary text-sm rounded-full">
-                {{ request }}
+                {{ request.userName || 'Pending user' }}
+              </span>
+              <span *ngIf="community.joinRequests.length === 0" class="text-ink-muted text-sm">
+                No pending requests
               </span>
             </div>
           </div>

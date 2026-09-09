@@ -48,7 +48,7 @@ Original list (strikethrough = shipped in PR #6):
 2. ~~**Role assignment for existing members**~~ ✅ server PR #12, UI PR #14 (member modal "Roles" per-member checkbox editor).
 3. ~~**Decide `KICK_MEMBERS`'s fate**~~ ✅ **PR #12** — real narrower kick (`POST /community/kick/:communityId`); UI (Kick vs Remove) **PR #14**.
 4. ~~**Role badges in the member list**~~ ✅ **PR #14** — coloured pills per role via a `common-table` `roleBadges` column.
-5. Confirm intent for `VIEW_CONTENT`/`SEND_MESSAGES` (`03-rbac-status.md`) — either find/add their enforcement points or document that they're reserved for future use.
+5. ~~Confirm intent for `VIEW_CONTENT`/`SEND_MESSAGES`~~ ✅ **PR #19** — both now enforced in the channel/chat layer (Guest can read but not post). Reactions/votes and voiceroom join still ungated — follow-ups.
 
 ## Tier 3 — smaller things worth doing opportunistically
 

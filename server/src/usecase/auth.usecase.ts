@@ -233,10 +233,7 @@ export default class AuthUsecase implements IAuthUseCase {
         text: `Your OTP is: ${otp}`
       };
 
-      console.log("Sending mail with options:", mailOptions);
-
-      const result = await transporter.sendMail(mailOptions);
-      console.log("Email sent successfully:", result);
+      await transporter.sendMail(mailOptions);
 
     } catch (error: any) {
       console.error("Error sending email:", error);

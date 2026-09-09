@@ -422,10 +422,8 @@ export class AboutComponent {
   handleModalAction(event: { action: string, item: any }) {
     const actionLabel = event.action.toLowerCase();
     if (actionLabel === 'create') {
-      console.log('Submitting new channel:', event.item);
       this.createChannel(this.communityId, event.item);
     } else if (actionLabel === 'edit') {
-      console.log('Editing channel (opening modal):', event.item);
       this.modalData.mode = 'edit';
       this.showModal = true;
       setTimeout(() => {
@@ -433,10 +431,8 @@ export class AboutComponent {
         this.listModal.patchForm(event.item);
       }, 0);
     } else if (actionLabel === 'submitedit') {
-      console.log('Submitting edit for channel:', event.item);
       this.editChannel(this.communityId, event.item._id, event.item);
     } else if (actionLabel === 'delete') {
-      console.log('Delete requested for channel:', event.item);
       // Instead of deleting immediately, show the confirmation modal.
       this.channelToDelete = event.item;
       this.showConfirmModal = true;
@@ -446,7 +442,6 @@ export class AboutComponent {
 
   onDeleteConfirmed() {
     if (this.channelToDelete) {
-      console.log('Deleting channel:', this.channelToDelete);
       this.deleteChannel(this.communityId, this.channelToDelete._id);
       this.channelToDelete = null;
     }
@@ -579,7 +574,6 @@ export class AboutComponent {
     return new Promise((resolve, reject) => {
       this.channelService.createChannel(communityId, data).subscribe({
         next: (res) => {
-          console.log('Channel created:', res);
           // Refresh community state and update local properties and modal data
           this.communityStateService.loadCommunity(communityId, true).subscribe(community => {
             this.community = community;
@@ -604,7 +598,6 @@ export class AboutComponent {
     return new Promise((resolve, reject) => {
       this.channelService.editChannel(communityId, channelId, data).subscribe({
         next: (res) => {
-          console.log('Channel updated:', res);
           this.communityStateService.loadCommunity(communityId, true).subscribe(community => {
             this.community = community;
             this.modalData.data = community ? community.channels : [];
@@ -625,7 +618,6 @@ export class AboutComponent {
     return new Promise((resolve, reject) => {
       this.channelService.deleteChannel(communityId, channelId).subscribe({
         next: (res) => {
-          console.log('Channel deleted:', res);
           this.communityStateService.loadCommunity(communityId, true).subscribe(community => {
             this.community = community;
             this.modalData.data = community ? community.channels : [];
@@ -805,7 +797,6 @@ export class AboutComponent {
   }
 
   openAddMemberModal(item: any) {
-    console.log('Opening user search modal to add a member.');
     this.modalData = {
       title: 'Add Members',
       data: [], // This will be populated by your search function
@@ -832,23 +823,21 @@ export class AboutComponent {
     const roleId: string = memberRole ? memberRole._id : '';
 
     if (!roleId) {
-      console.error('No default member role found.');
+      this.toast.error('No default "Member" role found for this community');
       return;
     }
 
-    console.log('Adding user:', this.communityId, user._id, roleId);
     this.communityService.addMember(this.communityId, user._id, roleId).subscribe({
-      next: (response) => {
-        console.log(response);
+      next: () => {
+        this.toast.success(`${user.userName || 'Member'} added`);
         this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
           this.community = community;
           this.modalData.data = this.mapMembers(community);
           this.cd.detectChanges();
         });
       },
-      error: (error) => {
-        console.log(error);
-        this.errorMessage = error.message
+      error: (error: Error) => {
+        this.toast.error(error.message || 'Failed to add member');
       }
     })
 
@@ -860,8 +849,6 @@ export class AboutComponent {
       return;
     }
 
-    console.log('Searching users for query:', searchQuery);
-
     this.friendService.searchUserByUsername(searchQuery).subscribe({
       next: (response) => {
         this.modalData.data = response.map((user: any) => ({
@@ -870,9 +857,8 @@ export class AboutComponent {
           email: user.email
         }));
       },
-      error: (error) => {
-        console.log(error);
-        this.errorMessage = error.message;
+      error: (error: Error) => {
+        this.toast.error(error.message || 'Search failed');
       }
     })
 

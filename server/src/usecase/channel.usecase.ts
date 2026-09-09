@@ -110,6 +110,11 @@ export class ChannelUseCase implements IChannelUsecase{
         throw new NotFoundError("User has no roles in this community", "role");
       }
 
+      // A role without VIEW_CONTENT sees no channels at all.
+      if (!(await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.VIEW_CONTENT))) {
+        return {};
+      }
+
       const userRoleIds = userRoles
         .map(role => role._id)
         .filter((id): id is Types.ObjectId => Boolean(id));
@@ -141,6 +146,10 @@ export class ChannelUseCase implements IChannelUsecase{
       const userRoles = await this.roleRepository.getUserRoles(userId, communityId);
       if (!userRoles || userRoles.length === 0) {
         throw new NotFoundError("User has no roles in this community", "role");
+      }
+
+      if (!(await this.rbacService.hasPermission(userId, communityId, PERMISSIONS.VIEW_CONTENT))) {
+        return [];
       }
 
       const userRoleIds = userRoles

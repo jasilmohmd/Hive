@@ -134,7 +134,7 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 | # | Where | Issue |
 |---|---|---|
 | ~~1~~ | ~~`client/src/app/app.routes.ts`~~ | **FIXED** (PR #16) — `community/create` now precedes `community/:id`. |
-| 2 | `server/src/usecase/auth.usecase.ts:~121` | Login returns distinct "user not found" vs "password incorrect" → email enumeration. |
+| ~~2~~ | ~~`server/src/usecase/auth.usecase.ts`~~ | **FIXED** (PR #18) — login returns one generic 401 for unknown-email and wrong-password, with a dummy bcrypt compare to keep timing even. |
 | ~~3~~ | ~~`server/src/framework/utils/jwt.service.ts`~~ | **FIXED** (PR #16) — `algorithm`/`algorithms: ['HS256']` pinned on sign and verify. |
 | ~~4~~ | ~~`server/src/usecase/auth.usecase.ts:236`~~ | **FIXED** (PR #15) — the OTP mail-options / send-result `console.log`s are gone. |
 | 5 | ~~`server/src/repositories/channel.repository.ts:84`~~ | **FIXED** (PR #2, `d8c9c33`) — `deleteChannel` now `$pull`s the id from `Community.channels`. |

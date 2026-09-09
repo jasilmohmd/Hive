@@ -7,6 +7,7 @@ const ErrorMessage = Object.freeze({
   EMAIL_ALREADY_TAKEN: "Email already taken.",
   USER_NOT_FOUND: "No user with that email.",
   PASSWORD_INCORRECT: "Password incorrect.",
+  INVALID_CREDENTIALS: "Invalid email or password.",
   PASSWORD_MIN_LENGTH_NOT_MET: "Should contain at least 8 characters.",
   NOT_AUTHENTICATED: "Not authenticated.",
   TOKEN_EXPIRED: "Token expired.",

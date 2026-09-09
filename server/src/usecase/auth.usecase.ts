@@ -120,19 +120,24 @@ export default class AuthUsecase implements IAuthUseCase {
 
       const userData: IUser | null = await this.authRepository.getUserDataByEmail(data.email);
 
-      if (!userData) {
+      // One generic error whether the email is unknown or the password is
+      // wrong, so login can't be used to probe which emails have accounts.
+      // Still run a bcrypt compare in the "no user" case to keep timing even.
+      // A real bcrypt hash (cost 10, matching HashingService) of a throwaway
+      // string — compared against when there's no user so the response time
+      // doesn't reveal account existence.
+      const DUMMY_HASH = "$2b$10$YxnQbGpiT9NiwnaDcjCmBe7PGnJE6tnZyam4uK/ijH/mzU.wTqjLO";
+      const passwordOk = await this.hashingService.compare(
+        data.password,
+        userData?.password ?? DUMMY_HASH
+      );
+
+      if (!userData || !passwordOk) {
         throw new ValidationError({
           errorField: ErrorField.EMAIL,
-          message: ErrorMessage.USER_NOT_FOUND,
-          statusCode: StatusCodes.NotFound,
-          errorCode: ErrorCode.USER_NOT_FOUND
-        });
-      } else if (!await this.hashingService.compare(data.password, userData.password)) {
-        throw new ValidationError({
-          errorField: ErrorField.PASSWORD,
-          message: ErrorMessage.PASSWORD_INCORRECT,
-          statusCode: StatusCodes.BadRequest,
-          errorCode: ErrorCode.PASSWORD_INCORRECT
+          message: ErrorMessage.INVALID_CREDENTIALS,
+          statusCode: StatusCodes.Unauthorized,
+          errorCode: ErrorCode.INVALID_CREDENTIALS
         });
       }
 

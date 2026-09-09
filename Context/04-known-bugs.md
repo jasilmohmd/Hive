@@ -109,7 +109,7 @@ All four threw `NotFoundError("No communities found...")` when the underlying qu
 
 ## 7. Debug `console.log` left in request-handling hot paths
 
-> **PARTLY FIXED — PR #2.** The two server-side logs are gone: `community.controller.ts:28` (`console.log(req.body.data)`) and `channel.controller.ts:23` (`console.log(channelData)`). **Still open:** the OTP-mailer log (`HANDOFF.md` #4) and the `console.log`/`console.error` calls in `about.component.ts` on the client.
+> **FIXED.** PR #2 removed the two controller logs; **PR #15** removed the OTP-mailer logs (`HANDOFF.md` #4) and the stray `console.log`/`console.error` debug lines in `about.component.ts` (add-member / user-search errors now toast).
 
 **Files:** ~~`server/src/controller/community.controller.ts:28`~~, ~~`server/src/controller/channel.controller.ts:23`~~, plus the OTP-mailer log already flagged in `HANDOFF.md`'s known-issues table (#4) and several `console.log`/`console.error` calls throughout `about.component.ts` on the client.
 

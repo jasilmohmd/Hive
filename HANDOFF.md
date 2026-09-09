@@ -136,7 +136,7 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 | 1 | `client/src/app/app.routes.ts:66,76` | `community/:id` declared **before** `community/create`; Angular is first-match-wins, so `/main/community/create` resolves to the detail route with `id="create"`. Muted today only because the UI opens create as a modal — breaks deep links. Fix: move `create` above `:id`. |
 | 2 | `server/src/usecase/auth.usecase.ts:~121` | Login returns distinct "user not found" vs "password incorrect" → email enumeration. |
 | 3 | `server/src/framework/utils/jwt.service.ts:23` | `jwt.verify` doesn't pin `algorithms: ['HS256']` (defense-in-depth). |
-| 4 | `server/src/usecase/auth.usecase.ts:236` | `console.log("Sending mail with options:", mailOptions)` — plaintext OTP to stdout. |
+| ~~4~~ | ~~`server/src/usecase/auth.usecase.ts:236`~~ | **FIXED** (PR #15) — the OTP mail-options / send-result `console.log`s are gone. |
 | 5 | ~~`server/src/repositories/channel.repository.ts:84`~~ | **FIXED** (PR #2, `d8c9c33`) — `deleteChannel` now `$pull`s the id from `Community.channels`. |
 | 6 | `server/src/usecase/chat.usecase.ts` (~216) | Queries the `Users` model directly instead of via a repository (layering violation; also in `voiceroom.usecase.ts`, `voiceroomPresence.ts`). |
 | ~~6b~~ | ~~`server/src/repositories/community.repository.ts`~~ | **FIXED** (PR #8 `aef7301`) — User schema `toJSON` transform strips `password` from every serialised response. |

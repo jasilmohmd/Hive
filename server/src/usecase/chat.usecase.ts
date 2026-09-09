@@ -7,6 +7,9 @@ import { IMessageRepository } from "../interfaces/repository/IMessage.repository
 import { IChannelRepository } from "../interfaces/repository/IChannel.repository.interface";
 import { ICommunityRepository } from "../interfaces/repository/ICommunity.repository.interface";
 import IFriendRepository from "../interfaces/repository/IFriends.repository.interface";
+import IRBACService from "../interfaces/utils/IRBAC.service";
+import { PERMISSIONS } from "../constants/permissions";
+import { UnauthorizedError } from "../errors/customError.error";
 import { IChannel } from "../entity/Channel.entity";
 import IImageUsecase from "../interfaces/usecase/IImage.usecase.interface";
 import { IMessageReactionRepository } from "../interfaces/repository/IMessageReaction.repository";
@@ -55,7 +58,8 @@ export class ChatUseCase implements IChatUseCase {
     private friendRepository: IFriendRepository,
     private imageUsecase: IImageUsecase,
     private reactionRepository: IMessageReactionRepository,
-    private pollVoteRepository: IPollVoteRepository
+    private pollVoteRepository: IPollVoteRepository,
+    private rbacService: IRBACService
   ) {}
 
   private normalizeDirectChatId(userA: string, userB: string): string {
@@ -65,7 +69,10 @@ export class ChatUseCase implements IChatUseCase {
   private async userHasChannelAccess(userId: Types.ObjectId, channel: IChannel): Promise<boolean> {
     const communityId = communityObjectId(channel);
     const userRoleIds = await this.communityRepository.getUserRoles(communityId, userId);
-    return channel.allowedRoles.some((ar) => userRoleIds.some((ur) => ur.equals(ar)));
+    const inAllowedRole = channel.allowedRoles.some((ar) => userRoleIds.some((ur) => ur.equals(ar)));
+    if (!inAllowedRole) return false;
+    // A role also needs VIEW_CONTENT to see any channel's messages.
+    return this.rbacService.hasPermission(userId, communityId, PERMISSIONS.VIEW_CONTENT);
   }
 
   async ensureGroupChatForChannel(channelId: Types.ObjectId): Promise<void> {
@@ -80,7 +87,7 @@ export class ChatUseCase implements IChatUseCase {
       const [a, b] = chat.chatId.split("_");
       const uid = userId.toString();
       if (uid !== a && uid !== b) {
-        throw new Error("Unauthorized to access this chat");
+        throw new UnauthorizedError("Unauthorized to access this chat", "chat");
       }
       return;
     }
@@ -91,7 +98,7 @@ export class ChatUseCase implements IChatUseCase {
       throw new Error("Invalid channel chat");
     }
     if (!(await this.userHasChannelAccess(userId, channel))) {
-      throw new Error("Unauthorized to access this channel chat");
+      throw new UnauthorizedError("Unauthorized to access this channel chat", "chat");
     }
   }
 
@@ -113,7 +120,7 @@ export class ChatUseCase implements IChatUseCase {
       }
       const uid = userOid.toString();
       if (uid !== id1 && uid !== id2) {
-        throw new Error("Unauthorized to join this chat");
+        throw new UnauthorizedError("Unauthorized to join this chat", "chat");
       }
       const peer = uid === id1 ? id2 : id1;
       const status = await this.friendRepository.checkFriendshipStatus(userOid, new Types.ObjectId(peer));
@@ -133,7 +140,19 @@ export class ChatUseCase implements IChatUseCase {
       throw new Error("Chat does not exist");
     }
     if (!(await this.userHasChannelAccess(userOid, channel))) {
-      throw new Error("Unauthorized to join this channel chat");
+      throw new UnauthorizedError("Unauthorized to join this channel chat", "chat");
+    }
+  }
+
+  /** A community channel also needs SEND_MESSAGES to post (VIEW_CONTENT alone isn't enough). */
+  private async assertCanSendToChannel(senderId: Types.ObjectId, channel: IChannel): Promise<void> {
+    const allowed = await this.rbacService.hasPermission(
+      senderId,
+      communityObjectId(channel),
+      PERMISSIONS.SEND_MESSAGES
+    );
+    if (!allowed) {
+      throw new UnauthorizedError("You do not have permission to send messages in this community", "chat");
     }
   }
 
@@ -141,6 +160,12 @@ export class ChatUseCase implements IChatUseCase {
     const existing = await this.chatRepository.findChatById(chatId);
     if (existing) {
       await this.assertCanAccessExistingChat(senderId, existing);
+      if (existing.type === "group") {
+        const channel = await this.channelRepository.getChannelById(new Types.ObjectId(existing.chatId));
+        if (channel) {
+          await this.assertCanSendToChannel(senderId, channel);
+        }
+      }
       return existing;
     }
 
@@ -153,7 +178,7 @@ export class ChatUseCase implements IChatUseCase {
       }
       const uid = senderId.toString();
       if (uid !== id1 && uid !== id2) {
-        throw new Error("Unauthorized to send message to this chat");
+        throw new UnauthorizedError("Unauthorized to send message to this chat", "chat");
       }
       const peer = uid === id1 ? id2 : id1;
       const status = await this.friendRepository.checkFriendshipStatus(senderId, new Types.ObjectId(peer));
@@ -180,8 +205,9 @@ export class ChatUseCase implements IChatUseCase {
       throw new Error("This channel does not support text chat");
     }
     if (!(await this.userHasChannelAccess(senderId, channel))) {
-      throw new Error("Unauthorized to send message to this channel");
+      throw new UnauthorizedError("Unauthorized to send message to this channel", "chat");
     }
+    await this.assertCanSendToChannel(senderId, channel);
 
     await this.ensureGroupChatForChannel(channelId);
     const created = await this.chatRepository.findChatById(chatId);
@@ -370,7 +396,7 @@ export class ChatUseCase implements IChatUseCase {
         }
         const uid = userOid.toString();
         if (uid !== id1 && uid !== id2) {
-          throw new Error("Unauthorized to read this chat");
+          throw new UnauthorizedError("Unauthorized to read this chat", "chat");
         }
         const peer = uid === id1 ? id2 : id1;
         const status = await this.friendRepository.checkFriendshipStatus(userOid, new Types.ObjectId(peer));
@@ -388,7 +414,7 @@ export class ChatUseCase implements IChatUseCase {
           throw new Error("Chat does not exist");
         }
         if (!(await this.userHasChannelAccess(userOid, channel))) {
-          throw new Error("Unauthorized to read this channel chat");
+          throw new UnauthorizedError("Unauthorized to read this channel chat", "chat");
         }
         await this.ensureGroupChatForChannel(channelId);
       } else {

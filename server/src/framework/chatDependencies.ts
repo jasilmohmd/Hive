@@ -7,16 +7,21 @@ import { ChannelRepository } from "../repositories/channel.repository";
 import { CommunityRepository } from "../repositories/community.repository";
 import FriendRepository from "../repositories/friends.repository";
 import ImageUsecase from "../usecase/imageUpload.usecase";
+import { RoleRepository } from "../repositories/role.repository";
+import { RBACService } from "./utils/RBACService";
 
 export function createChatUseCase(): ChatUseCase {
+  const communityRepository = new CommunityRepository();
+  const rbacService = new RBACService(new RoleRepository(), communityRepository);
   return new ChatUseCase(
     new MessageRepository(),
     new ChatRepository(),
     new ChannelRepository(),
-    new CommunityRepository(),
+    communityRepository,
     new FriendRepository(),
     new ImageUsecase(),
     new MessageReactionRepository(),
-    new PollVoteRepository()
+    new PollVoteRepository(),
+    rbacService
   );
 }

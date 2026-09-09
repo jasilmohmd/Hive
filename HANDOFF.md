@@ -140,7 +140,7 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 | 5 | ~~`server/src/repositories/channel.repository.ts:84`~~ | **FIXED** (PR #2, `d8c9c33`) — `deleteChannel` now `$pull`s the id from `Community.channels`. |
 | 6 | `server/src/usecase/chat.usecase.ts` (~216) | Queries the `Users` model directly instead of via a repository (layering violation; also in `voiceroom.usecase.ts`, `voiceroomPresence.ts`). |
 | ~~6b~~ | ~~`server/src/repositories/community.repository.ts`~~ | **FIXED** (PR #8 `aef7301`) — User schema `toJSON` transform strips `password` from every serialised response. |
-| 7 | ~~`server/src/controller/community.controller.ts`~~ | **FIXED** (PR #2, `f653285`) — both controllers now route every id param through a `parseObjectId` helper that validates the raw string with `Types.ObjectId.isValid` and returns 400 before construction. Also fixed `searchAccessibleChannels`, which 400'd every call. |
+| ~~8~~ | ~~`server/src/usecase/channel.usecase.ts`~~ | **FIXED** (PR #17) — the `getAccessibleChannels` return-type key is `voiceroom` (the real runtime key), was `voice`, in the server usecase/interfaces and `client/channel.service.ts`. |
 | 8 | `server/src/usecase/channel.usecase.ts:~84` | `getAccessibleChannels` return type says key `voice`; runtime key is `voiceroom`. |
 | 9 | client `call.service` / `voiceroom.service` | No mutual exclusion — a DM call started while in a voiceroom fights over the microphone (`NotReadableError`). |
 | 10 | `client/.../chat-forward-picker` | Unlike its 7 siblings it has no full-viewport dismiss backdrop (left deliberately — different design, not a mechanical fix). |

@@ -46,9 +46,9 @@ export class ChannelService {
     return this.http.get<IChannel>(url).pipe(catchError(this.handleError));
   }
 
-  getAccessibleChannels(communityId: string): Observable<{ [key in 'info' | 'chatroom' | 'voice']?: IChannel[] }> {
+  getAccessibleChannels(communityId: string): Observable<{ [key in 'info' | 'chatroom' | 'voiceroom']?: IChannel[] }> {
     const url = `${this.baseUrl}/list/${communityId}`
-    return this.http.get<{ groupedChannels: { [key in 'info' | 'chatroom' | 'voice']?: IChannel[] } }>(url).pipe(
+    return this.http.get<{ groupedChannels: { [key in 'info' | 'chatroom' | 'voiceroom']?: IChannel[] } }>(url).pipe(
       map(response => response.groupedChannels),
       catchError(this.handleError)
     );

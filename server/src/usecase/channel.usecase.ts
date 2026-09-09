@@ -94,7 +94,7 @@ export class ChannelUseCase implements IChannelUsecase{
   /**
    * Get accessible channels for a given community based on the user's role IDs.
    */
-  async getAccessibleChannels(communityId: Types.ObjectId, userId: Types.ObjectId): Promise<{ [key in 'info' | 'chatroom' | 'voice']?: IChannel[] }> {
+  async getAccessibleChannels(communityId: Types.ObjectId, userId: Types.ObjectId): Promise<{ [key in 'info' | 'chatroom' | 'voiceroom']?: IChannel[] }> {
     try {
 
       if (!Types.ObjectId.isValid(communityId)) {

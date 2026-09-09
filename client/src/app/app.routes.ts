@@ -64,16 +64,10 @@ export const routes: Routes = [
         ]
       },
       { path: "direct_message", component: DirectMessageComponent, data: { title: "Messages" } },
-      { path: "community/:id", component: ComunityLayoutComponent,
-        data: { title: "Community" },
-        children: [
-          { path: '', redirectTo: 'about', pathMatch: 'full' },
-          { path: "about", component: AboutComponent, data: { title: "Community" } },
-          { path: "chatroom/:channelId", component: ChatroomComponent, data: { title: "Chat" } },
-          { path: "voiceroom/:channelId", component: VoiceroomComponent, data: { title: "Voice" } },
-        ]
-      },
       {
+        // Must precede "community/:id" — Angular is first-match-wins, so with
+        // the detail route first, /main/community/create resolves to it with
+        // id="create".
         path: 'community/create',
         component: CreateCommunityLayoutComponent,
         data: { title: "Create community" },
@@ -82,6 +76,15 @@ export const routes: Routes = [
           { path: 'step-one', component: CommunityCreateStepOneComponent, data: { title: "Create community" } },
           { path: 'step-two', component: CommunityCreateStepTwoComponent, data: { title: "Create community" } },
           { path: 'step-three', component: CommunityCreateStepThreeComponent, data: { title: "Create community" } },
+        ]
+      },
+      { path: "community/:id", component: ComunityLayoutComponent,
+        data: { title: "Community" },
+        children: [
+          { path: '', redirectTo: 'about', pathMatch: 'full' },
+          { path: "about", component: AboutComponent, data: { title: "Community" } },
+          { path: "chatroom/:channelId", component: ChatroomComponent, data: { title: "Chat" } },
+          { path: "voiceroom/:channelId", component: VoiceroomComponent, data: { title: "Voice" } },
         ]
       }
     ]

@@ -1,6 +1,6 @@
 import express, { Express } from "express";
 import { Server } from 'socket.io';
-import cors from "cors";
+import cors, { CorsOptions } from "cors";
 import cookieParser from "cookie-parser";
 import morgan from 'morgan';
 import winston from "winston";
@@ -13,13 +13,43 @@ import { Resource } from "@opentelemetry/resources";
 // Initialize the Express app
 const app: Express = express();
 
-/** Strip quotes/spaces from .env values like `"http://localhost:4200"` */
-function readCorsOrigin(): string {
-  const raw = process.env.CORS_ORIGIN ?? "http://localhost:4200";
-  return raw.replace(/^["']|["']$/g, "").trim();
+/** Split a comma-separated env value, stripping quotes/spaces from each entry. */
+function readEnvList(name: string): string[] {
+  return (process.env[name] ?? "")
+    .split(",")
+    .map((s) => s.replace(/^["']|["']$/g, "").trim())
+    .filter(Boolean);
 }
 
-const CORS_ORIGIN: string = readCorsOrigin();
+// Exact allowed origins (comma-separated). Falls back to the Angular dev URL.
+const CORS_ORIGINS: string[] = readEnvList("CORS_ORIGIN");
+if (CORS_ORIGINS.length === 0) {
+  CORS_ORIGINS.push("http://localhost:4200");
+}
+
+// Optional host suffixes (comma-separated) so ephemeral preview deploys are
+// allowed without listing every generated subdomain, e.g. ".hive-web.pages.dev".
+const CORS_ORIGIN_SUFFIXES: string[] = readEnvList("CORS_ORIGIN_SUFFIXES");
+
+function isAllowedOrigin(origin: string | undefined): boolean {
+  // No Origin header → non-browser client (curl, server-to-server, same-origin).
+  if (!origin) return true;
+  if (CORS_ORIGINS.includes(origin)) return true;
+  if (CORS_ORIGIN_SUFFIXES.length === 0) return false;
+  try {
+    const host = new URL(origin).host;
+    return CORS_ORIGIN_SUFFIXES.some((suffix) => host === suffix || host.endsWith(suffix));
+  } catch {
+    return false;
+  }
+}
+
+const corsOptions: CorsOptions = {
+  origin(origin, callback) {
+    callback(null, isAllowedOrigin(origin ?? undefined));
+  },
+  credentials: true,
+};
 
 
 
@@ -112,10 +142,7 @@ const morganJsonFormat: morgan.FormatFn<express.Request, express.Response> = (
 
 
 // Middlewares
-app.use(cors({
-  origin: [CORS_ORIGIN],
-  credentials: true
-})); // Enable CORS for all routes
+app.use(cors(corsOptions)); // Enable CORS for all routes
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 app.use(cookieParser()); // Parse cookies in request headers
@@ -187,7 +214,9 @@ const chatUseCase = createChatUseCase();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: CORS_ORIGIN,
+    origin(origin, callback) {
+      callback(null, isAllowedOrigin(origin ?? undefined));
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },

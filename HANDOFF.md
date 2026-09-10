@@ -144,9 +144,11 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 | 8 | `server/src/usecase/channel.usecase.ts:~84` | `getAccessibleChannels` return type says key `voice`; runtime key is `voiceroom`. |
 | 9 | client `call.service` / `voiceroom.service` | No mutual exclusion — a DM call started while in a voiceroom fights over the microphone (`NotReadableError`). |
 | 10 | `client/.../chat-forward-picker` | Unlike its 7 siblings it has no full-viewport dismiss backdrop (left deliberately — different design, not a mechanical fix). |
-| 11 | `render.yaml` | `TURN_*` and (locally) `GIPHY_API_KEY` undeclared; no TURN means DM calls fail behind strict NAT. |
-| 12 | `server/src/framework/config/app.ts` | `CORS_ORIGIN` accepts a single exact origin → Cloudflare Pages preview deploys are blocked. |
+| ~~11~~ | ~~`render.yaml`~~ | **FIXED** (PR #24) — `TURN_URL`/`TURN_USERNAME`/`TURN_CREDENTIAL` declared (`sync: false`); `GIPHY_API_KEY` added to `.env.example`. Set real TURN values in the Render dashboard to actually get a relay. |
+| ~~12~~ | ~~`server/src/framework/config/app.ts`~~ | **FIXED** (PR #24) — `CORS_ORIGIN` is now a comma-separated allow-list; optional `CORS_ORIGIN_SUFFIXES` matches host suffixes (e.g. `.pages.dev`) so preview deploys pass. Same check on Express + Socket.IO. |
 | ~~13~~ | ~~`server/src/framework/utils/jwt.service.ts`~~ | **FIXED** (PR #16) — `server.ts` exits on a missing `JWT_SECRET_KEY` at startup. |
 | 14 | repo-wide | No ESLint/Prettier. Deliberate — no existing convention to encode, and adding one means a large reformat. |
 
-Ops reminders: `EMAIL_USER`/`EMAIL_PASS` must be set in the Render dashboard (declared but `sync: false`), and `CORS_ORIGIN` must match the live Pages origin.
+Ops reminders: `EMAIL_USER`/`EMAIL_PASS` must be set in the Render dashboard (declared but `sync: false`), and `CORS_ORIGIN` must include the live Pages origin (comma-separate multiple; set `CORS_ORIGIN_SUFFIXES` for preview-deploy subdomains).
+
+Still open after the 2026-09-10 backlog pass: #9 (DM-call/voiceroom mic contention, client), #10 (deliberate), #14 (deliberate). Everything else in this table is fixed.

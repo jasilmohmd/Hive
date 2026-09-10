@@ -81,7 +81,7 @@ export class ChannelUseCase implements IChannelUsecase{
       if (!channel) {
         throw new NotFoundError("Channel not found", "channel");
       }
-      if (!(await userHasChannelAccess(userId, channel, this.communityRepository))) {
+      if (!(await userHasChannelAccess(userId, channel, this.communityRepository, this.rbacService))) {
         throw new UnauthorizedError("Permission denied", "channel");
       }
       return channel;

@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { IChannelRepository } from "../interfaces/repository/IChannel.repository.interface";
 import { ICommunityRepository } from "../interfaces/repository/ICommunity.repository.interface";
+import IRBACService from "../interfaces/utils/IRBAC.service";
 import { assertVoiceroomChannelAccess } from "../framework/utils/channelAccess.util";
 import { loadLiveKitSdk } from "../framework/utils/livekitSdk";
 import {
@@ -18,7 +19,8 @@ function livekitApiHost(): string {
 export class VoiceroomUseCase {
   constructor(
     private channelRepository: IChannelRepository,
-    private communityRepository: ICommunityRepository
+    private communityRepository: ICommunityRepository,
+    private rbacService: IRBACService
   ) {}
 
   async createJoinToken(
@@ -36,7 +38,8 @@ export class VoiceroomUseCase {
       userId,
       channelId,
       this.channelRepository,
-      this.communityRepository
+      this.communityRepository,
+      this.rbacService
     );
 
     const { AccessToken, RoomServiceClient } = await loadLiveKitSdk();
@@ -91,7 +94,8 @@ export class VoiceroomUseCase {
       userId,
       channelId,
       this.channelRepository,
-      this.communityRepository
+      this.communityRepository,
+      this.rbacService
     );
     return {
       participants: getChannelPresenceList(channelId),

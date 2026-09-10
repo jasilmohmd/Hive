@@ -18,6 +18,10 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      # Optional: comma-separated host suffixes to also allow (e.g. Cloudflare
+      # Pages preview deploys). Leave unset to allow only the exact CORS_ORIGIN.
+      - key: CORS_ORIGIN_SUFFIXES
+        sync: false
       - key: COOKIE_SAME_SITE
         value: none
       - key: LIVEKIT_URL
@@ -37,4 +41,12 @@ services:
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASS
+        sync: false
+      # Optional TURN relay for DM WebRTC calls behind strict NAT / corporate
+      # Wi-Fi. Without it calls fall back to STUN only and may fail to connect.
+      - key: TURN_URL
+        sync: false
+      - key: TURN_USERNAME
+        sync: false
+      - key: TURN_CREDENTIAL
         sync: false

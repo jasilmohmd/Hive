@@ -2,13 +2,13 @@ import { Types } from "mongoose";
 import { IChannelRepository } from "../interfaces/repository/IChannel.repository.interface";
 import { ICommunityRepository } from "../interfaces/repository/ICommunity.repository.interface";
 import IRBACService from "../interfaces/utils/IRBAC.service";
+import { IUserRepository } from "../interfaces/repository/IUser.repository.interface";
 import { assertVoiceroomChannelAccess } from "../framework/utils/channelAccess.util";
 import { loadLiveKitSdk } from "../framework/utils/livekitSdk";
 import {
   getChannelPresenceList,
   IVoiceroomParticipant,
 } from "../framework/utils/voiceroomPresence";
-import Users from "../framework/models/user.model";
 
 function livekitApiHost(): string {
   const raw = process.env.LIVEKIT_URL?.trim() ?? "";
@@ -20,7 +20,8 @@ export class VoiceroomUseCase {
   constructor(
     private channelRepository: IChannelRepository,
     private communityRepository: ICommunityRepository,
-    private rbacService: IRBACService
+    private rbacService: IRBACService,
+    private userRepository: IUserRepository
   ) {}
 
   async createJoinToken(
@@ -61,11 +62,8 @@ export class VoiceroomUseCase {
       }
     }
 
-    const user = await Users.findById(userId).select("userName").lean();
-    const displayName =
-      user && typeof (user as { userName?: string }).userName === "string"
-        ? (user as { userName: string }).userName
-        : "User";
+    const user = await this.userRepository.findPublicProfileById(userId);
+    const displayName = user?.userName || "User";
 
     const at = new AccessToken(apiKey, apiSecret, {
       identity: userId,

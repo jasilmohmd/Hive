@@ -32,7 +32,7 @@ import {
 } from "../framework/utils/chatMessageContent";
 import { parseCallMessageContent } from "../framework/utils/callMessageContent";
 import { extractFirstHttpUrl, fetchLinkPreview } from "../framework/utils/linkPreview";
-import Users from "../framework/models/user.model";
+import { IUserRepository } from "../interfaces/repository/IUser.repository.interface";
 
 const DIRECT_CHAT_REGEX = /^([a-fA-F0-9]{24})_([a-fA-F0-9]{24})$/;
 
@@ -59,7 +59,8 @@ export class ChatUseCase implements IChatUseCase {
     private imageUsecase: IImageUsecase,
     private reactionRepository: IMessageReactionRepository,
     private pollVoteRepository: IPollVoteRepository,
-    private rbacService: IRBACService
+    private rbacService: IRBACService,
+    private userRepository: IUserRepository
   ) {}
 
   private normalizeDirectChatId(userA: string, userB: string): string {
@@ -297,14 +298,14 @@ export class ChatUseCase implements IChatUseCase {
       resolvedContent = stringifyLocationContent(location);
     } else if (type === "contact") {
       const contact = parseContactContent(content);
-      const user = await Users.findById(contact.userId).select("_id userName imageUrl").lean();
+      const user = await this.userRepository.findPublicProfileById(contact.userId);
       if (!user) {
         throw new NotFoundError("Contact user not found", "message");
       }
       resolvedContent = buildContactContent({
         userId: contact.userId,
-        userName: contact.userName || String((user as { userName?: string }).userName ?? ""),
-        imageUrl: contact.imageUrl ?? (user as { imageUrl?: string }).imageUrl,
+        userName: contact.userName || user.userName,
+        imageUrl: contact.imageUrl ?? user.imageUrl,
       });
     } else if (type === "poll") {
       const poll = parsePollContent(content);

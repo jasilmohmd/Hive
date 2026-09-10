@@ -48,7 +48,7 @@ Original list (strikethrough = shipped in PR #6):
 2. ~~**Role assignment for existing members**~~ ✅ server PR #12, UI PR #14 (member modal "Roles" per-member checkbox editor).
 3. ~~**Decide `KICK_MEMBERS`'s fate**~~ ✅ **PR #12** — real narrower kick (`POST /community/kick/:communityId`); UI (Kick vs Remove) **PR #14**.
 4. ~~**Role badges in the member list**~~ ✅ **PR #14** — coloured pills per role via a `common-table` `roleBadges` column.
-5. ~~Confirm intent for `VIEW_CONTENT`/`SEND_MESSAGES`~~ ✅ **PR #19** — both now enforced in the channel/chat layer (Guest can read but not post). Reactions/votes and voiceroom join still ungated — follow-ups.
+5. ~~Confirm intent for `VIEW_CONTENT`/`SEND_MESSAGES`~~ ✅ **PR #19** + **PR #21** — enforced in the channel/chat layer (Guest reads but can't post); PR #21 extended it to reactions/poll-votes (`SEND_MESSAGES`) and voiceroom join (`VIEW_CONTENT`), and converted `chat.usecase` client-fault errors from bare `Error` (500) to `CustomError` (404/400/401).
 
 ## Tier 3 — smaller things worth doing opportunistically
 
@@ -57,6 +57,15 @@ Original list (strikethrough = shipped in PR #6):
 - ~~Resolve what `GET /auth/userDetails/:id` is for~~ ✅ **PR #22** — it *is* used (`friends.service.getUserDetails(friendId)` → incoming-call modal, channel-chat-panel, direct-message). Kept; added an ObjectId-validity guard (400 instead of 500 on garbage input).
 - ~~have `layout.component.ts`'s `loadCommunities()` explicitly handle its error case~~ ✅ **PR #22** — now toasts on failure and keeps the existing list instead of only `console.log`. (The four "empty result → 404" usecases were already fixed to return `[]` in PR #2.)
 - Cleanup pass on stray `console.log`s in controllers/components (`04-known-bugs.md` #7) — not urgent, but easy to batch with other work in the same files.
+
+## Backlog pass 2026-09-10 (PRs #21–#24)
+
+- **PR #21** — PR #19 follow-ups: reactions/poll-votes gated on `SEND_MESSAGES`, voiceroom join on `VIEW_CONTENT`, `chat.usecase` error-type cleanup.
+- **PR #22** — Tier 3 minor: `GET /auth/userDetails/:id` kept (it's used) + id guard; `layout.loadCommunities()` toasts on error; channel-search method left unbuilt by decision.
+- **PR #23** — HANDOFF #6: new `UserRepository` / `IUserRepository`; `chat`/`voiceroom` no longer import the `Users` model directly.
+- **PR #24** — HANDOFF #11/#12: multi-origin CORS + `CORS_ORIGIN_SUFFIXES`; `render.yaml` declares `TURN_*`.
+
+**Left open after this pass:** HANDOFF #9 (DM-call vs voiceroom mic contention — client-side, needs real design), #10 / #14 (both deliberate). No other backlog items remain.
 
 ## Everything in `HANDOFF.md`'s table, unchanged
 

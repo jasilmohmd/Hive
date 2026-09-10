@@ -216,8 +216,13 @@ export default class AuthController implements IAuthController {
 
     try {
 
+      if (!Types.ObjectId.isValid(req.params.id)) {
+        res.status(StatusCodes.BadRequest).json({ error: "Invalid user id" });
+        return;
+      }
+
       const userId = new Types.ObjectId(req.params.id)
-    
+
       const userData: IUser | null = await this.authUsecase.getUSerdetails(userId);
 
       res.status(StatusCodes.Success).json({

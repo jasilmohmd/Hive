@@ -2,9 +2,9 @@ import { Server, Socket } from "socket.io";
 import { ChannelRepository } from "../../repositories/channel.repository";
 import { CommunityRepository } from "../../repositories/community.repository";
 import { RoleRepository } from "../../repositories/role.repository";
+import { UserRepository } from "../../repositories/user.repository";
 import { RBACService } from "./RBACService";
 import { assertVoiceroomChannelAccess } from "./channelAccess.util";
-import Users from "../models/user.model";
 
 export interface IVoiceroomParticipant {
   userId: string;
@@ -83,6 +83,7 @@ function broadcastState(io: Server, channelId: string): void {
 const channelRepository = new ChannelRepository();
 const communityRepository = new CommunityRepository();
 const rbacService = new RBACService(new RoleRepository(), communityRepository);
+const userRepository = new UserRepository();
 
 export function registerVoiceroomPresence(io: Server): void {
   io.on("connection", (socket: Socket) => {
@@ -146,15 +147,12 @@ export function registerVoiceroomPresence(io: Server): void {
           map = new Map();
           channelPresence.set(data.channelId, map);
         }
-        const user = await Users.findById(userId).select("userName imageUrl").lean();
-        const row = user as { userName?: string; imageUrl?: string } | null;
+        const row = await userRepository.findPublicProfileById(userId);
         const existing = map.get(userId);
         map.set(userId, {
           userId,
-          userName:
-            row && typeof row.userName === "string" ? row.userName : "User",
-          imageUrl:
-            row && typeof row.imageUrl === "string" ? row.imageUrl : undefined,
+          userName: row?.userName || "User",
+          imageUrl: row?.imageUrl,
           muted: !!data.muted,
           cameraOn: existing?.cameraOn ?? false,
           screenOn: existing?.screenOn ?? false,

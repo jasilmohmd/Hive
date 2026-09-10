@@ -8,6 +8,7 @@ import { CommunityRepository } from "../repositories/community.repository";
 import FriendRepository from "../repositories/friends.repository";
 import ImageUsecase from "../usecase/imageUpload.usecase";
 import { RoleRepository } from "../repositories/role.repository";
+import { UserRepository } from "../repositories/user.repository";
 import { RBACService } from "./utils/RBACService";
 
 export function createChatUseCase(): ChatUseCase {
@@ -22,6 +23,7 @@ export function createChatUseCase(): ChatUseCase {
     new ImageUsecase(),
     new MessageReactionRepository(),
     new PollVoteRepository(),
-    rbacService
+    rbacService,
+    new UserRepository()
   );
 }

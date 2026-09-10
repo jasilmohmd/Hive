@@ -6,6 +6,7 @@ import AuthMiddleware from "../middlewares/auth.middleware";
 import { ChannelRepository } from "../../repositories/channel.repository";
 import { CommunityRepository } from "../../repositories/community.repository";
 import { RoleRepository } from "../../repositories/role.repository";
+import { UserRepository } from "../../repositories/user.repository";
 import { RBACService } from "../utils/RBACService";
 import { VoiceroomUseCase } from "../../usecase/voiceroom.usecase";
 import { VoiceroomController } from "../../controller/voiceroom.controller";
@@ -17,7 +18,8 @@ const communityRepository = new CommunityRepository();
 const voiceroomUseCase = new VoiceroomUseCase(
   new ChannelRepository(),
   communityRepository,
-  new RBACService(new RoleRepository(), communityRepository)
+  new RBACService(new RoleRepository(), communityRepository),
+  new UserRepository()
 );
 const voiceroomController = new VoiceroomController(voiceroomUseCase);
 

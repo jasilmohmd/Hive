@@ -138,7 +138,7 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 | ~~3~~ | ~~`server/src/framework/utils/jwt.service.ts`~~ | **FIXED** (PR #16) — `algorithm`/`algorithms: ['HS256']` pinned on sign and verify. |
 | ~~4~~ | ~~`server/src/usecase/auth.usecase.ts:236`~~ | **FIXED** (PR #15) — the OTP mail-options / send-result `console.log`s are gone. |
 | 5 | ~~`server/src/repositories/channel.repository.ts:84`~~ | **FIXED** (PR #2, `d8c9c33`) — `deleteChannel` now `$pull`s the id from `Community.channels`. |
-| 6 | `server/src/usecase/chat.usecase.ts` (~216) | Queries the `Users` model directly instead of via a repository (layering violation; also in `voiceroom.usecase.ts`, `voiceroomPresence.ts`). |
+| ~~6~~ | ~~`server/src/usecase/chat.usecase.ts`~~ | **FIXED** (PR #23) — new `UserRepository.findPublicProfileById` (+ `IUserRepository`); `ChatUseCase` and `VoiceroomUseCase` take it as a constructor dep, `voiceroomPresence` uses a module-level instance. No usecase/util imports `user.model` directly any more. |
 | ~~6b~~ | ~~`server/src/repositories/community.repository.ts`~~ | **FIXED** (PR #8 `aef7301`) — User schema `toJSON` transform strips `password` from every serialised response. |
 | ~~8~~ | ~~`server/src/usecase/channel.usecase.ts`~~ | **FIXED** (PR #17) — the `getAccessibleChannels` return-type key is `voiceroom` (the real runtime key), was `voice`, in the server usecase/interfaces and `client/channel.service.ts`. |
 | 8 | `server/src/usecase/channel.usecase.ts:~84` | `getAccessibleChannels` return type says key `voice`; runtime key is `voiceroom`. |

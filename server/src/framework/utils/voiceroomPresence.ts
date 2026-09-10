@@ -1,6 +1,8 @@
 import { Server, Socket } from "socket.io";
 import { ChannelRepository } from "../../repositories/channel.repository";
 import { CommunityRepository } from "../../repositories/community.repository";
+import { RoleRepository } from "../../repositories/role.repository";
+import { RBACService } from "./RBACService";
 import { assertVoiceroomChannelAccess } from "./channelAccess.util";
 import Users from "../models/user.model";
 
@@ -80,6 +82,7 @@ function broadcastState(io: Server, channelId: string): void {
 
 const channelRepository = new ChannelRepository();
 const communityRepository = new CommunityRepository();
+const rbacService = new RBACService(new RoleRepository(), communityRepository);
 
 export function registerVoiceroomPresence(io: Server): void {
   io.on("connection", (socket: Socket) => {
@@ -107,7 +110,8 @@ export function registerVoiceroomPresence(io: Server): void {
           userId,
           data.channelId,
           channelRepository,
-          communityRepository
+          communityRepository,
+          rbacService
         );
         socket.join(channelRoom(data.channelId));
         socket.emit("room:state", {
@@ -132,7 +136,8 @@ export function registerVoiceroomPresence(io: Server): void {
           userId,
           data.channelId,
           channelRepository,
-          communityRepository
+          communityRepository,
+          rbacService
         );
         socket.join(channelRoom(data.channelId));
         trackUserSocket(data.channelId, userId, socket.id);

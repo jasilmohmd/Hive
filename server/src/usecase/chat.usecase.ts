@@ -9,7 +9,7 @@ import { ICommunityRepository } from "../interfaces/repository/ICommunity.reposi
 import IFriendRepository from "../interfaces/repository/IFriends.repository.interface";
 import IRBACService from "../interfaces/utils/IRBAC.service";
 import { PERMISSIONS } from "../constants/permissions";
-import { UnauthorizedError } from "../errors/customError.error";
+import { NotFoundError, UnauthorizedError, ValidationError } from "../errors/customError.error";
 import { IChannel } from "../entity/Channel.entity";
 import IImageUsecase from "../interfaces/usecase/IImage.usecase.interface";
 import { IMessageReactionRepository } from "../interfaces/repository/IMessageReaction.repository";
@@ -95,7 +95,7 @@ export class ChatUseCase implements IChatUseCase {
     const channelId = new Types.ObjectId(chat.chatId);
     const channel = await this.channelRepository.getChannelById(channelId);
     if (!channel || !channelSupportsTextChat(channel.type)) {
-      throw new Error("Invalid channel chat");
+      throw new NotFoundError("Invalid channel chat", "chat");
     }
     if (!(await this.userHasChannelAccess(userId, channel))) {
       throw new UnauthorizedError("Unauthorized to access this channel chat", "chat");
@@ -116,7 +116,7 @@ export class ChatUseCase implements IChatUseCase {
       const [, id1, id2] = directMatch;
       const normalized = this.normalizeDirectChatId(id1, id2);
       if (normalized !== chatId) {
-        throw new Error("Invalid direct chat id: ids must be sorted");
+        throw new ValidationError("Invalid direct chat id: ids must be sorted", "chat");
       }
       const uid = userOid.toString();
       if (uid !== id1 && uid !== id2) {
@@ -125,19 +125,19 @@ export class ChatUseCase implements IChatUseCase {
       const peer = uid === id1 ? id2 : id1;
       const status = await this.friendRepository.checkFriendshipStatus(userOid, new Types.ObjectId(peer));
       if (status !== "already_friends") {
-        throw new Error("You can only join chats with friends");
+        throw new UnauthorizedError("You can only join chats with friends", "chat");
       }
       return;
     }
 
     if (!Types.ObjectId.isValid(chatId)) {
-      throw new Error("Chat does not exist");
+      throw new NotFoundError("Chat does not exist", "chat");
     }
 
     const channelId = new Types.ObjectId(chatId);
     const channel = await this.channelRepository.getChannelById(channelId);
     if (!channel || !channelSupportsTextChat(channel.type)) {
-      throw new Error("Chat does not exist");
+      throw new NotFoundError("Chat does not exist", "chat");
     }
     if (!(await this.userHasChannelAccess(userOid, channel))) {
       throw new UnauthorizedError("Unauthorized to join this channel chat", "chat");
@@ -174,7 +174,7 @@ export class ChatUseCase implements IChatUseCase {
       const [, id1, id2] = directMatch;
       const normalized = this.normalizeDirectChatId(id1, id2);
       if (normalized !== chatId) {
-        throw new Error("Invalid direct chat id: ids must be sorted");
+        throw new ValidationError("Invalid direct chat id: ids must be sorted", "chat");
       }
       const uid = senderId.toString();
       if (uid !== id1 && uid !== id2) {
@@ -183,7 +183,7 @@ export class ChatUseCase implements IChatUseCase {
       const peer = uid === id1 ? id2 : id1;
       const status = await this.friendRepository.checkFriendshipStatus(senderId, new Types.ObjectId(peer));
       if (status !== "already_friends") {
-        throw new Error("You can only message users who are already friends");
+        throw new UnauthorizedError("You can only message users who are already friends", "chat");
       }
       let chat = await this.chatRepository.findChatById(normalized);
       if (!chat) {
@@ -193,16 +193,16 @@ export class ChatUseCase implements IChatUseCase {
     }
 
     if (!Types.ObjectId.isValid(chatId)) {
-      throw new Error("Chat does not exist");
+      throw new NotFoundError("Chat does not exist", "chat");
     }
 
     const channelId = new Types.ObjectId(chatId);
     const channel = await this.channelRepository.getChannelById(channelId);
     if (!channel) {
-      throw new Error("Chat does not exist");
+      throw new NotFoundError("Chat does not exist", "chat");
     }
     if (!channelSupportsTextChat(channel.type)) {
-      throw new Error("This channel does not support text chat");
+      throw new ValidationError("This channel does not support text chat", "chat");
     }
     if (!(await this.userHasChannelAccess(senderId, channel))) {
       throw new UnauthorizedError("Unauthorized to send message to this channel", "chat");
@@ -219,13 +219,29 @@ export class ChatUseCase implements IChatUseCase {
 
   private async assertCanAccessMessage(userId: Types.ObjectId, message: IMessage): Promise<void> {
     if (message.deletedAt) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message not found", "message");
     }
     const chat = await this.chatRepository.findChatById(message.chatId);
     if (!chat) {
-      throw new Error("Chat not found");
+      throw new NotFoundError("Chat not found", "chat");
     }
     await this.assertCanAccessExistingChat(userId, chat);
+  }
+
+  /**
+   * Reacting to or voting on a message in a community channel is a form of
+   * participation — it needs SEND_MESSAGES, not just VIEW_CONTENT. DMs are
+   * unaffected (no channel, no permission check).
+   */
+  private async assertCanParticipateWithMessage(userId: Types.ObjectId, message: IMessage): Promise<void> {
+    await this.assertCanAccessMessage(userId, message);
+    const chat = await this.chatRepository.findChatById(message.chatId);
+    if (chat?.type === "group") {
+      const channel = await this.channelRepository.getChannelById(new Types.ObjectId(chat.chatId));
+      if (channel) {
+        await this.assertCanSendToChannel(userId, channel);
+      }
+    }
   }
 
   private senderIdOf(message: IMessage): string {
@@ -267,7 +283,7 @@ export class ChatUseCase implements IChatUseCase {
     await this.getOrCreateChatForSend(senderOid, chatId);
 
     if (!ALLOWED_MESSAGE_TYPES.has(type)) {
-      throw new Error("Invalid message type");
+      throw new ValidationError("Invalid message type", "message");
     }
 
     let resolvedContent = content;
@@ -283,7 +299,7 @@ export class ChatUseCase implements IChatUseCase {
       const contact = parseContactContent(content);
       const user = await Users.findById(contact.userId).select("_id userName imageUrl").lean();
       if (!user) {
-        throw new Error("Contact user not found");
+        throw new NotFoundError("Contact user not found", "message");
       }
       resolvedContent = buildContactContent({
         userId: contact.userId,
@@ -309,7 +325,7 @@ export class ChatUseCase implements IChatUseCase {
     if (options.replyToMessageId) {
       const reply = await this.messageRepository.findById(options.replyToMessageId);
       if (!reply || reply.deletedAt || reply.chatId !== chatId) {
-        throw new Error("Reply message not found in this chat");
+        throw new NotFoundError("Reply message not found in this chat", "message");
       }
       replyToMessageId = new Types.ObjectId(options.replyToMessageId);
     }
@@ -401,7 +417,7 @@ export class ChatUseCase implements IChatUseCase {
         const peer = uid === id1 ? id2 : id1;
         const status = await this.friendRepository.checkFriendshipStatus(userOid, new Types.ObjectId(peer));
         if (status !== "already_friends") {
-          throw new Error("You can only read chats with friends");
+          throw new UnauthorizedError("You can only read chats with friends", "chat");
         }
         chat = await this.chatRepository.findChatById(normalized);
         if (!chat) {
@@ -411,14 +427,14 @@ export class ChatUseCase implements IChatUseCase {
         const channelId = new Types.ObjectId(chatId);
         const channel = await this.channelRepository.getChannelById(channelId);
         if (!channel || !channelSupportsTextChat(channel.type)) {
-          throw new Error("Chat does not exist");
+          throw new NotFoundError("Chat does not exist", "chat");
         }
         if (!(await this.userHasChannelAccess(userOid, channel))) {
           throw new UnauthorizedError("Unauthorized to read this channel chat", "chat");
         }
         await this.ensureGroupChatForChannel(channelId);
       } else {
-        throw new Error("Chat does not exist");
+        throw new NotFoundError("Chat does not exist", "chat");
       }
     } else {
       await this.assertCanAccessExistingChat(userOid, chat);
@@ -432,13 +448,13 @@ export class ChatUseCase implements IChatUseCase {
   async editMessage(userId: string, messageId: string, newContent: string): Promise<IMessage> {
     const message = await this.messageRepository.findById(messageId);
     if (!message || message.deletedAt) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message not found", "message");
     }
     if (this.senderIdOf(message) !== userId) {
-      throw new Error("You can only edit your own messages");
+      throw new UnauthorizedError("You can only edit your own messages", "message");
     }
     if (!EDITABLE_MESSAGE_TYPES.has(message.type)) {
-      throw new Error("This message type cannot be edited");
+      throw new ValidationError("This message type cannot be edited", "message");
     }
     await this.assertCanAccessMessage(new Types.ObjectId(userId), message);
 
@@ -454,7 +470,7 @@ export class ChatUseCase implements IChatUseCase {
       );
       resolved = buildPollContent(parsed);
     } else if (!resolved) {
-      throw new Error("Message cannot be empty");
+      throw new ValidationError("Message cannot be empty", "message");
     }
 
     const updated = await this.messageRepository.editMessage(messageId, resolved);
@@ -468,10 +484,10 @@ export class ChatUseCase implements IChatUseCase {
   async deleteMessage(userId: string, messageId: string): Promise<IMessage> {
     const message = await this.messageRepository.findById(messageId);
     if (!message || message.deletedAt) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message not found", "message");
     }
     if (this.senderIdOf(message) !== userId) {
-      throw new Error("You can only delete your own messages");
+      throw new UnauthorizedError("You can only delete your own messages", "message");
     }
     await this.assertCanAccessMessage(new Types.ObjectId(userId), message);
 
@@ -485,9 +501,9 @@ export class ChatUseCase implements IChatUseCase {
   async setReaction(userId: string, messageId: string, emoji: string) {
     const message = await this.messageRepository.findById(messageId);
     if (!message || message.deletedAt) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message not found", "message");
     }
-    await this.assertCanAccessMessage(new Types.ObjectId(userId), message);
+    await this.assertCanParticipateWithMessage(new Types.ObjectId(userId), message);
     const validEmoji = assertValidReactionEmoji(emoji);
     const reactions = await this.reactionRepository.setReaction(messageId, userId, validEmoji);
     return { chatId: message.chatId, messageId, reactions };
@@ -496,9 +512,9 @@ export class ChatUseCase implements IChatUseCase {
   async removeReaction(userId: string, messageId: string) {
     const message = await this.messageRepository.findById(messageId);
     if (!message || message.deletedAt) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message not found", "message");
     }
-    await this.assertCanAccessMessage(new Types.ObjectId(userId), message);
+    await this.assertCanParticipateWithMessage(new Types.ObjectId(userId), message);
     const reactions = await this.reactionRepository.removeReaction(messageId, userId);
     return { chatId: message.chatId, messageId, reactions };
   }
@@ -506,12 +522,12 @@ export class ChatUseCase implements IChatUseCase {
   async votePoll(userId: string, messageId: string, optionIndexes: number[]) {
     const message = await this.messageRepository.findById(messageId);
     if (!message || message.deletedAt) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message not found", "message");
     }
     if (message.type !== "poll") {
-      throw new Error("Not a poll message");
+      throw new ValidationError("Not a poll message", "message");
     }
-    await this.assertCanAccessMessage(new Types.ObjectId(userId), message);
+    await this.assertCanParticipateWithMessage(new Types.ObjectId(userId), message);
     const pollContent = parsePollContent(message.content);
     const { counts, myVotes, totalVotes } = await this.pollVoteRepository.vote(
       messageId,

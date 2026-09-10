@@ -5,15 +5,19 @@ import JWTService from "../utils/jwt.service";
 import AuthMiddleware from "../middlewares/auth.middleware";
 import { ChannelRepository } from "../../repositories/channel.repository";
 import { CommunityRepository } from "../../repositories/community.repository";
+import { RoleRepository } from "../../repositories/role.repository";
+import { RBACService } from "../utils/RBACService";
 import { VoiceroomUseCase } from "../../usecase/voiceroom.usecase";
 import { VoiceroomController } from "../../controller/voiceroom.controller";
 
 const voiceroomRouter = Router();
 const jwtService: IJWTService = new JWTService();
 const authMiddleware: IAuthMiddleware = new AuthMiddleware(jwtService);
+const communityRepository = new CommunityRepository();
 const voiceroomUseCase = new VoiceroomUseCase(
   new ChannelRepository(),
-  new CommunityRepository()
+  communityRepository,
+  new RBACService(new RoleRepository(), communityRepository)
 );
 const voiceroomController = new VoiceroomController(voiceroomUseCase);
 

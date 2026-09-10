@@ -52,10 +52,10 @@ Original list (strikethrough = shipped in PR #6):
 
 ## Tier 3 — smaller things worth doing opportunistically
 
-- **`GET /community/:id` leaks bcrypt password hashes** for every populated member and (since PR #2) every join requester. Add a `-password` projection to the `getCommunityById` populate, or a `toJSON`/`toObject` transform on the User model that strips `password`. Found during PR #6 verification. Also in `04-known-bugs.md` / `HANDOFF.md`.
-- `channel.service.ts` is missing a `search` method for `GET /channel/search/:communityId` — cheap to add if/when a channel search box is wanted.
-- Resolve what `GET /auth/userDetails/:id` is for (`01-backend-frontend-gap-analysis.md`) — wire it up or remove it.
-- Tighten the four "empty result → 404" usecases (`04-known-bugs.md` #6) to return `[]`, and have `layout.component.ts`'s `loadCommunities()` explicitly handle its error case instead of only logging.
+- ~~**`GET /community/:id` leaks bcrypt password hashes**~~ ✅ **PR #8** — User model `toJSON` transform strips `password`.
+- `channel.service.ts` is missing a `search` method for `GET /channel/search/:communityId` — **left unbuilt by decision (PR #22):** no channel-search UI exists, so a service method would be dead code. Add it alongside the UI if one is ever wanted.
+- ~~Resolve what `GET /auth/userDetails/:id` is for~~ ✅ **PR #22** — it *is* used (`friends.service.getUserDetails(friendId)` → incoming-call modal, channel-chat-panel, direct-message). Kept; added an ObjectId-validity guard (400 instead of 500 on garbage input).
+- ~~have `layout.component.ts`'s `loadCommunities()` explicitly handle its error case~~ ✅ **PR #22** — now toasts on failure and keeps the existing list instead of only `console.log`. (The four "empty result → 404" usecases were already fixed to return `[]` in PR #2.)
 - Cleanup pass on stray `console.log`s in controllers/components (`04-known-bugs.md` #7) — not urgent, but easy to batch with other work in the same files.
 
 ## Everything in `HANDOFF.md`'s table, unchanged

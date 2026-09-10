@@ -12,6 +12,7 @@ import { ChatService } from '../../../services/chat.service';
 import { Subscription } from 'rxjs';
 import { ChannelSidebarService } from '../../../services/shared/channel-sidebar.service';
 import { CommunityStateService } from '../../../services/shared/community-state.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-layout',
@@ -51,7 +52,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     private call: CallService,
     private chat: ChatService,
     private channelSidebar: ChannelSidebarService,
-    private communityState: CommunityStateService
+    private communityState: CommunityStateService,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -118,7 +120,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
         this.communities = response;
       },
       error: (error) => {
-        console.log(error.message);
+        // Keep whatever list we already have rather than blanking the sidebar.
+        this.toast.error(error?.message || 'Could not load your communities');
       },
     });
   }

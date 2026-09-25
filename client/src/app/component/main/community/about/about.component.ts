@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, inject, Input, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, inject, Input, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -135,13 +135,17 @@ export class AboutComponent {
       this.routeParamSubscriptions.add(
         this.communityStateService.loadCommunity(this.communityId).subscribe(community => {
           this.community = community;
+          this.errorMessage = community ? null : "Couldn't load this community.";
           this.cd.markForCheck();
           this.isLoading = false;
         })
       );
 
-      // Load user roles via the RoleStateService.
-      this.roleStateService.loadUserRoles(this.communityId).subscribe();
+      // Load user roles via the RoleStateService. Tracked per community so a
+      // late response can't land after you've switched to another one.
+      this.routeParamSubscriptions.add(
+        this.roleStateService.loadUserRoles(this.communityId).subscribe({ error: () => undefined })
+      );
 
       // Subscribe to role state updates.
       this.routeParamSubscriptions.add(
@@ -180,6 +184,22 @@ export class AboutComponent {
   get isOwner(): boolean {
     const ownerId = this.community?.ownerId?._id || this.community?.ownerId;
     return !!ownerId && !!this.currentUserId && String(ownerId) === String(this.currentUserId);
+  }
+
+  /**
+   * Only once we know who you are: `!isOwner` alone is true while the user
+   * lookup is in flight, so the owner briefly saw a Leave button.
+   */
+  get canLeave(): boolean {
+    return !!this.currentUserId && !this.isOwner;
+  }
+
+  /** Escape closes whichever inline dialog is open (the shared modals handle their own). */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showMemberRoles) this.closeMemberRoles();
+    else if (this.showTagModal) this.showTagModal = false;
+    else if (this.showEditCommunity) this.showEditCommunity = false;
   }
 
   promptLeaveCommunity(): void {
@@ -326,9 +346,23 @@ export class AboutComponent {
   }
 
   private reloadCommunity(): void {
-    this.communityStateService.loadCommunity(this.communityId, true).subscribe((c) => {
-      this.community = c;
-      this.cd.markForCheck();
+    this.refreshCommunity(() => this.cd.markForCheck());
+  }
+
+  /**
+   * Re-fetch after a change. The state service maps a failed request to null,
+   * and every one of these call sites used to assign that straight to
+   * this.community — so one flaky request after, say, removing a member
+   * blanked the whole page. Keep what's on screen and say so instead.
+   */
+  private refreshCommunity(after?: (community: any) => void): void {
+    this.communityStateService.loadCommunity(this.communityId, true).subscribe((community) => {
+      if (!community) {
+        this.toast.error("Couldn't refresh the community. What you see may be out of date.");
+        return;
+      }
+      this.community = community;
+      after?.(community);
     });
   }
 
@@ -339,18 +373,31 @@ export class AboutComponent {
     }
   }
 
+  /**
+   * Opens the page with the details card near the top and a strip of cover
+   * still showing above it. The page scrolls inside the community pane, not
+   * the window — so the old scrollIntoView + window.scrollBy(-80) pinned the
+   * card flush to the top and the offset never applied.
+   */
   private scrollToDetails() {
     setTimeout(() => {
-      if (this.detailsSection?.nativeElement) {
-        this.detailsSection.nativeElement.scrollIntoView({
-          behavior: 'instant',
-          block: 'start'
-        });
-
-        // Optional: Add slight offset
-        window.scrollBy(0, -80); // Adjust this value as needed
-      }
+      const el = this.detailsSection?.nativeElement as HTMLElement | undefined;
+      const scroller = el && this.scrollParent(el);
+      if (!el || !scroller) return;
+      const top =
+        el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      scroller.scrollTo({ top: Math.max(0, top - 80), behavior: 'instant' as ScrollBehavior });
     }, 50);
+  }
+
+  private scrollParent(el: HTMLElement): HTMLElement | null {
+    for (let p = el.parentElement; p; p = p.parentElement) {
+      const { overflowY } = getComputedStyle(p);
+      if ((overflowY === 'auto' || overflowY === 'scroll') && p.scrollHeight > p.clientHeight) {
+        return p;
+      }
+    }
+    return null;
   }
 
   // Method to manually scroll to cover image
@@ -468,8 +515,7 @@ export class AboutComponent {
     this.communityService.removeMember(this.communityId, member.userId).subscribe({
       next: () => {
         this.toast.success(`${member.userName} removed from the community`);
-        this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
-          this.community = community;
+        this.refreshCommunity((community) => {
           this.modalData.data = this.mapMembers(community);
           this.cd.detectChanges();
         });
@@ -498,8 +544,7 @@ export class AboutComponent {
     this.communityService.kickMember(this.communityId, member.userId).subscribe({
       next: () => {
         this.toast.success(`${member.userName} was kicked`);
-        this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
-          this.community = community;
+        this.refreshCommunity((community) => {
           this.modalData.data = this.mapMembers(community);
           this.cd.detectChanges();
         });
@@ -559,8 +604,7 @@ export class AboutComponent {
   }
 
   private refreshAfterRoleChange(affectedUserId: string): void {
-    this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
-      this.community = community;
+    this.refreshCommunity((community) => {
       this.modalData.data = this.mapMembers(community);
       this.cd.detectChanges();
     });
@@ -575,8 +619,7 @@ export class AboutComponent {
       this.channelService.createChannel(communityId, data).subscribe({
         next: (res) => {
           // Refresh community state and update local properties and modal data
-          this.communityStateService.loadCommunity(communityId, true).subscribe(community => {
-            this.community = community;
+          this.refreshCommunity((community) => {
             // Update modal data if needed (e.g., if modalData.data comes from community.channels)
             this.modalData.data = community ? community.channels : [];
             // Force change detection
@@ -586,10 +629,7 @@ export class AboutComponent {
           this.channelStateService.loadAccessibleChannels(communityId, true).subscribe();
           resolve();
         },
-        error: (err) => {
-          console.error('Creation failed:', err);
-          reject(err);
-        }
+        error: (err) => reject(err),
       });
     });
   }
@@ -598,18 +638,14 @@ export class AboutComponent {
     return new Promise((resolve, reject) => {
       this.channelService.editChannel(communityId, channelId, data).subscribe({
         next: (res) => {
-          this.communityStateService.loadCommunity(communityId, true).subscribe(community => {
-            this.community = community;
+          this.refreshCommunity((community) => {
             this.modalData.data = community ? community.channels : [];
             this.cd.detectChanges();
           });
           this.channelStateService.loadAccessibleChannels(communityId, true).subscribe();
           resolve();
         },
-        error: (err) => {
-          console.error('Updation failed:', err);
-          reject(err);
-        }
+        error: (err) => reject(err),
       });
     });
   }
@@ -618,18 +654,14 @@ export class AboutComponent {
     return new Promise((resolve, reject) => {
       this.channelService.deleteChannel(communityId, channelId).subscribe({
         next: (res) => {
-          this.communityStateService.loadCommunity(communityId, true).subscribe(community => {
-            this.community = community;
+          this.refreshCommunity((community) => {
             this.modalData.data = community ? community.channels : [];
             this.cd.detectChanges();
           });
           this.channelStateService.loadAccessibleChannels(communityId, true).subscribe();
           resolve();
         },
-        error: (err) => {
-          console.error('Deletion failed:', err);
-          reject(err);
-        }
+        error: (err) => reject(err),
       });
     });
   }
@@ -758,8 +790,7 @@ export class AboutComponent {
   }
 
   private refreshJoinRequests(): void {
-    this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
-      this.community = community;
+    this.refreshCommunity((community) => {
       this.modalData.data = this.mapJoinRequests(community);
       this.cd.detectChanges();
     });
@@ -830,8 +861,7 @@ export class AboutComponent {
     this.communityService.addMember(this.communityId, user._id, roleId).subscribe({
       next: () => {
         this.toast.success(`${user.userName || 'Member'} added`);
-        this.communityStateService.loadCommunity(this.communityId, true).subscribe(community => {
-          this.community = community;
+        this.refreshCommunity((community) => {
           this.modalData.data = this.mapMembers(community);
           this.cd.detectChanges();
         });

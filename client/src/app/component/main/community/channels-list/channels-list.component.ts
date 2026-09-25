@@ -30,6 +30,12 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
   private presenceMap: Record<string, IVoiceroomPresenceUser[]> = {};
+  /**
+   * Voice rooms this list is watching. The component is reused across
+   * communities, and used to add each new community's rooms without dropping
+   * the last one's — every community visited stayed subscribed.
+   */
+  private watchedRooms = new Set<string>();
 
   constructor(
     private route: ActivatedRoute,
@@ -67,47 +73,69 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
             );
         })
       )
-      .subscribe((channels) => {
-        if (channels) {
-          this.channels.info = channels.filter(
-            (channel) => channel.type === 'info'
-          );
-          this.channels.chatroom = channels.filter(
-            (channel) => channel.type === 'chatroom'
-          );
-          this.channels.voiceroom = channels.filter(
-            (channel) => channel.type === 'voiceroom'
-          );
-        } else {
-          this.channels = { info: [], chatroom: [], voiceroom: [] };
-        }
-
-        if (this.channels.voiceroom?.length) {
-          this.channels.voiceroom = this.channels.voiceroom.map((channel) => ({
-            ...channel,
-            isOpen: channel.isOpen ?? false,
-          }));
-          const ids = this.channels.voiceroom
-            .map((c) => c._id)
-            .filter((id): id is string => !!id);
-          this.voiceroomPresence.watchMany(ids);
-        }
-
-        this.isLoading = false;
-      });
+      .subscribe((channels) => this.applyChannels(channels));
 
     this.subscriptions.add(channelSub);
   }
 
+  /** Retry after a failed load (the list used to just render empty). */
+  reload(): void {
+    if (!this.communityId) return;
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.subscriptions.add(
+      this.channelStateService
+        .loadAccessibleChannels(this.communityId, true)
+        .subscribe((channels) => this.applyChannels(channels))
+    );
+  }
+
+  private applyChannels(channels: IChannel[] | null): void {
+    if (channels) {
+      this.channels.info = channels.filter(
+        (channel) => channel.type === 'info'
+      );
+      this.channels.chatroom = channels.filter(
+        (channel) => channel.type === 'chatroom'
+      );
+      this.channels.voiceroom = channels.filter(
+        (channel) => channel.type === 'voiceroom'
+      );
+    } else {
+      this.channels = { info: [], chatroom: [], voiceroom: [] };
+      // The state service maps a failed request to null.
+      this.errorMessage = this.errorMessage || "Couldn't load channels.";
+    }
+
+    if (this.channels.voiceroom?.length) {
+      this.channels.voiceroom = this.channels.voiceroom.map((channel) => ({
+        ...channel,
+        isOpen: channel.isOpen ?? false,
+      }));
+    }
+    this.syncWatchedRooms(
+      (this.channels.voiceroom ?? [])
+        .map((c) => c._id)
+        .filter((id): id is string => !!id)
+    );
+
+    this.isLoading = false;
+  }
+
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-    if (this.channels.voiceroom) {
-      for (const room of this.channels.voiceroom) {
-        if (room._id) {
-          this.voiceroomPresence.unwatch(room._id);
-        }
-      }
+    this.syncWatchedRooms([]);
+  }
+
+  private syncWatchedRooms(ids: string[]): void {
+    const next = new Set(ids);
+    for (const id of this.watchedRooms) {
+      if (!next.has(id)) this.voiceroomPresence.unwatch(id);
     }
+    for (const id of next) {
+      if (!this.watchedRooms.has(id)) this.voiceroomPresence.watch(id);
+    }
+    this.watchedRooms = next;
   }
 
   toggleRoom(room: IChannel, event: Event): void {

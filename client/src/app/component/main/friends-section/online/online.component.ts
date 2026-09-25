@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FriendService } from '../../../../services/friends.service';
 import { CommonModule } from '@angular/common';
@@ -7,11 +7,14 @@ import { TableAction, TableColumn } from '../../../../interface/table.interface'
 import { CommonTableComponent } from '../../../common/common-table/common-table.component';
 import { CommonModalComponent } from '../../../common/common-modal/common-modal.component';
 import { EmptyStateComponent } from '../../../common/empty-state/empty-state.component';
+import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.component';
+import { LoadingStateComponent } from '../../../common/loading-state/loading-state.component';
+import { ToastService } from '../../../../services/toast.service';
 
 @Component({
   selector: 'app-online',
   standalone: true,
-  imports: [CommonModule, FormsModule, CommonTableComponent, CommonModalComponent, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, CommonTableComponent, CommonModalComponent, EmptyStateComponent, ErrorAlertComponent, LoadingStateComponent],
   templateUrl: './online.component.html',
   styleUrl: './online.component.css'
 })
@@ -22,9 +25,9 @@ export class OnlineComponent {
   searchTerm: string = '';  // Search term entered by the user
   hasSearched: boolean = false; // Track if search was performed
   dropdownOpen: string | null = null;
+  loading = true;
 
-  showSearchBar = true;
-  private lastScrollTop = 0;
+  private toast = inject(ToastService);
 
   // Define columns (example: only username)
   tableColumns: TableColumn[] = [
@@ -92,15 +95,16 @@ export class OnlineComponent {
     // this.onlineFriends = dummyFriends;
     // this.filteredOnlineFriends = dummyFriends;
 
+    this.loading = true;
     this.friendsService.getOnlineFriends().subscribe({
       next: (response) => {
-        this.onlineFriends = response; // Store the online friends list
-        this.filteredOnlineFriends = response; // Default filtered list = full list
-        console.log(response);
+        this.onlineFriends = response ?? []; // Store the online friends list
+        this.filteredOnlineFriends = this.onlineFriends; // Default filtered list = full list
+        this.loading = false;
       },
-      error: (error) => {
-        console.error('Error fetching online friends:', error);
+      error: () => {
         this.errorMessage = 'Failed to load online friends list';
+        this.loading = false;
       }
     });
   }
@@ -148,14 +152,21 @@ export class OnlineComponent {
   unfriend(friendId: string): void {
     this.friendsService.unfriendUser(friendId).subscribe({
       next: () => {
-        this.filteredOnlineFriends = this.filteredOnlineFriends.filter(
-          (friend) => (friend._id ?? friend.id) !== friendId
-        );
+        this.dropFriend(friendId);
+        this.toast.success('Removed from friends');
       },
-      error: (error) => {
-        console.error('Error unfriending user:', error);
-      }
+      error: () => this.toast.error('Something went wrong. Try again.'),
     });
+  }
+
+  /**
+   * Out of both lists. Removing only from the filtered one brought the user
+   * back as soon as the search was cleared.
+   */
+  private dropFriend(friendId: string): void {
+    const keep = (friend: any) => (friend._id ?? friend.id) !== friendId;
+    this.onlineFriends = this.onlineFriends.filter(keep);
+    this.filteredOnlineFriends = this.filteredOnlineFriends.filter(keep);
   }
 
 
@@ -163,13 +174,10 @@ export class OnlineComponent {
 
     this.friendsService.blockUser(friendId).subscribe({
       next: () => {
-        this.filteredOnlineFriends = this.filteredOnlineFriends.filter(
-          (friend) => (friend._id ?? friend.id) !== friendId
-        );
+        this.dropFriend(friendId);
+        this.toast.success('User blocked');
       },
-      error: (error) => {
-        console.error('Error blocking user:', error);
-      }
+      error: () => this.toast.error('Something went wrong. Try again.'),
     });
 
   }
@@ -186,20 +194,6 @@ export class OnlineComponent {
     this.dropdownOpen = this.dropdownOpen === friendId ? null : friendId;
   }
 
-  @HostListener('window:scroll', [])
-  onScroll() {
-    console.log("hi");
 
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-
-    if (scrollTop > this.lastScrollTop + 10) {
-      this.showSearchBar = false;
-    } else if (scrollTop < this.lastScrollTop - 10) {
-      this.showSearchBar = true;
-    }
-
-    this.lastScrollTop = scrollTop;
-    this.cdr.detectChanges(); // Force update
-  }
 
 }

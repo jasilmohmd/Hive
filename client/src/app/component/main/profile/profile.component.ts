@@ -20,7 +20,6 @@ import { finalize } from 'rxjs/operators';
 export class ProfileComponent implements OnInit {
   userData: IUser;
   errorMessage = '';
-  successMessage = '';
   logoutSubmitting = false;
 
   userAuthService = inject(UserAuthService);
@@ -38,28 +37,26 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (history.state && history.state.successMessage) {
-      this.successMessage = history.state.successMessage;
-      this.toast.success(this.successMessage);
-      history.replaceState({}, document.title);
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-    }
-
-    this.userAuthService.getUserDetails().subscribe((res: any) => {
-      if (res) {
-        this.userData = res.userData;
-      }
+    this.userAuthService.getUserDetails().subscribe({
+      next: (res) => {
+        if (res?.userData) {
+          this.userData = res.userData;
+        }
+      },
+      error: (error: Error) => {
+        this.errorMessage = error?.message || 'Could not load your profile';
+      },
     });
   }
 
   logout(): void {
     if (this.logoutSubmitting) return;
     this.logoutSubmitting = true;
-    this.chatService.disconnect();
     this.userAuthService.handelLogout().pipe(finalize(() => (this.logoutSubmitting = false))).subscribe({
       next: () => {
+        // Only once the server has ended the session: disconnecting first left
+        // a failed logout on the page with no live connection.
+        this.chatService.disconnect();
         this.toast.success('Logged out');
         this.router.navigateByUrl('/auth/login');
       },

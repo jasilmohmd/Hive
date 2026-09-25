@@ -8,7 +8,8 @@
     "start": "node ./dist/server.js",
     "dev": "nodemon",
     "test:chat-media-url": "ts-node --transpile-only src/framework/utils/chatMediaUrl.selftest.ts",
-    "test:chat-message-content": "ts-node --transpile-only src/framework/utils/chatMessageContent.selftest.ts"
+    "test:chat-message-content": "ts-node --transpile-only src/framework/utils/chatMessageContent.selftest.ts",
+    "test:link-preview": "ts-node --transpile-only src/framework/utils/linkPreview.selftest.ts"
   },
   "author": "",
   "license": "ISC",

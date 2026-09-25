@@ -1,65 +1,144 @@
-<div class="bg-surface-950 m-0 min-h-screen overflow-y-auto flex flex-col md:flex-row">
+<!-- h-dvh, not min-h: the content column is flex-1, and a flex-1 basis only
+     resolves against a *definite* container height. Under min-height it fell
+     back to content size, so the column grew with the page and nothing inside
+     it could scroll. -->
+<div class="bg-surface-950 m-0 h-dvh overflow-hidden flex flex-col md:flex-row">
 
   <app-incoming-call-modal></app-incoming-call-modal>
 
   <create-community-layout *ngIf="showCommunityCreateModal" (close)="toggleCommunityCreateModal()"></create-community-layout>
 
-  <!-- Mobile bottom nav -->
+  <!-- Phones have no icon rail, so this sheet is how they reach the
+       communities they have joined. Same list the rail renders. -->
+  <app-bottom-sheet
+    *ngIf="showCommunitiesSheet"
+    sheetTitle="Your communities"
+    (dismiss)="showCommunitiesSheet = false"
+  >
+    <ul class="flex flex-col gap-1" aria-label="Your communities">
+      <li *ngFor="let community of communities">
+        <a
+          [routerLink]="['/main','community', community._id]"
+          routerLinkActive="bg-surface-800 text-ink"
+          class="flex min-h-12 items-center gap-3 rounded-xl px-2 py-2 text-ink-secondary hover:bg-surface-850 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
+          (click)="showCommunitiesSheet = false"
+        >
+          <img
+            *ngIf="community.imageUrl; else sheetInitials"
+            [src]="getSafeUrl(community.imageUrl)"
+            alt=""
+            class="h-10 w-10 shrink-0 rounded-full object-cover"
+          />
+          <ng-template #sheetInitials>
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-700 text-sm font-semibold text-ink">
+              {{ initials(community.name) }}
+            </span>
+          </ng-template>
+          <span class="min-w-0 flex-1 truncate font-medium">{{ community.name }}</span>
+        </a>
+      </li>
+    </ul>
+
+    <p *ngIf="communities.length === 0" class="px-2 py-4 text-sm text-ink-muted">
+      You haven't joined any communities yet.
+      <a routerLink="/main/discover" class="text-brand hover:underline" (click)="showCommunitiesSheet = false">Discover some</a>
+      or create your own.
+    </p>
+
+    <div class="mt-2 border-t border-surface-700 px-2 pt-3">
+      <button
+        type="button"
+        class="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-surface-700 px-4 text-sm font-medium text-ink hover:bg-surface-600 focus-visible:ring-2 focus-visible:ring-brand"
+        (click)="showCommunitiesSheet = false; toggleCommunityCreateModal()"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        Create a community
+      </button>
+    </div>
+  </app-bottom-sheet>
+
+  <!-- Mobile bottom nav. Fixed height (--bottom-nav-h) plus the home-indicator
+       inset; the content column and the toast stack both offset by the same
+       two values. -->
   <nav
-    class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-surface-800 bg-surface-900 px-2 py-2 md:hidden"
+    class="fixed bottom-0 left-0 right-0 z-40 flex h-[calc(var(--bottom-nav-h)+var(--safe-bottom))] items-stretch justify-around gap-0.5 border-t border-surface-800 bg-surface-900 px-0.5 pb-[var(--safe-bottom)] md:hidden"
     aria-label="Primary"
   >
     <a
       routerLink="/main/friends_section/friends"
-      routerLinkActive="opacity-100 ring-2 ring-brand"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="rounded-full p-2 opacity-90"
-      [attr.aria-label]="'Friends and messages'"
+      class="hv-nav-item"
+      [ngClass]="{ '!text-brand': inHome }"
+      [attr.aria-current]="inHome ? 'page' : null"
     >
-      <img src="assets/images/Logo-bg-white.png" alt="" class="h-10 w-10 rounded-full object-cover" />
+      <img src="assets/images/Logo-bg-white.png" alt="" class="h-6 w-6 rounded-full object-cover" />
+      <span>Home</span>
     </a>
+    <button
+      type="button"
+      class="hv-nav-item"
+      [ngClass]="{ '!text-brand': showCommunitiesSheet || inCommunity }"
+      [attr.aria-expanded]="showCommunitiesSheet"
+      aria-haspopup="dialog"
+      (click)="showCommunitiesSheet = true"
+    >
+      <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8" />
+        <rect x="13.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8" />
+        <rect x="3.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8" />
+        <rect x="13.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8" />
+      </svg>
+      <span>Communities</span>
+    </button>
     <a
       routerLink="/main/discover"
-      routerLinkActive="opacity-100 ring-2 ring-brand"
-      class="rounded-full bg-surface-700 p-3"
-      aria-label="Discover communities"
+      routerLinkActive="!text-brand"
+      class="hv-nav-item"
     >
-      <img src="assets/Icons/compass-fill.png" alt="" class="h-8 w-8" />
+      <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" />
+        <path d="M15.5 8.5l-2 5-5 2 2-5 5-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+      <span>Discover</span>
     </a>
     <button
       type="button"
       (click)="toggleCommunityCreateModal()"
-      class="rounded-full bg-surface-700 p-3 hover:bg-surface-700 focus-visible:ring-2 focus-visible:ring-brand"
-      aria-label="Create community"
+      class="hv-nav-item"
     >
-      <img src="assets/Icons/plus.png" alt="" class="h-8 w-8" />
+      <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" stroke-width="1.8" />
+        <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+      <span>Create</span>
     </button>
 
-    <!-- Channel sidebar toggle. Lives here rather than in the sidebar so that
-         hiding the sidebar leaves no stub behind. Community routes only. -->
+    <!-- Channel drawer toggle. Lives here rather than in the sidebar so it is
+         always reachable. Community routes only. -->
     <button
       *ngIf="inCommunity"
       type="button"
       (click)="toggleChannelSidebar()"
-      class="rounded-full p-3 focus-visible:ring-2 focus-visible:ring-brand"
-      [class.bg-surface-700]="!channelSidebarCollapsed"
-      [class.text-ink]="!channelSidebarCollapsed"
-      [class.text-ink-muted]="channelSidebarCollapsed"
-      [attr.aria-pressed]="!channelSidebarCollapsed"
-      [attr.aria-label]="channelSidebarCollapsed ? 'Show channels' : 'Hide channels'"
-      [title]="channelSidebarCollapsed ? 'Show channels' : 'Hide channels'"
+      class="hv-nav-item"
+      [ngClass]="{ '!text-brand': channelSidebarOpenOnPhone }"
+      [attr.aria-expanded]="channelSidebarOpenOnPhone"
+      aria-controls="community-channels"
     >
-      <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <rect x="3" y="4.5" width="18" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7" />
         <path d="M9.5 4.5v15" stroke="currentColor" stroke-width="1.7" />
       </svg>
+      <span>Channels</span>
     </button>
   </nav>
 
   <!-- Vertical Navigation Bar (tablet+) -->
-  <nav class="hidden md:flex bg-surface-900 max-w-20 max-h-screen p-3 mx-3 my-4 rounded-3xl overflow-y-auto box-border flex-col" aria-label="Primary">
+  <!-- max-h accounts for the vertical margin: the root is exactly one screen
+       tall, so max-h-dvh plus my-4 pushed the rail's bottom (Discover) off it. -->
+  <nav class="hidden md:flex bg-surface-900 max-w-20 max-h-[calc(100dvh-2rem)] p-3 my-4 ml-[max(0.75rem,env(safe-area-inset-left))] mr-3 rounded-3xl overflow-y-auto scrollbar-themed box-border flex-col short:my-2 short:max-h-[calc(100dvh-1rem)] short:p-2" aria-label="Primary">
     <div class="flex flex-col justify-between h-full">
-      <ul class="text-ink space-y-4">
+      <ul class="text-ink space-y-4 short:space-y-2">
         <li>
           <div class="mt-2 flex justify-center">
             <a
@@ -67,21 +146,34 @@
               routerLinkActive="ring-2 ring-brand rounded-full"
               [routerLinkActiveOptions]="{ exact: false }"
               class="rounded-full"
-              [attr.aria-label]="'Friends'"
+              aria-label="Friends and messages"
+              title="Friends and messages"
             >
-              <img src="assets/images/Logo-bg-white.png" alt="" class="w-14 h-14 rounded-full flex items-center justify-center object-cover" />
+              <img src="assets/images/Logo-bg-white.png" alt="" class="w-14 h-14 rounded-full flex items-center justify-center object-cover short:h-11 short:w-11" />
             </a>
           </div>
         </li>
 
         <li *ngFor="let community of communities">
           <div class="mt-2 flex justify-center">
-            <a [routerLink]="['/main','community', community._id]" routerLinkActive="ring-2 ring-brand rounded-full" class="rounded-full">
+            <a
+              [routerLink]="['/main','community', community._id]"
+              routerLinkActive="ring-2 ring-brand rounded-full"
+              class="rounded-full"
+              [attr.aria-label]="community.name"
+              [title]="community.name"
+            >
               <img
+                *ngIf="community.imageUrl; else railInitials"
                 [src]="getSafeUrl(community.imageUrl)"
-                [alt]="(community.name || 'Community') + ' icon'"
-                class="w-14 h-14 rounded-full flex items-center justify-center object-cover"
+                alt=""
+                class="w-14 h-14 rounded-full flex items-center justify-center object-cover short:h-11 short:w-11"
               />
+              <ng-template #railInitials>
+                <span class="flex h-14 w-14 items-center justify-center rounded-full bg-surface-700 text-base font-semibold text-ink short:h-11 short:w-11">
+                  {{ initials(community.name) }}
+                </span>
+              </ng-template>
             </a>
           </div>
         </li>
@@ -91,10 +183,11 @@
             <button
               type="button"
               (click)="toggleCommunityCreateModal()"
-              class="bg-surface-700 text-xs p-3 rounded-full flex items-center justify-center hover:bg-surface-700 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
+              class="bg-surface-700 text-xs p-3 rounded-full flex items-center justify-center hover:bg-surface-600 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand short:p-2"
               aria-label="Create community"
+              title="Create community"
             >
-              <img src="assets/Icons/plus.png" alt="" class="w-8 h-8" />
+              <img src="assets/Icons/plus.png" alt="" class="w-8 h-8 short:h-7 short:w-7" />
             </button>
           </div>
         </li>
@@ -106,7 +199,7 @@
           *ngIf="inCommunity"
           type="button"
           (click)="toggleChannelSidebar()"
-          class="flex items-center justify-center rounded-full p-3 focus-visible:ring-2 focus-visible:ring-brand"
+          class="flex items-center justify-center rounded-full p-3 focus-visible:ring-2 focus-visible:ring-brand short:p-2"
           [class.bg-surface-700]="!channelSidebarCollapsed"
           [class.text-ink]="!channelSidebarCollapsed"
           [class.text-ink-muted]="channelSidebarCollapsed"
@@ -114,7 +207,7 @@
           [attr.aria-label]="channelSidebarCollapsed ? 'Show channels' : 'Hide channels'"
           [title]="channelSidebarCollapsed ? 'Show channels' : 'Hide channels'"
         >
-          <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <svg class="h-8 w-8 short:h-7 short:w-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <rect x="3" y="4.5" width="18" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7" />
             <path d="M9.5 4.5v15" stroke="currentColor" stroke-width="1.7" />
           </svg>
@@ -123,10 +216,11 @@
         <a
           routerLink="/main/discover"
           routerLinkActive="ring-2 ring-brand rounded-full"
-          class="bg-surface-700 text-xs p-3 rounded-full flex items-center justify-center hover:bg-surface-700 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
+          class="bg-surface-700 text-xs p-3 rounded-full flex items-center justify-center hover:bg-surface-600 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand short:p-2"
           aria-label="Discover communities"
+          title="Discover communities"
         >
-          <img src="assets/Icons/compass-fill.png" alt="" class="w-8 h-8" />
+          <img src="assets/Icons/compass-fill.png" alt="" class="w-8 h-8 short:h-7 short:w-7" />
         </a>
       </div>
     </div>
@@ -135,29 +229,42 @@
   <!-- Main Content Area -->
   <!-- px-1 on phones: the old pl-1/pr-4 spent 20px of a 390px screen on gutters
        that the channel sidebar and chat pane both needed. -->
-  <!-- h-screen at every width, not just md. With h-auto below md this column
-       had no definite height, so the community layout's h-full sidebar and chat
-       pane collapsed to their content and left dead space under the composer. -->
-  <div class="flex-1 flex flex-col px-1 py-2 pb-20 text-ink overflow-hidden h-screen md:pl-1 md:pr-4 md:py-4 md:pb-4">
+  <!-- h-dvh at every width: a definite height is what lets the routed views'
+       h-full panes (chat, voice) fill the column. dvh rather than vh so that
+       on phones the column ends at the *visible* bottom edge while browser
+       toolbars are showing, instead of 60-80px below it. The bottom padding
+       reserves the fixed nav plus the home-indicator inset. -->
+  <div class="flex-1 flex flex-col min-w-0 px-1 pt-2 pb-[calc(var(--bottom-nav-h)+var(--safe-bottom)+0.5rem)] text-ink overflow-hidden h-dvh md:pl-1 md:pr-[max(1rem,env(safe-area-inset-right))] md:py-4 short:md:py-2">
     <!-- h-20 was a fixed 80px band above every page; on a phone that is a tenth
          of the viewport spent on a title. -->
-    <header class="flex justify-between items-center gap-2 h-12 px-2 shrink-0 md:h-20 md:p-3">
-      <h1 class="min-w-0 truncate text-lg font-bold md:text-3xl">{{ pageTitle }}</h1>
-      <div class="flex shrink-0 items-center gap-4">
-        <span class="cursor-pointer hover:text-ink-secondary hidden sm:inline">Settings</span>
-        <!-- inline-flex + min-h keeps this a real 36px tap target; it was 24px. -->
-        <a routerLink="/main/profile" routerLinkActive="text-brand" class="inline-flex min-h-[2.25rem] items-center rounded px-2 text-sm cursor-pointer hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-brand md:text-base">
+    <header class="flex justify-between items-center gap-2 h-12 px-2 shrink-0 md:h-20 md:p-3 short:md:h-12 short:md:py-0">
+      <h1 class="min-w-0 truncate text-lg font-bold md:text-3xl short:md:text-xl">{{ pageTitle }}</h1>
+      <div class="flex shrink-0 items-center gap-1 sm:gap-2">
+        <a
+          routerLink="/main/edit_profile"
+          routerLinkActive="text-brand"
+          class="hidden min-h-10 items-center rounded-lg px-3 text-sm hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-brand sm:inline-flex md:text-base"
+        >
+          Settings
+        </a>
+        <a
+          routerLink="/main/profile"
+          routerLinkActive="text-brand"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="inline-flex min-h-10 items-center rounded-lg px-3 text-sm hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-brand md:text-base"
+        >
           Profile
         </a>
       </div>
     </header>
 
-    <!-- `relative` is the positioning context the community layout pins itself
-         to. Deliberately still a block box: every routed page shares this
-         wrapper, and turning it into a flex row would shrink the ones that
-         don't set a host width. -->
-    <div class="relative flex-1 rounded-2xl box-border overflow-hidden min-h-0">
+    <!-- The routed page's scroll container. Pages that manage their own
+         scrolling (chat, voice, friends) fill it with h-full and never
+         overflow it; pages that are just content (Discover, Profile) grow
+         and scroll here. `relative` is the positioning context the community
+         layout pins itself to. -->
+    <main class="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl box-border scrollbar-themed">
       <router-outlet></router-outlet>
-    </div>
+    </main>
   </div>
 </div>

@@ -72,6 +72,13 @@ export class ChatService {
   private socket: Socket | null = null;
   private readonly socketReadyListeners: SocketReadyListener[] = [];
   private connectPromise: Promise<Socket> | null = null;
+  /**
+   * Chat rooms this session has joined. A reconnect gives the server a brand
+   * new socket that is in no rooms, so these are re-joined on every connect —
+   * otherwise live messages silently stopped after any network blip until
+   * the user navigated away and back.
+   */
+  private readonly joinedChats = new Set<string>();
 
   readonly incomingMessage$ = new Subject<IChatMessage>();
   readonly messageEdited$ = new Subject<IChatMessage>();
@@ -88,6 +95,12 @@ export class ChatService {
   }>();
   readonly chatError$ = new Subject<string>();
   readonly socketConnected$ = new Subject<boolean>();
+  /**
+   * Fires when the realtime session is torn down on purpose (logout). Services
+   * that hold per-session socket state — call signalling, voice presence —
+   * reset on it, so the next login starts clean.
+   */
+  readonly sessionEnded$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
@@ -173,6 +186,12 @@ export class ChatService {
     return !!this.socket?.connected;
   }
 
+  /**
+   * Called with the socket on every (re)connect — including the first, and
+   * again with a *different* socket instance after logout → login. Listeners
+   * must therefore be idempotent per instance: bind event handlers once per
+   * socket, but re-send any room joins every time.
+   */
   onSocketReady(listener: SocketReadyListener): void {
     this.socketReadyListeners.push(listener);
     if (this.socket?.connected) {
@@ -180,10 +199,12 @@ export class ChatService {
     }
   }
 
-  private notifySocketReady(): void {
-    if (!this.socket) return;
+  private notifySocketReady(socket: Socket): void {
+    for (const chatId of this.joinedChats) {
+      socket.emit('joinChat', chatId);
+    }
     for (const listener of this.socketReadyListeners) {
-      listener(this.socket);
+      listener(socket);
     }
   }
 
@@ -235,6 +256,10 @@ export class ChatService {
     this.attachSocketHandlers(socket);
     await this.waitUntilConnected(socket);
     this.socket = socket;
+    // The 'connect' handler already ran, but before this.socket was assigned,
+    // so it could not notify anyone (this is why onSocketReady listeners never
+    // heard about the first connection). Do it now.
+    this.notifySocketReady(socket);
     return socket;
   }
 
@@ -271,7 +296,11 @@ export class ChatService {
 
     socket.on('connect', () => {
       this.socketConnected$.next(true);
-      this.notifySocketReady();
+      // Only the current socket re-joins rooms; a stale instance left over
+      // from a previous session must not.
+      if (this.socket === socket) {
+        this.notifySocketReady(socket);
+      }
     });
 
     socket.on('disconnect', () => {
@@ -328,6 +357,7 @@ export class ChatService {
 
   joinChat(chatId: string): void {
     const s = this.ensureSocket();
+    this.joinedChats.add(chatId);
     s.emit('joinChat', chatId);
   }
 
@@ -345,6 +375,8 @@ export class ChatService {
   disconnect(): void {
     this.socket?.disconnect();
     this.socket = null;
+    this.joinedChats.clear();
     this.socketConnected$.next(false);
+    this.sessionEnded$.next();
   }
 }

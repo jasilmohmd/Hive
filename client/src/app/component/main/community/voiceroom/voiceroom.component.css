@@ -20,10 +20,8 @@
    filter or contain — none currently do. */
 :host(.vr-expanded) {
   position: fixed;
-  inset: 0;
+  inset: 0; /* not 100vw/100vh: vh overshoots phone toolbars, vw includes the scrollbar */
   z-index: 60;
-  width: 100vw;
-  height: 100vh;
   background: rgb(var(--surface-950));
 }
 
@@ -70,7 +68,7 @@
 }
 
 .vr-eyebrow {
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -300,8 +298,11 @@
   color: rgb(var(--text-primary));
 }
 
+/* Capped so the people grid always keeps room on short screens. */
 .vr-strip {
   flex-shrink: 0;
+  max-height: 45%;
+  overflow-y: auto;
   border-bottom: 1px solid rgb(var(--surface-800));
   padding: 0.75rem;
 }
@@ -428,6 +429,13 @@
   opacity: 1;
 }
 
+/* Touch screens have no hover to reveal it. */
+@media (hover: none) {
+  .vr-tile-expand {
+    opacity: 1;
+  }
+}
+
 /* ──────────────────────────────── Chips ──────────────────────────────── */
 
 .vr-chip {
@@ -463,6 +471,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  flex-wrap: wrap;
   border-top: 1px solid rgb(var(--surface-800));
   padding: 0.6rem;
 }
@@ -545,7 +554,7 @@
 }
 
 .vr-ctl-label {
-  font-size: 0.53rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.01em;
   line-height: 1;
@@ -592,14 +601,16 @@
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
+/* The nudge goes through Tailwind's translate variable: overriding `transform`
+   dropped the -translate-x-1/2 centring, and the dock slid right as it faded. */
 .fs-chrome--idle {
   opacity: 0;
   pointer-events: none;
-  transform: translateY(8px);
+  --tw-translate-y: 8px;
 }
 
 .vr-tray {
-  max-width: min(92vw, 46rem);
+  max-width: min(100%, 46rem);
   border-radius: 1rem;
   border: 1px solid rgb(var(--surface-600) / 0.6);
   background: rgb(var(--surface-900) / 0.94);
@@ -680,7 +691,7 @@
   background: rgb(var(--surface-950) / 0.8);
   padding: 0.05rem 0.3rem;
   text-align: center;
-  font-size: 0.5625rem;
+  font-size: 0.6875rem;
   line-height: 1.25;
   color: rgb(var(--text-primary));
   text-overflow: ellipsis;
@@ -729,14 +740,13 @@
     display: none;
   }
 
-  /*
-    The channel sidebar stays on screen at these widths, so this pane gets about
-    200px until the user collapses it. At the desktop paddings the lobby card
-    left the join button ~118px and "Join voice room" broke across three lines.
-  */
   .vr-header {
     gap: 0.5rem;
     padding: 0.5rem 0.625rem;
+  }
+
+  .vr-header .vr-btn--quiet {
+    display: none;
   }
 
   .vr-lobby-card {
@@ -749,6 +759,5 @@
     width: 100%;
     padding: 0.625rem 0.75rem;
     font-size: 0.875rem;
-    white-space: nowrap;
   }
 }

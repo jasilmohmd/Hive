@@ -5,19 +5,19 @@
 >
   <div
     #panel
-    class="relative w-full max-w-sm rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
+    class="relative max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
     role="dialog"
     aria-modal="true"
     [attr.aria-labelledby]="title ? titleId : null"
     [attr.aria-describedby]="message ? messageId : null"
     (click)="$event.stopPropagation()"
-    (keydown)="$event.stopPropagation()"
+    (keydown)="onPanelKeydown($event)"
   >
-    <h2 *ngIf="title" [id]="titleId" class="mb-4 text-xl font-bold">{{ title }}</h2>
-    <p *ngIf="message" [id]="messageId" class="mb-6 text-ink-secondary">{{ message }}</p>
+    <h2 *ngIf="title" [id]="titleId" class="mb-4 break-words text-xl font-bold">{{ title }}</h2>
+    <p *ngIf="message" [id]="messageId" class="mb-6 break-words text-ink-secondary">{{ message }}</p>
     <div *ngIf="confirmPhrase" class="mb-6">
       <label class="mb-1 block text-sm text-ink-secondary">
-        Type <span class="font-semibold text-ink">{{ confirmPhrase }}</span> to confirm
+        Type <span class="break-all font-semibold text-ink">{{ confirmPhrase }}</span> to confirm
       </label>
       <input
         type="text"
@@ -26,7 +26,7 @@
         autocomplete="off"
       />
     </div>
-    <div class="flex justify-end space-x-2">
+    <div class="flex flex-wrap justify-end gap-2">
       <app-button variant="secondary" [disabled]="loading" (click)="cancel()">{{ cancelText || 'Cancel' }}</app-button>
       <app-button [variant]="confirmVariant" [loading]="loading" [disabled]="confirmDisabled" (click)="confirm()">{{ confirmText || 'Confirm' }}</app-button>
     </div>

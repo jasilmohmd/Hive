@@ -1,5 +1,8 @@
 <div class="relative">
   <ng-container *ngIf="variant === 'avatar'">
+    <!-- w-fit wrapper: the touch edit badge anchors to the avatar's corner,
+         not to this component's (possibly much wider) box. -->
+    <div class="relative mx-auto w-fit">
     <div
       class="relative overflow-hidden rounded-full bg-surface-800 ring-2 ring-surface-700 mx-auto"
       [ngClass]="avatarSizeClass"
@@ -12,9 +15,11 @@
         {{ fallbackLabel }}
       </div>
 
+      <!-- Hover/focus overlay for mouse and keyboard. Touch screens can't
+           hover, so they get the always-visible edit badge below instead. -->
       <div
         *ngIf="editable"
-        class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-surface-950/55 opacity-0 transition-opacity hover:opacity-100 focus-within:opacity-100"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-surface-950/55 opacity-0 transition-opacity hover:opacity-100 focus-within:opacity-100 hover-none:hidden"
       >
         <button
           type="button"
@@ -41,6 +46,33 @@
       >
         Uploading…
       </div>
+    </div>
+
+    <!-- Touch: a visible edit badge (outside the round clip) that opens the
+         picker. The hover overlay above is hidden on these screens. -->
+    <button
+      *ngIf="editable"
+      type="button"
+      class="absolute bottom-0 right-0 hidden h-9 w-9 translate-x-1 translate-y-1 items-center justify-center rounded-full bg-surface-700 text-ink shadow-lg ring-2 ring-surface-900 disabled:opacity-50 hover-none:inline-flex"
+      [disabled]="uploading"
+      (click)="triggerPick()"
+      aria-label="Change photo"
+    >
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+      </svg>
+    </button>
+    </div>
+
+    <div *ngIf="editable && allowRemove && src" class="mt-3 hidden justify-center hover-none:flex">
+      <button
+        type="button"
+        class="min-h-10 rounded-lg px-3 text-sm text-ink-secondary hover:bg-surface-800 disabled:opacity-50"
+        [disabled]="uploading"
+        (click)="onRemove()"
+      >
+        Remove photo
+      </button>
     </div>
   </ng-container>
 
@@ -118,6 +150,6 @@
   (cancel)="onCropCancel()"
 />
 
-<p *ngIf="errorMessage" class="mt-2 text-center text-xs text-danger" role="alert">
+<p *ngIf="errorMessage" class="mt-2 text-center text-xs text-danger-text" role="alert">
   {{ errorMessage }}
 </p>

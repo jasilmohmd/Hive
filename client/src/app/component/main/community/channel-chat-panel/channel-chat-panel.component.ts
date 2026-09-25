@@ -20,6 +20,7 @@ import { catchError } from 'rxjs/operators';
 import { ChatService, IChatMessage } from '../../../../services/chat.service';
 import { UserAuthService } from '../../../../services/user-auth.service';
 import { FriendService } from '../../../../services/friends.service';
+import { ConfirmDialogService } from '../../../../services/confirm-dialog.service';
 import {
   ChatComposerComponent,
   ChatComposerPayload,
@@ -64,12 +65,14 @@ import {
 } from '../../../../util/chat-message-actions';
 import { IUser } from '../../../../services/friends.service';
 import { LongPressDirective } from '../../../../directives/long-press.directive';
+import { StickToBottomDirective } from '../../../../directives/stick-to-bottom.directive';
 import { ButtonComponent } from '../../../common/button/button.component';
 
 @Component({
   selector: 'app-channel-chat-panel',
   standalone: true,
   imports: [
+    StickToBottomDirective,
     CommonModule,
     ChatComposerComponent,
     LoadingStateComponent,
@@ -137,7 +140,8 @@ export class ChannelChatPanelComponent implements OnInit, OnChanges, OnDestroy {
   constructor(
     private chat: ChatService,
     private auth: UserAuthService,
-    private friends: FriendService
+    private friends: FriendService,
+    private confirmDialog: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -225,6 +229,12 @@ export class ChannelChatPanelComponent implements OnInit, OnChanges, OnDestroy {
         this.loading = false;
       }
     }
+  }
+
+  /** Your own message just landed: the list jumps to it even if you'd scrolled up. */
+  get lastMessageIsMine(): boolean {
+    const last = this.messages[this.messages.length - 1];
+    return !!last && this.isMine(last);
   }
 
   ngOnDestroy(): void {
@@ -443,13 +453,20 @@ export class ChannelChatPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   async onContextDelete(): Promise<void> {
     const msg = this.contextMenuMsg;
-    if (!msg?._id || !confirm('Delete this message?')) return;
+    this.closeContextMenu();
+    if (!msg?._id) return;
+    const ok = await this.confirmDialog.confirm({
+      title: 'Delete message?',
+      message: 'It will be removed for everyone in this channel.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     try {
       await firstValueFrom(this.chat.deleteMessage(msg._id));
     } catch (e) {
       this.errorMessage = (e as Error).message;
     }
-    this.closeContextMenu();
   }
 
   async onReaction(msg: IChatMessage, emoji: string): Promise<void> {

@@ -12,6 +12,8 @@ import {
 } from '../../../../services/voiceroom-presence.service';
 import { ChannelService } from '../../../../services/channel.service';
 import { UserAuthService } from '../../../../services/user-auth.service';
+import { CallService } from '../../../../services/call.service';
+import { ConfirmDialogService } from '../../../../services/confirm-dialog.service';
 import { IChannel } from '../../../../models/channel';
 import { LoadingStateComponent } from '../../../common/loading-state/loading-state.component';
 import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.component';
@@ -92,7 +94,9 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
     public voiceroom: VoiceroomService,
     private presence: VoiceroomPresenceService,
     private channels: ChannelService,
-    private auth: UserAuthService
+    private auth: UserAuthService,
+    private call: CallService,
+    private confirmDialog: ConfirmDialogService
   ) {}
 
   get screenShares(): IVoiceroomParticipantView[] {
@@ -140,6 +144,8 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
             typeof img === 'string' && img.trim() ? img.trim() : null
           );
         },
+        // Only the local tile's avatar depends on this; it falls back to initials.
+        error: () => undefined,
       })
     );
 
@@ -294,12 +300,26 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
       this.connected = true;
       return;
     }
+    // One microphone, one session: a live DM call and a voice room would
+    // fight over it (HANDOFF #9). A call that is only ringing holds no media.
+    const callState = this.call.callState$.value;
+    if (callState === 'outgoing' || callState === 'connecting' || callState === 'active') {
+      const ok = await this.confirmDialog.confirm({
+        title: 'End your call?',
+        message: 'Joining the voice room hangs up your current call.',
+        confirmText: 'End call & join',
+        variant: 'confirm',
+      });
+      if (!ok) return;
+      this.call.endCall();
+    }
     this.joining = true;
     this.errorMessage = null;
     try {
       await this.voiceroom.join(
         this.channelId,
-        this.channel?.name ?? undefined
+        this.channel?.name ?? undefined,
+        this.communityId ?? undefined
       );
     } catch (e) {
       const err = e as {

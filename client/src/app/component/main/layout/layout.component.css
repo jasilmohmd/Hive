@@ -1,0 +1,32 @@
+/* Phone bottom-nav item: icon over a short label, one fifth of the bar each,
+   a full-height tap target. The active colour comes from routerLinkActive /
+   ngClass (`!text-brand`), which is why the base colour here is overridable. */
+.hv-nav-item {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  border-radius: 0.75rem;
+  margin-block: 0.25rem;
+  /* 10px so "Communities" fits a fifth of a 360px screen untruncated. */
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: rgb(var(--text-secondary));
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.hv-nav-item:active {
+  background: rgb(var(--surface-850));
+}
+
+.hv-nav-item > span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

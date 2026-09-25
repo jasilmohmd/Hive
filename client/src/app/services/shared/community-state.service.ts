@@ -30,10 +30,9 @@ export class CommunityStateService {
 
     return this.communityService.getCommunityById(id).pipe(
       tap(community => this.communitySubject.next(community)),
-      catchError(error => {
-        console.error('Failed to load community', error);
-        return of(null);
-      })
+      // Null means "couldn't load"; callers show that (layout error state,
+      // About's keep-and-toast refresh) rather than it going to the console.
+      catchError(() => of(null))
     );
   }
 

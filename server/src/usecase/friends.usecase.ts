@@ -50,8 +50,6 @@ export default class FriendUseCase implements IFriendUsecase {
     // Check if they are already friends or request is pending
     const status = await this.friendRepository.checkFriendshipStatus(senderId, receiverId);
 
-    console.log(status);
-    
   
     if (status === "already_friends") {
       throw new ValidationError({

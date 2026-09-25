@@ -4,7 +4,11 @@
   <meta charset="utf-8">
   <title>Hive</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- viewport-fit=cover lets the layout reach under notches/home indicators;
+       every fixed bar pads itself with env(safe-area-inset-*) to compensate.
+       interactive-widget=resizes-content makes the on-screen keyboard shrink
+       the layout viewport (and so 100dvh) instead of overlaying the composer. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#0C0B09">
   <link rel="icon" type="image/x-icon" href="assets/images/Logo-bg-white.png">
 

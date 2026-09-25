@@ -2,14 +2,14 @@
   class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 p-4 animate-fade-in"
   (click)="close.emit()" role="presentation">
   <div
-    class="relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
+    class="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col rounded-2xl bg-surface-900 p-4 text-ink shadow-xl ring-1 ring-surface-700 sm:p-6"
     role="dialog" aria-modal="true" aria-label="Community roles" (click)="$event.stopPropagation()">
 
-    <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-bold">
+    <div class="mb-4 flex shrink-0 items-center justify-between gap-2">
+      <h2 class="min-w-0 truncate text-xl font-bold">
         {{ mode === 'list' ? 'Roles' : mode === 'edit' ? 'Edit role' : 'New role' }}
       </h2>
-      <button (click)="close.emit()" class="text-ink-muted hover:text-ink" aria-label="Close">✕</button>
+      <button type="button" (click)="close.emit()" class="-m-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-muted hover:bg-surface-800 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand" aria-label="Close">✕</button>
     </div>
 
     <!-- List -->
@@ -31,9 +31,9 @@
           </div>
           <div class="flex shrink-0 items-center gap-2">
             <button *ngIf="!role.isDefault" (click)="startEdit(role)"
-              class="rounded-md bg-surface-700 px-2.5 py-1 text-sm hover:bg-surface-600">Edit</button>
+              class="min-h-9 rounded-md bg-surface-700 px-3 py-1 text-sm hover:bg-surface-600 coarse:min-h-10">Edit</button>
             <button *ngIf="!role.isDefault" (click)="promptDelete(role)"
-              class="rounded-md bg-danger/20 px-2.5 py-1 text-sm text-danger-text hover:bg-danger/30">Delete</button>
+              class="min-h-9 rounded-md bg-danger/20 px-3 py-1 text-sm text-danger-text hover:bg-danger/30 coarse:min-h-10">Delete</button>
           </div>
         </li>
       </ul>

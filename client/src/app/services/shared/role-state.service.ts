@@ -31,10 +31,9 @@ export class RoleStateService {
         });
         this.permissionsSubject.next(Array.from(permissionSet));
       }),
-      catchError(error => {
-        console.error("Failed to load user roles", error);
-        return of([]);
-      })
+      // No roles = no permissions: every gated control stays hidden, which is
+      // the safe failure. The server enforces permissions regardless.
+      catchError(() => of([]))
     );
   }
 

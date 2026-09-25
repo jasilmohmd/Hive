@@ -1,5 +1,5 @@
 <div class="max-w-sm space-y-2 sm:min-w-[14rem]">
-  <p class="text-sm font-medium">{{ poll.question }}</p>
+  <p class="break-words text-sm font-medium">{{ poll.question }}</p>
   <div class="space-y-1.5">
     <button
       *ngFor="let opt of poll.options; let i = index"
@@ -10,8 +10,8 @@
       (click)="toggleOption(i)"
     >
       <span class="flex justify-between gap-2">
-        <span>{{ opt }}</span>
-        <span *ngIf="poll.myVotes.length > 0" class="text-xs text-ink-secondary">{{ percent(poll.counts[i]) }}%</span>
+        <span class="min-w-0 break-words [overflow-wrap:anywhere]">{{ opt }}</span>
+        <span *ngIf="poll.myVotes.length > 0" class="shrink-0 text-xs text-ink-secondary">{{ percent(poll.counts[i]) }}%</span>
       </span>
       <span *ngIf="poll.myVotes.length > 0" class="mt-1 block h-1 overflow-hidden rounded-full bg-surface-700">
         <span class="block h-full bg-brand" [style.width]="percent(poll.counts[i]) + '%'"></span>

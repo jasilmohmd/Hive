@@ -190,6 +190,7 @@ import { extractSocketToken } from "../utils/socketAuth.util";
 import { createChatUseCase } from "../chatDependencies";
 import { registerCallSignaling } from "../utils/callSignaling";
 import { registerVoiceroomPresence } from "../utils/voiceroomPresence";
+import { isClientSendableMessageType } from "../utils/chatMessageContent";
 
 app.get("/health", (_req, res) => {
   res.status(200).json({ ok: true });
@@ -299,11 +300,19 @@ io.on("connection", (socket) => {
           socket.emit("chatError", { message: "Invalid message payload" });
           return;
         }
+        const type = messageData.type ?? "text";
+        // Call-log bubbles are written by the server when a call ends
+        // (callSignaling.persistCallLog). Accepting them from clients let
+        // anyone post fake "missed call" / "call lasted 2h" entries.
+        if (!isClientSendableMessageType(type)) {
+          socket.emit("chatError", { message: "Invalid message type" });
+          return;
+        }
         const savedMessage = await chatUseCase.sendMessage(
           userId,
           messageData.chatId,
           messageData.content,
-          messageData.type ?? "text",
+          type,
           {
             replyToMessageId: messageData.replyToMessageId,
             metadata: messageData.metadata,

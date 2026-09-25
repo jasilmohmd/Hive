@@ -19,6 +19,8 @@ export class VoiceSessionBarComponent implements OnInit, OnDestroy {
   channelId: string | null = null;
   channelName = 'Voice room';
   localMuted = false;
+  /** The room's own community — can differ from the one being viewed. */
+  roomCommunityId: string | null = null;
 
   private subs = new Subscription();
 
@@ -46,40 +48,43 @@ export class VoiceSessionBarComponent implements OnInit, OnDestroy {
         }
       })
     );
-    this.syncMuted();
+    this.subs.add(this.voiceroom.localMuted$.subscribe((m) => (this.localMuted = m)));
+    this.subs.add(this.voiceroom.activeCommunityId$.subscribe((id) => (this.roomCommunityId = id)));
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
   }
 
+  /**
+   * The layout is reused when you switch communities while staying connected,
+   * so link through the room's own community — pairing the viewed community's
+   * id with the room's channel id produced a dead link.
+   */
   get voiceroomLink(): (string | undefined)[] {
-    if (!this.communityId || !this.channelId) return [];
+    const communityId = this.roomCommunityId || this.communityId;
+    if (!communityId || !this.channelId) return [];
     return [
       '/main',
       'community',
-      this.communityId,
+      communityId,
       'voiceroom',
       this.channelId,
     ];
   }
 
   toggleMute(): void {
-    void this.voiceroom.toggleMute().then(() => this.syncMuted());
+    void this.voiceroom.toggleMute();
   }
 
   async leaveCall(): Promise<void> {
     await this.voiceroom.leaveActiveCall();
   }
 
-  private syncMuted(): void {
-    this.localMuted = this.voiceroom.localMuted;
-  }
-
   private async resolveChannelName(channelId: string): Promise<void> {
     try {
       const list = await firstValueFrom(
-        this.channels.loadAccessibleChannels(this.communityId)
+        this.channels.loadAccessibleChannels(this.roomCommunityId || this.communityId)
       );
       const ch = list?.find((c) => String(c._id) === channelId);
       if (ch?.name) {

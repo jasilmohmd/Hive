@@ -39,7 +39,15 @@ export class CallService {
   private peerId: string | null = null;
   private role: 'caller' | 'callee' | null = null;
   private callType: CallType = 'audio';
-  private socketListenersBound = false;
+  /**
+   * Whether *this tab* accepted the ringing call. call:incoming / call:accepted
+   * / call:offer go to every tab the callee has open, so without this a second
+   * tab also answered the offer and the caller's second setRemoteDescription
+   * tore the call down.
+   */
+  private acceptedHere = false;
+  /** The socket instance our call:* handlers are attached to (a new one after re-login). */
+  private boundSocket: Socket | null = null;
   private unavailableDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly incomingCall$ = new Subject<IIncomingCall>();
@@ -56,7 +64,19 @@ export class CallService {
     private ringtone: CallRingtoneService,
     private http: HttpClient
   ) {
-    this.chat.onSocketReady((socket) => this.bindSocketEventsIfNeeded(socket));
+    this.chat.onSocketReady((socket) => {
+      this.bindSocketEventsIfNeeded(socket);
+      // After a reconnect the server sees a new socket; claim our live call on
+      // it, or the server ends the call once its disconnect grace runs out.
+      const state = this.callState$.value;
+      if (this.callId && (state === 'outgoing' || state === 'connecting' || state === 'active')) {
+        socket.emit('call:resume', { callId: this.callId });
+      }
+    });
+    this.chat.sessionEnded$.subscribe(() => {
+      this.endCallLocal();
+      this.boundSocket = null;
+    });
     this.callState$.subscribe((state) => {
       if (state === 'outgoing') this.ringtone.playOutgoing();
       else if (state === 'incoming') this.ringtone.playIncoming();
@@ -75,9 +95,9 @@ export class CallService {
   }
 
   private bindSocketEventsIfNeeded(socket: Socket): void {
-    if (this.socketListenersBound) return;
+    if (this.boundSocket === socket) return;
     this.bindSocketEvents(socket);
-    this.socketListenersBound = true;
+    this.boundSocket = socket;
   }
 
   get activeCallId(): string | null {
@@ -144,6 +164,7 @@ export class CallService {
     this.chatId = call.chatId;
     this.peerId = call.callerId;
     this.role = 'callee';
+    this.acceptedHere = true;
     this.callType = call.callType;
     this.callType$.next(call.callType);
     this.callState$.next('connecting');
@@ -175,10 +196,16 @@ export class CallService {
 
   endCall(): void {
     if (this.callId && this.chatId && this.isInCall()) {
-      this.chat.ensureSocket().emit('call:end', {
-        callId: this.callId,
-        chatId: this.chatId,
-      });
+      const ended = { callId: this.callId, chatId: this.chatId };
+      try {
+        this.chat.ensureSocket().emit('call:end', ended);
+      } catch {
+        /* socket already gone (logout) — ending locally is all that's left */
+      }
+      // The server's own call:ended arrives after callId is cleared below and
+      // is dropped, so announce it locally — otherwise listeners (the
+      // incoming-call modal) never hear that the call is over.
+      this.callEnded$.next(ended);
     }
     this.endCallLocal();
   }
@@ -210,6 +237,14 @@ export class CallService {
   private bindSocketEvents(socket: Socket): void {
     socket.on('call:incoming', (payload: IIncomingCall) => {
       if (this.isInCall() && this.callState$.value !== 'incoming') return;
+      if (this.callState$.value === 'incoming' && payload.callId !== this.callId) {
+        // Already ringing for someone else. This used to replace the first
+        // call outright, leaving its caller ringing forever; decline the
+        // newcomer instead so they get an answer.
+        socket.emit('call:reject', { callId: payload.callId, chatId: payload.chatId });
+        return;
+      }
+      this.acceptedHere = false;
       this.callId = payload.callId;
       this.chatId = payload.chatId;
       this.peerId = payload.callerId;
@@ -228,6 +263,12 @@ export class CallService {
 
     socket.on('call:accepted', async (payload: { callId: string; chatId: string }) => {
       if (payload.callId !== this.callId) return;
+      if (this.role === 'callee' && !this.acceptedHere) {
+        // Answered in another tab: stop ringing here and step aside.
+        this.callEnded$.next({ callId: payload.callId, chatId: payload.chatId });
+        this.endCallLocal();
+        return;
+      }
       try {
         this.callState$.next('connecting');
         this.callAccepted$.next(payload);
@@ -270,7 +311,7 @@ export class CallService {
     });
 
     socket.on('call:offer', async (payload: { callId: string; sdp: RTCSessionDescriptionInit }) => {
-      if (payload.callId !== this.callId) return;
+      if (payload.callId !== this.callId || !this.acceptedHere) return;
       try {
         await this.handleOffer(payload.sdp);
       } catch (e) {
@@ -391,6 +432,7 @@ export class CallService {
     this.chatId = null;
     this.peerId = null;
     this.role = null;
+    this.acceptedHere = false;
     this.callState$.next('idle');
   }
 }

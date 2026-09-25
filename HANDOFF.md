@@ -78,13 +78,24 @@ client/src/app/
                          direct-message create-community
 ```
 
-**Routes:** `/auth/{login,register,email_verify,otp,change_pass}` · `/main/{discover,profile{,/edit_profile,/change_password},friends_section/{friends,online,pending,blocked,addfriend},direct_message}` · `/main/community/:id/{about,chatroom/:channelId,voiceroom/:channelId}` · `/main/community/create/{step-one,step-two,step-three}`
+**Routes:** `/auth/{login,register,email_verify,otp,change_pass}` · `/main/{discover,profile,edit_profile,change_password,friends_section/{friends,online,pending,blocked,addfriend},direct_message}` · `/main/community/:id/{about,chatroom/:channelId,voiceroom/:channelId}` · `/main/community/create` (the wizard; also opened as a modal from the nav). `/main`, `/auth` and `friends_section` redirect to a default child; `**` redirects to the landing page, whose `canActivate` sends signed-in users to `/main/discover`. `direct_message` has `canDeactivate: confirmLeaveCallGuard`. Browser tab titles come from route `data.title` via `HiveTitleStrategy`.
 
 **Shared chat components** (extracted — reuse these, don't re-inline):
 - `common/chat-message-body/` — renders a bubble's contents (sticker/audio/video/file/location/contact/poll/gif/image/text). Used by both `direct-message` and `channel-chat-panel`.
 - `common/chat-sheet/` — backdrop + mobile bottom-sheet / desktop dropdown chrome for all 7 composer popups. Takes `theme`, `panelClass`, `sheetTitle`.
 - Both use `host: { class: 'contents' }` (`display:contents`) so the wrapper element stays out of layout. **Keep that** if you touch them.
 - `chat-composer` renders one template for both themes via class getters (`containerClasses`, `inputClasses`, …) — do not re-fork it per theme.
+- `directives/stick-to-bottom.directive.ts` — put `appStickToBottom [stickTrigger] [stickKey] [stickForce]` on a message list's scroll container; it opens at the newest message and follows new ones.
+
+**Responsive layout (2026-09-25 pass)** — read before touching the shell or adding a page:
+- **The shell is exactly one screen tall** (`h-dvh overflow-hidden` root). The routed `<main>` and the community pane are the scroll containers: a content page just grows and scrolls; a chat/voice view fills with `h-full`/flex and scrolls internally. Don't give pages `min-h-screen`/`100vh`.
+- **`dvh`, not `vh`**, anywhere height matters on phones. Bottom-fixed UI offsets by `var(--bottom-nav-h)` + `var(--safe-bottom)` (tokens in `styles.css`); `index.html` sets `viewport-fit=cover, interactive-widget=resizes-content`.
+- **Text fields are ≥16px on coarse pointers** (global rule in `styles.css`) — iOS zooms otherwise.
+- **Tailwind variants** (`tailwind.config.js`): `coarse:` (finger), `hover-none:` (no hover — give hover-only affordances a visible fallback), `short:` (landscape phones: md-wide but <500px tall).
+- **Phones:** bottom nav (Home, Communities sheet, Discover, Create, Channels). The community channel sidebar is a **drawer below md** (`ChannelSidebarService.mobileOpen$`, not persisted) and a collapsible column from md (`collapsed$`, persisted). `toggle()` acts on whichever the viewport uses.
+- `common-table` renders **stacked cards below sm** and a table from sm; `TableAction` has `hidden` / `disabled` / `labelFor` per row.
+- **Keep `voiceroom.component.css` under the 12 kB component-style warning** (it's ~11.6 kB; error at 16 kB). Put new voice-room styling in template utility classes.
+- Avoid `z-index` on wrappers of anything that opens a `fixed` overlay (e.g. `image-picker-menu`'s cropper): a z-indexed ancestor traps it under the nav.
 
 ## Conventions & gotchas (these have each caused real bugs here)
 
@@ -94,7 +105,10 @@ client/src/app/
 4. **One bad spec kills the entire client suite.** A TS error in any `*.spec.ts` makes Karma abort with `Found 1 load error` and run **zero** tests — silently green-looking if tests aren't gated. CI now runs `ng test` for this reason.
 5. **Dev server does not typecheck.** `nodemon` uses `ts-node/register/transpile-only`, and `noEmitOnError` is off. `tsc`/CI is the only real gate.
 6. **Editor TS ≠ project TS.** Workspace TS is 5.4.5; a newer editor TS can surface diagnostics CI never sees (this is why `client/tsconfig.json` now sets an explicit `rootDir`).
-7. **Git history was grafted** with `git subtree`. Old per-file history is reachable (blame works back to Jan 2025). The two original repos' other branches are preserved as `archive/frontend-*` and `archive/backend-*` refs.
+7. **Confirmations: use `ConfirmDialogService.confirm({...})` (awaitable, rendered once in `AppComponent`) or a template-owned `app-common-modal`** — never `window.confirm()`.
+8. **One microphone owner at a time.** DM calls (`CallService`), voice rooms (`VoiceroomService`) and voice notes all capture the mic. Accepting a call awaits `voiceroom.leaveActiveCall()` first; joining a room during a live call asks to end it; the recorder refuses while either is active. Voice-room **remote audio plays from `VoiceroomAudioComponent` in the community layout**, not from the voice-room page — don't add `<audio>` for remote tracks anywhere else.
+9. **Socket listeners bind per socket instance** (a new one after logout → login) via `ChatService.onSocketReady`, which fires on every (re)connect; re-send room joins there. `ChatService.sessionEnded$` fires on logout.
+10. **Git history was grafted** with `git subtree`. Old per-file history is reachable (blame works back to Jan 2025). The two original repos' other branches are preserved as `archive/frontend-*` and `archive/backend-*` refs.
 
 ## Deployment
 
@@ -110,14 +124,15 @@ client/src/app/
 # server
 cd server && npm run dev                    # nodemon, transpile-only
 npx tsc --noEmit && npm run build
-npm run test:chat-media-url && npm run test:chat-message-content
+npm run test:chat-media-url && npm run test:chat-message-content && npm run test:link-preview
 
 # client
 cd client && npm start
 npx tsc --noEmit -p tsconfig.app.json
 npx tsc --noEmit -p tsconfig.spec.json      # NOT covered by the app typecheck
 CHROME_BIN="/c/Program Files/Google/Chrome/Application/chrome.exe" \
-  npm test -- --watch=false --browsers=ChromeHeadless      # 79 specs, all passing
+  npm test -- --watch=false --browsers=ChromeHeadless      # 113 specs, all passing
+# (Linux as root: point CHROME_BIN at a wrapper that adds --no-sandbox)
 npm run build
 ```
 
@@ -126,6 +141,8 @@ npm run build
 Security: OTP now required for password reset; bcrypt hash no longer returned by `/auth/userDetails*`; socket `joinChat` checks membership; `/image/upload` authed + 5MB + image-only; rate limiting on `/auth/*`; regex escaping in auth lookups; membership checks on role/channel reads.
 
 Correctness: ObjectId `.equals()` sweep; `CustomError` rethrow; cookie `secure`/`sameSite` on JWT-error clear; OTP expiry 60s → 10min; voiceroom presence keyed per-socket (multi-tab); client state caches cleared on logout; per-community subscription disposal in `community/layout` + `about`.
+
+2026-09-25 responsive + fixes pass: see `Context/05-roadmap-todo.md` → "Responsive + fixes pass". Highlights — content pages scroll again; phones reach their communities; channel drawer; DM-call vs voice-room mic handoff (#9); voice-room audio survives navigation; sockets re-bind after re-login and re-join rooms after reconnect; list-modal `@slideInOut` crash; `common-modal` Escape; safe, non-fatal link previews; server-only call logs; ring timeout + ringing-callee busy.
 
 Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile stacking for the community sidebar; `chat-composer`/`chat-sheet`/`chat-message-body` de-duplication; client test suite repaired (0 running → 75 passing).
 
@@ -142,7 +159,7 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 | ~~6b~~ | ~~`server/src/repositories/community.repository.ts`~~ | **FIXED** (PR #8 `aef7301`) — User schema `toJSON` transform strips `password` from every serialised response. |
 | ~~8~~ | ~~`server/src/usecase/channel.usecase.ts`~~ | **FIXED** (PR #17) — the `getAccessibleChannels` return-type key is `voiceroom` (the real runtime key), was `voice`, in the server usecase/interfaces and `client/channel.service.ts`. |
 | 8 | `server/src/usecase/channel.usecase.ts:~84` | `getAccessibleChannels` return type says key `voice`; runtime key is `voiceroom`. |
-| 9 | client `call.service` / `voiceroom.service` | No mutual exclusion — a DM call started while in a voiceroom fights over the microphone (`NotReadableError`). |
+| ~~9~~ | ~~client `call.service` / `voiceroom.service`~~ | **FIXED** (2026-09-25 pass) — accepting a DM call awaits the voice-room leave before taking the mic (the modal says it will), joining a room during a live call asks first, leaving a DM mid-call asks first, voice notes refuse while a room holds the mic. |
 | 10 | `client/.../chat-forward-picker` | Unlike its 7 siblings it has no full-viewport dismiss backdrop (left deliberately — different design, not a mechanical fix). |
 | ~~11~~ | ~~`render.yaml`~~ | **FIXED** (PR #24) — `TURN_URL`/`TURN_USERNAME`/`TURN_CREDENTIAL` declared (`sync: false`); `GIPHY_API_KEY` added to `.env.example`. Set real TURN values in the Render dashboard to actually get a relay. |
 | ~~12~~ | ~~`server/src/framework/config/app.ts`~~ | **FIXED** (PR #24) — `CORS_ORIGIN` is now a comma-separated allow-list; optional `CORS_ORIGIN_SUFFIXES` matches host suffixes (e.g. `.pages.dev`) so preview deploys pass. Same check on Express + Socket.IO. |
@@ -151,4 +168,4 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 
 Ops reminders: `EMAIL_USER`/`EMAIL_PASS` must be set in the Render dashboard (declared but `sync: false`), and `CORS_ORIGIN` must include the live Pages origin (comma-separate multiple; set `CORS_ORIGIN_SUFFIXES` for preview-deploy subdomains).
 
-Still open after the 2026-09-10 backlog pass: #9 (DM-call/voiceroom mic contention, client), #10 (deliberate), #14 (deliberate). Everything else in this table is fixed.
+Still open after the 2026-09-25 pass: #10 (deliberate) and #14 (deliberate). Everything else in this table is fixed.

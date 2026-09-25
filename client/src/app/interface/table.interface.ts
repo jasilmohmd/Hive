@@ -13,4 +13,6 @@ export interface TableAction {
   icon?: string; // URL/path to the icon image
   display?: 'icon' | 'label' | 'both'; // How to display the action (default: both)
   hidden?: (row: any) => boolean; // If it returns true, the action is not rendered for that row
+  disabled?: (row: any) => boolean; // e.g. while that row's request is in flight
+  labelFor?: (row: any) => string; // per-row label, e.g. "Requested" once sent
 }

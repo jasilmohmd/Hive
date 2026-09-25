@@ -1,15 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FriendService } from '../../../../services/friends.service';
 import { CommonModule } from '@angular/common';
 import { TableAction, TableColumn } from '../../../../interface/table.interface';
 import { CommonTableComponent } from '../../../common/common-table/common-table.component';
 import { EmptyStateComponent } from '../../../common/empty-state/empty-state.component';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
+import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.component';
+import { LoadingStateComponent } from '../../../common/loading-state/loading-state.component';
+import { ToastService } from '../../../../services/toast.service';
 
 @Component({
   selector: 'app-pending',
   standalone: true,
-  imports: [CommonModule, CommonTableComponent, FormsModule, EmptyStateComponent],
+  imports: [CommonModule, CommonTableComponent, FormsModule, EmptyStateComponent, ErrorAlertComponent, LoadingStateComponent],
   templateUrl: './pending.component.html',
   styleUrl: './pending.component.css'
 })
@@ -19,6 +23,10 @@ export class PendingComponent implements OnInit {
   searchTerm: string = '';
   hasSearched: boolean = false;
   errorMessage: string = '';
+  loading = true;
+  /** Requests being accepted/rejected right now: their buttons are disabled so a double tap can't send twice. */
+  private busy = new Set<string>();
+  private toast = inject(ToastService);
 
   // Define columns (example: only username)
   tableColumns: TableColumn[] = [
@@ -31,12 +39,14 @@ export class PendingComponent implements OnInit {
     {
       label: 'Accept',
       action: (row: any) => this.acceptRequest(row._id),
+      disabled: (row: any) => this.busy.has(row._id),
       class: '!bg-success !text-surface-950 hover:!bg-success-hover px-4 py-2 text-sm rounded-md',
       display: "label"
     },
     {
       label: 'Reject',
       action: (row: any) => this.rejectRequest(row._id),
+      disabled: (row: any) => this.busy.has(row._id),
       class: '!bg-danger !text-white hover:!bg-danger-hover px-4 py-2 text-sm rounded-md',
       display: "label"
     }
@@ -51,7 +61,7 @@ export class PendingComponent implements OnInit {
   // Fetch pending requests
   loadPendingRequests(): void {
     this.friendService.getPendingRequests().subscribe({
-      next: (response: any[]) => {
+      next: (response: any[] = []) => {
         // Transform the pending request data so that each row has profilePicture, userName, _id
         this.pendingRequests = response.map(req => ({
           profilePicture: req.sender.imageUrl ?? req.sender.profilePicture,
@@ -59,17 +69,17 @@ export class PendingComponent implements OnInit {
           _id: req.sender._id,
           sender: req.sender  // preserve original if needed
         }));
-        this.filteredRequests = this.pendingRequests;
+        this.searchRequests();
+        this.loading = false;
       },
-      error: (error) => {
-        console.error('Error fetching pending requests:', error);
+      error: () => {
         this.errorMessage = 'Failed to load pending requests';
+        this.loading = false;
       }
     });
   }
 
   searchRequests(): void {
-    this.hasSearched = true;
     const trimmed = this.searchTerm.trim().toLowerCase();
     if (!trimmed) {
       this.filteredRequests = this.pendingRequests;
@@ -82,31 +92,30 @@ export class PendingComponent implements OnInit {
 
   // Accept a friend request
   acceptRequest(senderId: string): void {
-    this.friendService.acceptRequest(senderId).subscribe({
-      next: () => {
-        this.pendingRequests = this.pendingRequests.filter(req => req.sender._id !== senderId);
-        this.loadPendingRequests();
-      },
-      error: (error) => {
-        console.error('Error accepting request:', error);
-        this.errorMessage = 'Failed to accept request';
-      }
-
-    });
+    this.respond(senderId, 'accept');
   }
 
   // Reject a friend request
   rejectRequest(senderId: string): void {
-    this.friendService.rejectRequest(senderId).subscribe({
-      next: () => {
-        this.pendingRequests = this.pendingRequests.filter(req => req.sender._id !== senderId);
-        this.loadPendingRequests();
-      },
-      error: (error) => {
-        console.error('Error rejecting request:', error);
-        this.errorMessage = 'Failed to reject request';
-      }
+    this.respond(senderId, 'reject');
+  }
 
+  private respond(senderId: string, kind: 'accept' | 'reject'): void {
+    if (this.busy.has(senderId)) return;
+    const name = this.pendingRequests.find((r) => r._id === senderId)?.userName || 'them';
+    this.busy.add(senderId);
+    const req = kind === 'accept'
+      ? this.friendService.acceptRequest(senderId)
+      : this.friendService.rejectRequest(senderId);
+    req.pipe(finalize(() => this.busy.delete(senderId))).subscribe({
+      next: () => {
+        this.pendingRequests = this.pendingRequests.filter((r) => r._id !== senderId);
+        this.searchRequests();
+        this.toast.success(kind === 'accept' ? `You and ${name} are now friends` : 'Request declined');
+      },
+      error: (error: Error) => {
+        this.toast.error(error?.message || (kind === 'accept' ? 'Failed to accept request' : 'Failed to reject request'));
+      },
     });
   }
 }

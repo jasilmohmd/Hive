@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FriendService } from '../../../../services/friends.service';
 import { CommonModule } from '@angular/common';
@@ -10,6 +10,7 @@ import { finalize } from 'rxjs/operators';
 import { ToastService } from '../../../../services/toast.service';
 import { EmptyStateComponent } from '../../../common/empty-state/empty-state.component';
 import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.component';
+import { LoadingStateComponent } from '../../../common/loading-state/loading-state.component';
 
 @Component({
   selector: 'app-friends',
@@ -21,6 +22,7 @@ import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.com
     CommonModalComponent,
     EmptyStateComponent,
     ErrorAlertComponent,
+    LoadingStateComponent,
   ],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
@@ -31,9 +33,7 @@ export class FriendsComponent implements OnInit {
   filteredFriends: any[] = [];
   searchTerm = '';
   hasSearched = false;
-
-  showSearchBar = true;
-  private lastScrollTop = 0;
+  loading = true;
 
   tableColumns: TableColumn[] = [
     { header: 'Profile', field: 'profilePicture', isImage: true },
@@ -70,13 +70,16 @@ export class FriendsComponent implements OnInit {
   }
 
   loadFriends(): void {
+    this.loading = true;
     this.friendsService.getAllFriends().subscribe({
       next: (response) => {
-        this.friends = response;
-        this.filteredFriends = response;
+        this.friends = response ?? [];
+        this.filteredFriends = this.friends;
+        this.loading = false;
       },
       error: () => {
         this.errorMessage = 'Failed to load friends list';
+        this.loading = false;
       },
     });
   }
@@ -140,17 +143,5 @@ export class FriendsComponent implements OnInit {
     this.router.navigate(['/main/direct_message'], { queryParams: { friendId } });
   }
 
-  @HostListener('window:scroll', [])
-  onScroll(): void {
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
 
-    if (scrollTop > this.lastScrollTop + 10) {
-      this.showSearchBar = false;
-    } else if (scrollTop < this.lastScrollTop - 10) {
-      this.showSearchBar = true;
-    }
-
-    this.lastScrollTop = scrollTop;
-    this.cdr.detectChanges();
-  }
 }

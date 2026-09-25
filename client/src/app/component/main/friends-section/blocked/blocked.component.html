@@ -1,45 +1,47 @@
-<!-- Confirmation Modal -->
 <app-common-modal
   *ngIf="confirmModalVisible"
-  title="Confirmation"
-  message="Are you sure you want to Unblock this user"
+  title="Unblock user?"
+  message="They'll be able to message you and send you friend requests again."
+  confirmText="Unblock"
+  variant="confirm"
   (confirmed)="handleConfirmation()"
   (cancelled)="cancelConfirmation()"
 >
 </app-common-modal>
 
-<!-- Search Bar Section (Make it Sticky) -->
-<div class="sticky top-0 z-10 bg-surface-900 transition-transform duration-300">
-  <div class="flex items-center p-2">
-    <input
-      type="text"
-      placeholder="Search blocked users..."
-      [(ngModel)]="searchTerm"
-      (input)="searchBlockedUsers()"
-      aria-label="Search blocked users"
-      class="flex-1 rounded-2xl bg-surface-700 px-4 py-2 text-ink placeholder-ink-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-    />
-  </div>
+<div class="shrink-0 bg-surface-900 pb-2">
+  <input
+    type="search"
+    placeholder="Search blocked users…"
+    [(ngModel)]="searchTerm"
+    (input)="searchBlockedUsers()"
+    aria-label="Search blocked users"
+    class="min-h-10 w-full rounded-2xl bg-surface-700 px-4 py-2 text-ink placeholder-ink-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+  />
 </div>
 
-<div class="flex min-h-0 flex-1 flex-col">
-  <ng-container *ngIf="hasSearched && filteredBlockedUsers.length === 0; else blockedTable">
-    <div class="flex min-h-0 flex-1 items-center justify-center p-6">
-      <app-empty-state
-        [embedded]="true"
-        title="No blocked users found"
-        description="Try a different search term."
-      />
-    </div>
-  </ng-container>
-  <ng-template #blockedTable>
-    <app-common-table
-      [data]="filteredBlockedUsers"
-      [columns]="tableColumns"
-      [primaryActions]="primaryActions"
-      appearance="friends"
-      [showColumnHeaders]="false"
-    >
-    </app-common-table>
-  </ng-template>
+<app-loading-state *ngIf="loading" variant="spinner" message="Loading…" containerClass="py-8" />
+
+<app-error-alert *ngIf="errorMessage && !loading" [message]="errorMessage" variant="inline" class="mb-2 block" />
+
+<!-- Empty and no-match states show whether or not you've searched; they used
+     to appear only after typing, leaving a blank panel on first visit. -->
+<div *ngIf="!loading" class="flex min-h-0 flex-1 flex-col">
+  <div *ngIf="filteredBlockedUsers.length === 0 && !errorMessage" class="flex min-h-0 flex-1 items-center justify-center p-6">
+    <app-empty-state
+      [embedded]="true"
+      [title]="searchTerm.trim() ? 'No matches' : 'No blocked users'"
+      [description]="searchTerm.trim() ? 'Try a different search term.' : 'People you block appear here.'"
+    />
+  </div>
+  <app-common-table
+    *ngIf="filteredBlockedUsers.length"
+    [data]="filteredBlockedUsers"
+    [columns]="tableColumns"
+    [primaryActions]="primaryActions"
+    appearance="friends"
+    [showColumnHeaders]="false"
+    ariaLabel="Blocked users"
+  >
+  </app-common-table>
 </div>

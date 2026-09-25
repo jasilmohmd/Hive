@@ -30,6 +30,12 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
   private presenceMap: Record<string, IVoiceroomPresenceUser[]> = {};
+  /**
+   * Voice rooms this list is watching. The component is reused across
+   * communities, and used to add each new community's rooms without dropping
+   * the last one's — every community visited stayed subscribed.
+   */
+  private watchedRooms = new Set<string>();
 
   constructor(
     private route: ActivatedRoute,
@@ -87,11 +93,12 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
             ...channel,
             isOpen: channel.isOpen ?? false,
           }));
-          const ids = this.channels.voiceroom
-            .map((c) => c._id)
-            .filter((id): id is string => !!id);
-          this.voiceroomPresence.watchMany(ids);
         }
+        this.syncWatchedRooms(
+          (this.channels.voiceroom ?? [])
+            .map((c) => c._id)
+            .filter((id): id is string => !!id)
+        );
 
         this.isLoading = false;
       });
@@ -101,13 +108,18 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-    if (this.channels.voiceroom) {
-      for (const room of this.channels.voiceroom) {
-        if (room._id) {
-          this.voiceroomPresence.unwatch(room._id);
-        }
-      }
+    this.syncWatchedRooms([]);
+  }
+
+  private syncWatchedRooms(ids: string[]): void {
+    const next = new Set(ids);
+    for (const id of this.watchedRooms) {
+      if (!next.has(id)) this.voiceroomPresence.unwatch(id);
     }
+    for (const id of next) {
+      if (!this.watchedRooms.has(id)) this.voiceroomPresence.watch(id);
+    }
+    this.watchedRooms = next;
   }
 
   toggleRoom(room: IChannel, event: Event): void {

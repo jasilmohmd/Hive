@@ -16,7 +16,7 @@
         aria-hidden="true"
       >
       <div class="min-w-0">
-        <p class="text-xs font-medium uppercase tracking-wide text-success/90">
+        <p class="truncate text-xs font-medium uppercase tracking-wide text-success/90">
           Voice connected
         </p>
         <p class="truncate text-sm font-semibold text-ink">{{ channelName }}</p>
@@ -26,7 +26,7 @@
     <div class="flex shrink-0 items-center gap-1">
       <button
         type="button"
-        class="rounded-lg p-1.5 hover:bg-success/50 focus-visible:ring-2 focus-visible:ring-brand"
+        class="rounded-lg p-1.5 coarse:p-2.5 hover:bg-success/50 focus-visible:ring-2 focus-visible:ring-brand"
         [ngClass]="{ 'bg-danger/40': localMuted }"
         [attr.aria-label]="localMuted ? 'Unmute microphone' : 'Mute microphone'"
         [attr.aria-pressed]="localMuted"
@@ -41,7 +41,7 @@
       </button>
       <button
         type="button"
-        class="rounded-lg p-1.5 hover:bg-danger/50 focus-visible:ring-2 focus-visible:ring-danger"
+        class="rounded-lg p-1.5 coarse:p-2.5 hover:bg-danger/50 focus-visible:ring-2 focus-visible:ring-danger"
         aria-label="Leave voice room"
         (click)="leaveCall()"
       >

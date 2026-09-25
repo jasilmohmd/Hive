@@ -79,7 +79,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.subs.add(
       this.channelSidebar.collapsed$.subscribe((collapsed) => {
         this.channelSidebarCollapsed = collapsed;
-        this.channelSidebarOpenOnPhone = !collapsed;
+      })
+    );
+    this.subs.add(
+      this.channelSidebar.mobileOpen$.subscribe((open) => {
+        this.channelSidebarOpenOnPhone = open;
       })
     );
     this.subs.add(

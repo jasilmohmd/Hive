@@ -123,6 +123,22 @@
     padding: 1.5rem;
   }
 
+  .auth-bg {
+    background:
+      radial-gradient(circle, #f3c70d, #f39b0d),
+      url("/assets/images/auth-bg.png");
+    background-size: cover;
+    background-blend-mode: multiply;
+  }
+
+  /* Parallax only where it works: iOS Safari ignores background-attachment:
+     fixed (or scales the image to the whole page), which is every phone. */
+  @media (hover: hover) and (pointer: fine) {
+    .auth-bg {
+      background-attachment: fixed;
+    }
+  }
+
   .auth-heading {
     font-family: var(--font-display);
     font-size: clamp(1.9rem, 5vw, 2.75rem);

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { DropdownItem } from '../../../interface/dropdown.interface';
 import { CommonModule } from '@angular/common';
 
@@ -15,6 +15,15 @@ export class CommonDropdownComponent {
   @Input() isOpen: boolean = false;
   @Output() isOpenChange = new EventEmitter<boolean>();
   @Output() itemSelected = new EventEmitter<DropdownItem>();
+  /** Accessible name for the toggle (it's an icon-only button). */
+  @Input() label = 'More actions';
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (!this.isOpen) return;
+    this.isOpen = false;
+    this.isOpenChange.emit(false);
+  }
 
   toggle(event: MouseEvent): void {
     // Prevent propagation so that the document click listener does not immediately close it.

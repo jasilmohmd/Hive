@@ -1,35 +1,36 @@
-<!-- Search Bar Section (Make it Sticky) -->
-<div class="sticky top-0 z-10 bg-surface-900 transition-transform duration-300">
-  <div class="flex items-center p-2">
-    <input
-      type="text"
-      placeholder="Search pending requests..."
-      [(ngModel)]="searchTerm"
-      (input)="searchRequests()"
-      aria-label="Search pending requests"
-      class="flex-1 rounded-2xl bg-surface-700 px-4 py-2 text-ink placeholder-ink-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-    />
-  </div>
+<div class="shrink-0 bg-surface-900 pb-2">
+  <input
+    type="search"
+    placeholder="Search pending requests…"
+    [(ngModel)]="searchTerm"
+    (input)="searchRequests()"
+    aria-label="Search pending requests"
+    class="min-h-10 w-full rounded-2xl bg-surface-700 px-4 py-2 text-ink placeholder-ink-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+  />
 </div>
 
-<div class="flex min-h-0 flex-1 flex-col">
-  <ng-container *ngIf="hasSearched && filteredRequests.length === 0; else pendingTable">
-    <div class="flex min-h-0 flex-1 items-center justify-center p-6">
-      <app-empty-state
-        [embedded]="true"
-        title="No pending requests"
-        description="Try a different search term."
-      />
-    </div>
-  </ng-container>
-  <ng-template #pendingTable>
-    <app-common-table
-      [data]="filteredRequests"
-      [columns]="tableColumns"
-      [primaryActions]="primaryActions"
-      appearance="friends"
-      [showColumnHeaders]="false"
-    >
-    </app-common-table>
-  </ng-template>
+<app-loading-state *ngIf="loading" variant="spinner" message="Loading…" containerClass="py-8" />
+
+<app-error-alert *ngIf="errorMessage && !loading" [message]="errorMessage" variant="inline" class="mb-2 block" />
+
+<!-- Empty and no-match states show whether or not you've searched; they used
+     to appear only after typing, leaving a blank panel on first visit. -->
+<div *ngIf="!loading" class="flex min-h-0 flex-1 flex-col">
+  <div *ngIf="filteredRequests.length === 0 && !errorMessage" class="flex min-h-0 flex-1 items-center justify-center p-6">
+    <app-empty-state
+      [embedded]="true"
+      [title]="searchTerm.trim() ? 'No matches' : 'No pending requests'"
+      [description]="searchTerm.trim() ? 'Try a different search term.' : 'Friend requests you receive appear here.'"
+    />
+  </div>
+  <app-common-table
+    *ngIf="filteredRequests.length"
+    [data]="filteredRequests"
+    [columns]="tableColumns"
+    [primaryActions]="primaryActions"
+    appearance="friends"
+    [showColumnHeaders]="false"
+    ariaLabel="Pending friend requests"
+  >
+  </app-common-table>
 </div>

@@ -34,7 +34,37 @@ export class CommonTableComponent {
    */
   @Input() enableRowClick = false;
 
+  /** Accessible name for the list/table, e.g. "Members". */
+  @Input() ariaLabel: string | null = null;
+
+  /** Shown when there are no rows. Off by default — some hosts render their own empty state. */
+  @Input() emptyText: string | null = null;
+
   @Output() rowClick = new EventEmitter<any>();
+
+  /** The phone card layout renders the avatar column separately from the text ones. */
+  get hasAvatarColumn(): boolean {
+    return this.columns.some((c) => c.field === 'profilePicture');
+  }
+
+  get dataColumns(): TableColumn[] {
+    return this.columns.filter((c) => c.field !== 'profilePicture');
+  }
+
+  initial(row: any): string {
+    const label = row?.userName || row?.name || row?.email || '';
+    return label ? String(label)[0].toUpperCase() : '';
+  }
+
+  /**
+   * The neutral fill only when the action brings no colour of its own. It used
+   * to be applied unconditionally next to act.class, and which background won
+   * came down to Tailwind's stylesheet order — the About page's brand/danger
+   * buttons could render as plain grey.
+   */
+  actionBaseClasses(act: TableAction): string {
+    return /(^|\s)!?bg-/.test(act.class || '') ? '' : 'bg-surface-600 hover:bg-surface-500';
+  }
 
   dropdownOpen: any = null;
 
@@ -68,6 +98,24 @@ export class CommonTableComponent {
     const idx = cells.indexOf(td);
     const actionsColIndex = cells.length - 1;
     if (idx < 0 || idx === actionsColIndex) return;
+    this.rowClick.emit(row);
+  }
+
+  isDisabled(act: TableAction, row: any): boolean {
+    return !!act.disabled && act.disabled(row);
+  }
+
+  labelOf(act: TableAction, row: any): string {
+    return act.labelFor ? act.labelFor(row) : act.label;
+  }
+
+  /** Card (phone) rows, and Enter on a focused table row. */
+  onCardActivate(event: Event, row: any): void {
+    if (!this.enableRowClick) return;
+    const el = event.target as HTMLElement | null;
+    if (el?.closest('button, .dropdown-container, a, input, select, textarea, label')) {
+      return;
+    }
     this.rowClick.emit(row);
   }
 

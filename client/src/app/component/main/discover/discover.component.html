@@ -1,7 +1,7 @@
-<div class="min-h-full text-ink p-4 md:p-6">
+<div class="min-h-full text-ink p-3 sm:p-4 md:p-6">
   <div class="max-w-4xl mx-auto">
-    <h1 class="text-2xl font-semibold mb-2">Discover communities</h1>
-    <p class="text-ink-secondary text-sm mb-6">
+    <!-- The app header already says "Discover"; a second h1 repeated it. -->
+    <p class="text-ink-secondary text-sm mb-4 sm:mb-6">
       Search communities by name or tag. Open any community to explore it, or request to join a private one.
     </p>
 
@@ -20,14 +20,14 @@
         [(ngModel)]="search"
         (ngModelChange)="applyFilter()"
         placeholder="Search by name or description"
-        class="flex-1 rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+        class="min-h-10 min-w-0 flex-1 rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
         aria-label="Search communities"
       />
       <select
         *ngIf="tagOptions.length"
         [(ngModel)]="tagFilter"
         (ngModelChange)="applyFilter()"
-        class="rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+        class="min-h-10 rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
         aria-label="Filter by tag"
       >
         <option value="">All tags</option>
@@ -37,7 +37,7 @@
         *ngIf="hasActiveFilter"
         type="button"
         (click)="clearFilters()"
-        class="rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink-secondary hover:text-ink"
+        class="min-h-10 rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-sm text-ink-secondary hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
       >
         Clear
       </button>
@@ -46,12 +46,26 @@
     <ul *ngIf="!loading && communities.length" class="space-y-3">
       <li
         *ngFor="let c of communities; trackBy: trackCommunity"
-        class="rounded-xl bg-surface-900 border border-surface-800 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        class="rounded-xl bg-surface-900 border border-surface-800 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
-        <div>
-          <h2 class="font-medium text-lg">{{ c.name }}</h2>
-          <p class="text-ink-secondary text-sm line-clamp-2">{{ c.description || 'No description' }}</p>
-          <span class="inline-block mt-2 text-xs uppercase tracking-wide text-ink-muted">{{ c.type }}</span>
+        <div class="flex min-w-0 items-start gap-3">
+          <img
+            *ngIf="c.imageUrl; else discoverInitials"
+            [src]="c.imageUrl"
+            alt=""
+            class="h-12 w-12 shrink-0 rounded-full object-cover"
+            loading="lazy"
+          />
+          <ng-template #discoverInitials>
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-700 font-semibold text-ink" aria-hidden="true">
+              {{ (c.name || '?').slice(0, 2).toUpperCase() }}
+            </span>
+          </ng-template>
+          <div class="min-w-0">
+            <h2 class="break-words font-medium text-lg [overflow-wrap:anywhere]">{{ c.name }}</h2>
+            <p class="break-words text-ink-secondary text-sm line-clamp-2">{{ c.description || 'No description' }}</p>
+            <span class="inline-block mt-2 text-xs uppercase tracking-wide text-ink-muted">{{ c.type }}</span>
+          </div>
         </div>
         <div class="shrink-0 flex items-center gap-2">
           <button
@@ -59,13 +73,13 @@
             type="button"
             (click)="requestToJoin(c)"
             [disabled]="!canRequestToJoin(c) || requestState[c._id] === 'pending'"
-            class="px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 disabled:opacity-60 disabled:hover:bg-surface-800 text-ink text-sm focus-visible:ring-2 focus-visible:ring-brand"
+            class="min-h-10 flex-1 px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 disabled:opacity-60 disabled:hover:bg-surface-800 text-ink text-sm focus-visible:ring-2 focus-visible:ring-brand sm:flex-none"
           >
             {{ requestButtonLabel(c) }}
           </button>
           <a
             [routerLink]="['/main/community', c._id]"
-            class="px-4 py-2 rounded-lg bg-brand hover:bg-brand-hover text-surface-950 text-sm text-center focus-visible:ring-2 focus-visible:ring-brand"
+            class="inline-flex min-h-10 flex-1 items-center justify-center px-4 py-2 rounded-lg bg-brand hover:bg-brand-hover text-surface-950 text-sm font-medium focus-visible:ring-2 focus-visible:ring-brand sm:flex-none"
           >
             Open
           </a>
@@ -76,7 +90,7 @@
     <app-empty-state
       *ngIf="!loading && !communities.length && !errorMessage && !hasActiveFilter"
       title="No communities yet"
-      description="Create one from the sidebar plus button when you are ready."
+      description="Start one with the Create button whenever you're ready."
     />
 
     <app-empty-state

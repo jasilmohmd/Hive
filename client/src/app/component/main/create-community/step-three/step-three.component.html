@@ -5,7 +5,9 @@
 
     <!-- Search Input -->
     <div class="relative mb-4">
-      <input type="text" placeholder="Search tags..." [formControl]="searchControl"
+      <!-- Enter here used to submit the whole wizard (implicit form submission). -->
+      <input type="search" placeholder="Search tags..." [formControl]="searchControl" aria-label="Search tags"
+        (keydown.enter)="$event.preventDefault()"
         class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-800 border border-surface-600 focus:border-brand focus:ring-2 focus:ring-brand text-ink placeholder-ink-secondary transition-colors">
       <svg class="absolute left-3 top-3.5 h-5 w-5 text-ink-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -22,16 +24,22 @@
           Loading tags...
         </div>
 
+        <div *ngIf="!loading && errorMessage" class="text-center py-4 text-danger-text" role="alert">
+          {{ errorMessage }}
+        </div>
+
         <!-- Empty State -->
-        <div *ngIf="!loading && filteredTags.length === 0" class="text-center py-4 text-ink-secondary">
+        <div *ngIf="!loading && !errorMessage && filteredTags.length === 0" class="text-center py-4 text-ink-secondary">
           No tags found matching your search
         </div>
 
         <!-- Tags Grid -->
         <div class="flex flex-wrap gap-2 m-3">
           <div *ngFor="let tag of filteredTags" (click)="toggleTag(tag)"
-            class="group relative inline-flex items-center transition-all duration-200 ease-out hover:z-10"
-            [class]="getTagClasses(tag)" role="button" tabindex="0">
+            (keydown.enter)="$event.preventDefault(); toggleTag(tag)"
+            (keydown.space)="$event.preventDefault(); toggleTag(tag)"
+            class="relative inline-flex items-center transition-colors focus-visible:ring-2 focus-visible:ring-brand"
+            [class]="getTagClasses(tag)" role="button" tabindex="0" [attr.aria-pressed]="isTagSelected(tag)">
             <div class="flex items-center gap-2 px-4 py-2">
               <!-- Tag Name -->
               <span class="text-ink font-medium break-words">{{ tag.name }}</span>
@@ -75,7 +83,9 @@
       </svg>
       Back
     </app-button>
-    <app-button type="submit" variant="primary" [disabled]="formGroup.invalid">
+    <!-- Not disabled when invalid: submitting marks the form touched, which
+         shows *why* ("At least one tag is required") instead of a dead button. -->
+    <app-button type="submit" variant="primary">
       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
       </svg>

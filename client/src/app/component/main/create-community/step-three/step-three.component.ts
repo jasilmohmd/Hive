@@ -62,9 +62,8 @@ export class CommunityCreateStepThreeComponent implements OnInit {
         this.loading = false;
 
       },
-      error: (error) => {
-        console.error('Error fetching tags:', error);
-        this.errorMessage = 'Failed to load tags';
+      error: () => {
+        this.errorMessage = 'Could not load tags. Close this and try again.';
         this.loading = false;
       }
     });

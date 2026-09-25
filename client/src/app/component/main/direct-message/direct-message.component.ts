@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom, map, of, Subscription, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -31,6 +31,7 @@ import { ChatMessageCallComponent } from '../../common/chat-message-call/chat-me
 import { chatSenderMessageBubbleStyle } from '../../../util/chat-sender-color';
 import { ChatUploadKind, validateFileForUpload } from '../../../util/chat-attachment';
 import { LongPressDirective } from '../../../directives/long-press.directive';
+import { StickToBottomDirective } from '../../../directives/stick-to-bottom.directive';
 import { ButtonComponent } from '../../common/button/button.component';
 import {
   closeAllAttachPanels,
@@ -56,6 +57,8 @@ import {
   selector: 'app-direct-message',
   standalone: true,
   imports: [
+    StickToBottomDirective,
+    RouterModule,
     CommonModule,
     ChatComposerComponent,
     LoadingStateComponent,
@@ -222,6 +225,12 @@ export class DirectMessageComponent implements OnInit, OnDestroy {
         }
       })
     );
+  }
+
+  /** Your own message just landed: the list jumps to it even if you'd scrolled up. */
+  get lastMessageIsMine(): boolean {
+    const last = this.messages[this.messages.length - 1];
+    return !!last && this.isMine(last);
   }
 
   ngOnDestroy(): void {

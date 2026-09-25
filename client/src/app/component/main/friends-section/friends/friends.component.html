@@ -1,59 +1,55 @@
 <app-common-modal
   *ngIf="confirmModalVisible"
-  title="Confirmation"
+  [title]="pendingAction?.type === 'unfriend' ? 'Remove friend?' : 'Block user?'"
   variant="destructive"
+  [confirmText]="pendingAction?.type === 'unfriend' ? 'Remove' : 'Block'"
   [loading]="confirmLoading"
   [message]="
     pendingAction?.type === 'unfriend'
-      ? 'Are you sure you want to unfriend this user?'
-      : 'Are you sure you want to block this user?'
+      ? 'They will be removed from your friends list.'
+      : 'They won\'t be able to message you or send you friend requests.'
   "
   (confirmed)="handleConfirmation()"
   (cancelled)="cancelConfirmation()"
 >
 </app-common-modal>
 
-<div
-  class="sticky top-0 z-10 bg-surface-900 transition-transform duration-300"
-  [ngClass]="{ '-translate-y-full opacity-0': !showSearchBar, 'translate-y-0 opacity-100': showSearchBar }"
->
-  <div class="flex items-center p-2">
-    <input
-      type="text"
-      placeholder="Search friends..."
-      [(ngModel)]="searchTerm"
-      (input)="searchFriends()"
-      aria-label="Search friends"
-      class="flex-1 rounded-2xl bg-surface-700 px-4 py-2 text-ink placeholder-ink-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-    />
-  </div>
+<div class="shrink-0 bg-surface-900 pb-2">
+  <input
+    type="search"
+    placeholder="Search friends…"
+    [(ngModel)]="searchTerm"
+    (input)="searchFriends()"
+    aria-label="Search friends"
+    class="min-h-10 w-full rounded-2xl bg-surface-700 px-4 py-2 text-ink placeholder-ink-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+  />
 </div>
 
-<app-error-alert *ngIf="errorMessage" [message]="errorMessage" variant="banner" title="Friends list" />
+<app-loading-state *ngIf="loading" variant="spinner" message="Loading…" containerClass="py-8" />
 
-<div class="flex min-h-0 flex-1 flex-col">
-  <ng-container
-    *ngIf="hasSearched && filteredFriends.length === 0 && !errorMessage; else friendsTable"
+<app-error-alert *ngIf="errorMessage && !loading" [message]="errorMessage" variant="inline" class="mb-2 block" />
+
+<!-- Empty and no-match states show whether or not you've searched; they used
+     to appear only after typing, leaving a blank panel on first visit. -->
+<div *ngIf="!loading" class="flex min-h-0 flex-1 flex-col">
+  <div *ngIf="filteredFriends.length === 0 && !errorMessage" class="flex min-h-0 flex-1 items-center justify-center p-6">
+    <app-empty-state
+      [embedded]="true"
+      [title]="searchTerm.trim() ? 'No matches' : 'No friends yet'"
+      [description]="searchTerm.trim() ? 'Try a different search term.' : 'Add someone from the Add Friend tab.'"
+    />
+  </div>
+  <app-common-table
+    *ngIf="filteredFriends.length"
+    [data]="filteredFriends"
+    [columns]="tableColumns"
+    [primaryActions]="primaryActions"
+    [secondaryActions]="secondaryActions"
+    appearance="friends"
+    [showColumnHeaders]="false"
+    ariaLabel="Friends"
+    [enableRowClick]="true"
+    (rowClick)="message($event)"
   >
-    <div class="flex min-h-0 flex-1 items-center justify-center p-6">
-      <app-empty-state
-        [embedded]="true"
-        title="No friends found"
-        description="Try a different search term."
-      />
-    </div>
-  </ng-container>
-  <ng-template #friendsTable>
-    <app-common-table
-      [data]="filteredFriends"
-      [columns]="tableColumns"
-      [primaryActions]="primaryActions"
-      [secondaryActions]="secondaryActions"
-      appearance="friends"
-      [showColumnHeaders]="false"
-      [enableRowClick]="true"
-      (rowClick)="message($event)"
-    >
-    </app-common-table>
-  </ng-template>
+  </app-common-table>
 </div>

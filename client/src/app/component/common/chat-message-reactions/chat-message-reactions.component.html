@@ -2,7 +2,9 @@
   <button
     *ngFor="let r of reactions"
     type="button"
-    class="inline-flex items-center gap-1 rounded-full border min-h-6 px-2 py-0.5 text-xs"
+    class="inline-flex items-center gap-1 rounded-full border min-h-6 px-2 py-0.5 text-xs coarse:min-h-8 coarse:px-2.5"
+    [attr.aria-label]="r.emoji + ' ' + r.count + (r.reactedByMe ? ', you reacted' : '')"
+    [attr.aria-pressed]="r.reactedByMe"
     [ngClass]="r.reactedByMe ? 'border-brand bg-brand/20' : 'border-surface-600'"
     (click)="react.emit(r.emoji)"
   >
@@ -11,18 +13,20 @@
   </button>
   <button
     type="button"
-    class="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full border border-surface-600 px-2 py-0.5 text-xs text-ink-secondary hover:bg-surface-850"
+    class="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full border border-surface-600 px-2 py-0.5 text-xs text-ink-secondary hover:bg-surface-850 coarse:min-h-8 coarse:min-w-8"
     (click)="togglePicker.emit()"
     aria-label="Add reaction"
   >
     +
   </button>
 </div>
-<div *ngIf="showPicker" class="mt-1 flex gap-1">
+<!-- Wraps: five emoji at text-lg are ~216px, wider than a phone bubble column. -->
+<div *ngIf="showPicker" class="mt-1 flex max-w-full flex-wrap gap-1">
   <button
     *ngFor="let e of quickEmojis"
     type="button"
-    class="rounded-lg px-2 py-1 text-lg hover:bg-surface-850"
+    class="rounded-lg px-2 py-1 text-lg hover:bg-surface-850 coarse:min-h-10 coarse:min-w-10"
+    [attr.aria-label]="'React with ' + e"
     (click)="react.emit(e)"
   >
     {{ e }}

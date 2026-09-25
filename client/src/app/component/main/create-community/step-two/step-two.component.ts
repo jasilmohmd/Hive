@@ -95,7 +95,6 @@ export class CommunityCreateStepTwoComponent implements OnInit {
   }
 
   handleCropDone(event: ImageCroppedEvent, type: 'image' | 'cover'): void {
-    console.log(event);
 
     if (event.blob) {
       const fileName = this.originalFileName ? this.originalFileName : 'cropped-image.png';

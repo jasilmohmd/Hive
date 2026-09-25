@@ -1,15 +1,7 @@
-<div
-  class="auth-bg m-0 min-h-screen"
-  style="
-    background:
-      radial-gradient(circle, #F3C70D, #F39B0D),
-      url('assets/images/auth-bg.png');
-    background-size: cover;
-    background-blend-mode: multiply;
-    background-attachment: fixed;
-  "
->
-  <header class="flex p-6 sm:p-7">
+<!-- Background lives in .auth-bg (styles.css) so the fixed attachment can be
+     limited to mouse devices: iOS Safari ignores or mis-scales it. -->
+<div class="auth-bg m-0 min-h-dvh">
+  <header class="flex p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-7">
     <a routerLink="/" class="flex items-center justify-center gap-2.5 rounded-2xl focus-visible:ring-2 focus-visible:ring-surface-950">
       <img src="assets/images/Logo-bg-white.png" alt="" class="h-11 rounded-2xl" />
       <p class="font-display text-3xl font-black text-white">hive</p>

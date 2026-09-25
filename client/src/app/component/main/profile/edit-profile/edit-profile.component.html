@@ -1,13 +1,16 @@
-<div class="bg-surface-900 text-ink rounded-2xl p-6 max-w-md w-full mx-auto mt-6 md:mt-10">
+<div class="bg-surface-900 text-ink rounded-2xl p-4 sm:p-6 max-w-md w-full mx-auto mt-4 md:mt-10">
   <h2 class="text-2xl font-bold mb-4">Edit Profile</h2>
   <app-error-alert [message]="errorMessage" variant="banner" [title]="'Could not save'" *ngIf="errorMessage" />
   <form [formGroup]="editProfileForm" (ngSubmit)="updateProfile()" class="mt-4">
     <div class="mb-4">
-      <label class="block text-ink-secondary mb-1">Username</label>
+      <label for="edit-username" class="block text-ink-secondary mb-1">Username</label>
       <input
+        id="edit-username"
         type="text"
         formControlName="newUserName"
-        class="w-full px-4 py-2 rounded bg-surface-950 text-ink border border-surface-700 focus:outline-none focus:border-success focus-visible:ring-2 focus-visible:ring-brand"
+        autocomplete="username"
+        autocapitalize="off"
+        class="w-full px-4 py-2 rounded-lg bg-surface-950 text-ink border border-surface-700 focus:outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand"
       />
       <div
         *ngIf="
@@ -20,8 +23,23 @@
         <div *ngIf="editProfileForm.get('newUserName')?.errors?.['minlength']">Username must be at least 3 characters long.</div>
       </div>
     </div>
-    <app-button type="submit" variant="primary" [loading]="isSubmitting" [disabled]="editProfileForm.invalid">
-      Save Changes
-    </app-button>
+    <div class="flex flex-wrap gap-2">
+      <app-button type="submit" variant="primary" [loading]="isSubmitting" [disabled]="editProfileForm.invalid">
+        Save Changes
+      </app-button>
+      <a
+        routerLink="/main/profile"
+        class="inline-flex min-h-10 items-center rounded-xl px-4 py-2 text-ink-secondary hover:bg-surface-850 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        Cancel
+      </a>
+    </div>
   </form>
+
+  <!-- The header's "Settings" lands here, so point on to the other account setting. -->
+  <div class="mt-6 border-t border-surface-700 pt-4">
+    <a routerLink="/main/change_password" class="inline-flex min-h-10 items-center text-sm text-brand hover:underline">
+      Change password
+    </a>
+  </div>
 </div>

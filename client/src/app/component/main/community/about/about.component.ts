@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, inject, Input, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, inject, Input, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -180,6 +180,22 @@ export class AboutComponent {
   get isOwner(): boolean {
     const ownerId = this.community?.ownerId?._id || this.community?.ownerId;
     return !!ownerId && !!this.currentUserId && String(ownerId) === String(this.currentUserId);
+  }
+
+  /**
+   * Only once we know who you are: `!isOwner` alone is true while the user
+   * lookup is in flight, so the owner briefly saw a Leave button.
+   */
+  get canLeave(): boolean {
+    return !!this.currentUserId && !this.isOwner;
+  }
+
+  /** Escape closes whichever inline dialog is open (the shared modals handle their own). */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showMemberRoles) this.closeMemberRoles();
+    else if (this.showTagModal) this.showTagModal = false;
+    else if (this.showEditCommunity) this.showEditCommunity = false;
   }
 
   promptLeaveCommunity(): void {

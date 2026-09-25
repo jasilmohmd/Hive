@@ -65,12 +65,14 @@ import {
 } from '../../../../util/chat-message-actions';
 import { IUser } from '../../../../services/friends.service';
 import { LongPressDirective } from '../../../../directives/long-press.directive';
+import { StickToBottomDirective } from '../../../../directives/stick-to-bottom.directive';
 import { ButtonComponent } from '../../../common/button/button.component';
 
 @Component({
   selector: 'app-channel-chat-panel',
   standalone: true,
   imports: [
+    StickToBottomDirective,
     CommonModule,
     ChatComposerComponent,
     LoadingStateComponent,
@@ -227,6 +229,12 @@ export class ChannelChatPanelComponent implements OnInit, OnChanges, OnDestroy {
         this.loading = false;
       }
     }
+  }
+
+  /** Your own message just landed: the list jumps to it even if you'd scrolled up. */
+  get lastMessageIsMine(): boolean {
+    const last = this.messages[this.messages.length - 1];
+    return !!last && this.isMine(last);
   }
 
   ngOnDestroy(): void {

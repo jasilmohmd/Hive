@@ -1,32 +1,102 @@
-/* Angular animation for error messages */
-.slideInOut {
-  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
-}
-
-.slideInOut.ng-enter {
-  opacity: 0;
-  transform: translateY(-5px);
-}
-
-.slideInOut.ng-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.slideInOut.ng-leave {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.slideInOut.ng-leave-active {
-  opacity: 0;
-  transform: translateY(-5px);
-}
-
 /* The page scrolls inside the community layout's pane. It used to force
    min-height:100vh, which made the host taller than its (shorter) pane by
    construction and pushed the lower cards out of reach. */
 :host {
   display: block;
   overflow-anchor: none;
+}
+
+/* Header action buttons: labelled, 40px on touch screens. */
+.ab-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  border-radius: 0.75rem;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+/* Card header: title + count on the left, Manage on the right — wrapping
+   rather than overflowing when the card is narrow. */
+.ab-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.ab-card-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(var(--text-muted));
+}
+
+.ab-count {
+  border-radius: 9999px;
+  background: rgb(var(--surface-700));
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  color: rgb(var(--text-secondary));
+}
+
+.ab-manage {
+  min-height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgb(var(--brand) / 0.2);
+  padding: 0.25rem 0.875rem;
+  font-size: 0.875rem;
+  color: rgb(var(--brand));
+  transition: background-color 0.15s ease;
+}
+
+.ab-manage:hover {
+  background: rgb(var(--brand) / 0.3);
+}
+
+@media (pointer: coarse) {
+  .ab-action,
+  .ab-manage {
+    min-height: 2.5rem;
+  }
+}
+
+/* Inline dialogs: never taller than the visible screen, body scrolls. */
+.ab-dialog {
+  position: relative;
+  width: 100%;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  border-radius: 1rem;
+  background: rgb(var(--surface-900));
+  padding: 1.5rem;
+  color: rgb(var(--text-primary));
+  box-shadow: 0 20px 40px -12px rgb(0 0 0 / 0.7);
+  outline: 1px solid rgb(var(--surface-700));
+}
+
+.ab-close {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: -0.5rem -0.5rem -0.5rem 0;
+  border-radius: 0.5rem;
+  color: rgb(var(--text-muted));
+}
+
+.ab-close:hover {
+  background: rgb(var(--surface-800));
+  color: rgb(var(--text-primary));
 }

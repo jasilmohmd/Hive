@@ -46,10 +46,9 @@
         </svg>
       </button>
       <!--
-        Only rendered once you are actually in the call. The pre-join state used
-        to show a "Back" button that navigated to the community About page —
-        redundant now that the channel sidebar is on screen at every breakpoint,
-        and its presence-unwatch is already done by ngOnDestroy on navigation.
+        Only rendered once you are actually in the call. Hidden on narrow panes
+        (see the ≤520px block in the CSS), where the dock's own Leave is right
+        below and the header needs the room for the title.
       -->
       <button
         *ngIf="connected"
@@ -62,7 +61,8 @@
     </div>
   </header>
 
-  <div class="flex min-h-0 w-full flex-1">
+  <!-- relative: below lg the chat opens over the call rather than beside it. -->
+  <div class="relative flex min-h-0 w-full flex-1">
     <div class="relative flex min-h-0 min-w-0 flex-1 flex-col">
 
       <app-loading-state
@@ -77,9 +77,11 @@
       <!-- ───────────────────────── Lobby ───────────────────────── -->
       <section
         *ngIf="!loading && !errorMessage && !connected"
-        class="flex min-h-0 w-full flex-1 flex-col items-center justify-center p-4"
+        class="flex min-h-0 w-full flex-1 flex-col items-center overflow-y-auto p-4 scrollbar-themed"
       >
-        <div class="vr-lobby-card">
+        <!-- my-auto, not justify-center: centred when it fits, scrollable from
+             the top when it doesn't (landscape phones), never clipped at both ends. -->
+        <div class="vr-lobby-card my-auto">
           <div class="flex flex-col items-center gap-1 text-center">
             <span class="vr-eyebrow">Voice room</span>
             <h2 class="vr-lobby-title">{{ channel?.name ?? 'Voice room' }}</h2>
@@ -321,7 +323,7 @@
           <!-- Call controls, mirrored into fullscreen so they are not stranded
                underneath the z-40 layer. Fades with the rest of the chrome. -->
           <div
-            class="vr-dock fs-chrome absolute bottom-4 left-1/2 z-50 -translate-x-1/2"
+            class="vr-dock fs-chrome absolute bottom-[max(1rem,var(--safe-bottom))] left-1/2 z-50 max-w-[calc(100%-1rem)] -translate-x-1/2"
             [class.fs-chrome--idle]="!fsControlsVisible"
           >
             <ng-container *ngTemplateOutlet="callControls; context: { fullscreen: true }"></ng-container>
@@ -363,9 +365,12 @@
       </div>
     </div>
 
+    <!-- Below lg the chat covers the call (its header has Close) instead of
+         sitting beside it: at 22rem it left the call column 0-72px wide on
+         phones and tablets. From lg it is a side panel again. -->
     <aside
       *ngIf="chatPanelOpen && channelId"
-      class="flex w-[min(100%,22rem)] min-h-0 shrink-0 flex-col border-l border-surface-800 bg-surface-900"
+      class="absolute inset-0 z-30 flex min-h-0 w-full flex-col bg-surface-900 lg:static lg:z-auto lg:w-[min(100%,22rem)] lg:shrink-0 lg:border-l lg:border-surface-800"
       aria-label="Voice room chat"
     >
       <app-channel-chat-panel

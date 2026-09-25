@@ -47,6 +47,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
   /** Whether the channel list is showing on a phone — drives the nav item's active state. */
   channelSidebarOpenOnPhone = false;
   inCommunity = false;
+  /** Friends and DMs are both "Home" in the phone nav. */
+  inHome = false;
 
   private subs = new Subscription();
 
@@ -101,6 +103,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
    */
   private updateInCommunity(): void {
     this.inCommunity = /\/main\/community\/(?!create)[^/]+/.test(this.router.url);
+    this.inHome = /^\/main\/(friends_section|direct_message)/.test(this.router.url);
   }
 
   ngOnDestroy(): void {

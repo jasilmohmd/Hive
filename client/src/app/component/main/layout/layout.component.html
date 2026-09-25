@@ -68,9 +68,9 @@
   >
     <a
       routerLink="/main/friends_section/friends"
-      routerLinkActive="!text-brand"
-      [routerLinkActiveOptions]="{ exact: false }"
       class="hv-nav-item"
+      [ngClass]="{ '!text-brand': inHome }"
+      [attr.aria-current]="inHome ? 'page' : null"
     >
       <img src="assets/images/Logo-bg-white.png" alt="" class="h-6 w-6 rounded-full object-cover" />
       <span>Home</span>
@@ -134,7 +134,9 @@
   </nav>
 
   <!-- Vertical Navigation Bar (tablet+) -->
-  <nav class="hidden md:flex bg-surface-900 max-w-20 max-h-dvh p-3 my-4 ml-[max(0.75rem,env(safe-area-inset-left))] mr-3 rounded-3xl overflow-y-auto box-border flex-col short:my-2 short:p-2" aria-label="Primary">
+  <!-- max-h accounts for the vertical margin: the root is exactly one screen
+       tall, so max-h-dvh plus my-4 pushed the rail's bottom (Discover) off it. -->
+  <nav class="hidden md:flex bg-surface-900 max-w-20 max-h-[calc(100dvh-2rem)] p-3 my-4 ml-[max(0.75rem,env(safe-area-inset-left))] mr-3 rounded-3xl overflow-y-auto scrollbar-themed box-border flex-col short:my-2 short:max-h-[calc(100dvh-1rem)] short:p-2" aria-label="Primary">
     <div class="flex flex-col justify-between h-full">
       <ul class="text-ink space-y-4 short:space-y-2">
         <li>

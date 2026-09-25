@@ -1,10 +1,8 @@
-<div *ngIf="successMessage" class="fixed top-4 left-1/2 z-50 -translate-x-1/2 transform rounded-md bg-success px-4 py-2 text-surface-950 shadow-lg" role="status">
-  {{ successMessage }}
-</div>
-
-<div class="bg-surface-900 text-ink rounded-2xl p-6 max-w-lg w-full mx-auto">
+<!-- Success feedback comes from the page that did the work (a toast); this
+     page used to add a second toast and a banner of its own on top. -->
+<div class="bg-surface-900 text-ink rounded-2xl p-4 sm:p-6 max-w-lg w-full mx-auto">
   <div class="text-center mb-8">
-    <h2 class="text-3xl font-bold mb-2">Profile</h2>
+    <h2 class="text-2xl sm:text-3xl font-bold mb-2">Profile</h2>
     <p class="text-ink-secondary">Manage your account details</p>
   </div>
 
@@ -25,24 +23,24 @@
   <div class="space-y-6">
     <div>
       <h3 class="text-ink-secondary text-sm">Username</h3>
-      <p class="text-lg font-medium">{{ userData.userName }}</p>
+      <p class="break-words text-lg font-medium">{{ userData.userName || '…' }}</p>
     </div>
     <div>
       <h3 class="text-ink-secondary text-sm">Email</h3>
-      <p class="text-lg font-medium">{{ userData.email }}</p>
+      <p class="break-all text-lg font-medium">{{ userData.email || '…' }}</p>
     </div>
   </div>
 
   <div class="flex flex-wrap gap-3 mt-6">
     <a
       routerLink="/main/edit_profile"
-      class="rounded-md bg-brand px-4 py-2 text-sm text-surface-950 hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-brand"
+      class="inline-flex min-h-10 items-center rounded-xl bg-brand px-4 py-2 text-sm font-medium text-surface-950 hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-brand"
     >
       Edit Profile
     </a>
     <a
       routerLink="/main/change_password"
-      class="rounded-md bg-surface-700 px-4 py-2 text-sm text-ink hover:bg-surface-600 focus-visible:ring-2 focus-visible:ring-brand"
+      class="inline-flex min-h-10 items-center rounded-xl bg-surface-700 px-4 py-2 text-sm text-ink hover:bg-surface-600 focus-visible:ring-2 focus-visible:ring-brand"
     >
       Change Password
     </a>

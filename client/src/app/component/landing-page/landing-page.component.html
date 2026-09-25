@@ -1,28 +1,21 @@
-<div
-  class="m-0 flex min-h-screen flex-col justify-between overflow-y-auto"
-  style="
-    background:
-      radial-gradient(circle, #F3C70D, #F39B0D),
-      url('assets/images/landingPage/bg-blend-landing.png');
-    background-size: 100% auto;
-    background-blend-mode: multiply;
-    background-attachment: fixed;
-  "
->
+<!-- Background is .lp-bg in the component CSS: fixed attachment only on
+     mouse devices, since iOS Safari ignores or mis-scales it. -->
+<div class="lp-bg m-0 flex min-h-dvh flex-col justify-between overflow-y-auto">
   <!-- Fixed header — hides on scroll down, returns on scroll up -->
-  <header id="header" class="mx-3 flex items-center justify-between bg-transparent p-5 backdrop-blur-sm sm:p-7">
-    <a routerLink="/" class="flex items-center justify-center gap-2.5 rounded-2xl">
-      <img src="assets/images/Logo-bg-white.png" alt="" class="h-11 rounded-2xl" />
-      <p class="font-display text-3xl font-black text-white">hive</p>
+  <!-- Tighter on phones: logo + two pills didn't fit 360px at the desktop sizes. -->
+  <header id="header" class="flex items-center justify-between gap-2 bg-transparent px-3 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:mx-3 sm:p-7">
+    <a routerLink="/" class="flex shrink-0 items-center justify-center gap-2 rounded-2xl sm:gap-2.5" aria-label="Hive home">
+      <img src="assets/images/Logo-bg-white.png" alt="" width="44" height="44" class="h-9 w-auto rounded-2xl sm:h-11" />
+      <p class="font-display text-2xl font-black text-white sm:text-3xl">hive</p>
     </a>
 
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 sm:gap-3">
       <a routerLink="/auth/login" class="lp-nav-btn lp-nav-btn--ghost">Sign in</a>
       <a routerLink="/auth/email_verify" class="lp-nav-btn lp-nav-btn--solid">Sign up</a>
     </div>
   </header>
 
-  <div class="flex-1 px-5 pb-16 pt-36 sm:pt-40">
+  <div class="flex-1 px-5 pb-16 pt-28 sm:pt-40">
     <!-- Hero -->
     <div class="mx-auto flex max-w-4xl flex-col items-center gap-5 text-center">
       <h1 class="lp-hero-title">TALK . CHAT . STREAM . HANGOUT</h1>
@@ -38,7 +31,7 @@
     <div class="mt-24 flex flex-col gap-16 sm:gap-24">
       <article class="lp-card">
         <div class="lp-card-media">
-          <img src="assets/images/landingPage/community.png" alt="Browsing and joining communities in Hive" />
+          <img src="assets/images/landingPage/community.png" width="1025" height="662" loading="lazy" decoding="async" alt="Browsing and joining communities in Hive" />
         </div>
         <div class="lp-card-body">
           <h2 class="lp-card-title">DISCOVER AND JOIN COMMUNITIES OR CREATE YOUR OWN</h2>
@@ -55,7 +48,7 @@
 
       <article class="lp-card lp-card--flip">
         <div class="lp-card-media">
-          <img src="assets/images/landingPage/groupchat.png" alt="A group chat in Hive" />
+          <img src="assets/images/landingPage/groupchat.png" width="1056" height="682" loading="lazy" decoding="async" alt="A group chat in Hive" />
         </div>
         <div class="lp-card-body">
           <h2 class="lp-card-title">GROUP CHAT THAT'S ALL FUN</h2>
@@ -68,7 +61,7 @@
 
       <article class="lp-card">
         <div class="lp-card-media">
-          <img src="assets/images/landingPage/Chatroom.png" alt="A Hive voice and text chatroom" />
+          <img src="assets/images/landingPage/Chatroom.png" width="1060" height="687" loading="lazy" decoding="async" alt="A Hive voice and text chatroom" />
         </div>
         <div class="lp-card-body">
           <h2 class="lp-card-title">HOP IN WHEN YOU'RE FREE, NO NEED TO CALL</h2>
@@ -80,7 +73,7 @@
 
       <article class="lp-card lp-card--flip">
         <div class="lp-card-media">
-          <img src="assets/images/landingPage/online-members.png" alt="Online and offline members in Hive" />
+          <img src="assets/images/landingPage/online-members.png" width="226" height="461" loading="lazy" decoding="async" alt="Online and offline members in Hive" />
         </div>
         <div class="lp-card-body">
           <h2 class="lp-card-title">SEE WHO'S AROUND TO CHILL</h2>
@@ -98,12 +91,11 @@
       <p class="font-display text-3xl font-black text-ink">hive</p>
     </a>
 
+    <!-- These were href="#" placeholders that scrolled to the top; until the
+         pages exist, link to what does. -->
     <nav class="lp-footer-links" aria-label="Footer">
-      <a href="#">About us</a>
-      <a href="#">Contact</a>
-      <a href="#">Privacy Policy</a>
-      <a href="#">Sitemap</a>
-      <a href="#">Terms of use</a>
+      <a routerLink="/auth/login">Sign in</a>
+      <a routerLink="/auth/email_verify">Create an account</a>
     </nav>
   </div>
 </footer>

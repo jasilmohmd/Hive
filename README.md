@@ -96,20 +96,12 @@ npm run build:client
 
 ## UI Improvement Backlog (Prioritized)
 
-1. Navigation consistency
-   - Replace remaining `href`-based internal links with `routerLink`.
-   - Add consistent active state (`routerLinkActive`) in top-level navigation layouts.
-2. Shared feedback states
-   - Extract reusable loading, empty, and inline-error components.
-   - Adopt these in discover, friends, profile edit, and community pages.
-3. Accessibility baseline
-   - Add better `aria-label`/`alt` text for interactive icons and user images.
-   - Ensure keyboard interaction and escape-close support for dropdowns/modals.
-4. Responsive layout density
-   - Reduce fixed panel widths/heights in community and friends layouts.
-   - Improve spacing and stacking behavior for tablet breakpoints.
-5. Interaction polish
-   - Standardize async button states (idle/loading/success/error).
-   - Unify hover/focus transitions and form validation feedback.
+Status after the 2026-09-25 responsive pass (details: `Context/05-roadmap-todo.md`):
 
-Suggested next step after current chat improvements: extract a reusable `ChatComposer` component for shared text + attachment behavior across direct and channel chat UIs.
+1. ~~Navigation consistency~~ — done: no `href="#"` left; phone bottom nav and desktop rail have active states; tab titles follow the route.
+2. ~~Shared feedback states~~ — done: `app-loading-state` / `app-empty-state` / `app-error-alert` / toasts used across Discover, Friends, Profile, community pages; `ConfirmDialogService` for confirmations.
+3. Accessibility baseline — largely done: labelled icon buttons, Escape on every modal/sheet/drawer, focus moved into dialogs, keyboard row activation in tables. Remaining: a full screen-reader pass.
+4. ~~Responsive layout density~~ — done: phone channel drawer, stacked table cards, dvh/safe-area aware shell, landscape-phone (`short:`) density.
+5. Interaction polish — partly done: in-flight/“Requested” states on friend actions, 40px touch targets. Remaining: one shared async-button pattern everywhere.
+
+(The `ChatComposer` extraction suggested here earlier is done — `common/chat-composer`.)

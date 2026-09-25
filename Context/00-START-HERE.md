@@ -2,6 +2,8 @@
 
 Generated 2026-09-08 at commit `597fb1b` (branch `main`) by a Claude review session, at the request of the repo owner, to prime a **future Claude Code session** that will continue development.
 
+> **Progress — 2026-09-25.** A responsive + fixes pass landed on top of everything below: phones now have a full navigation model (bottom nav, Communities sheet, channel drawer), content pages scroll, HANDOFF #9 (mic contention) is fixed, and a batch of call/socket/link-preview bugs is closed. `HANDOFF.md` → "Responsive layout" and `05-roadmap-todo.md` → "Responsive + fixes pass" have the details and the conventions to follow.
+>
 > **Progress — 2026-09-09.** Tiers **0, 1 and 2 are all shipped** to `main` (PRs #2, #6–#10, #12–#14). Community management and RBAC are feature-complete on both sides — roles CRUD, per-member role assignment, join requests, remove/kick/leave/delete community, edit details, tags, Discover search. `05-roadmap-todo.md` has the PR-by-PR breakdown; `04-known-bugs.md` and the `02`/`03` update banners carry per-item status. Only Tier 3 opportunistic cleanup remains. This complements — does not replace — `HANDOFF.md` at the repo root, which is still accurate and worth reading first for stack/layout/conventions. This folder goes one layer deeper: it cross-references the Angular client against the Express API line by line, and answers the two questions the owner specifically asked about: *is community management done?* and *is role-based access control done?* (Short answer to both: no — see below.)
 
 ## Files in this folder

@@ -7,6 +7,7 @@ import { ChatService, IChatMessage } from '../../../services/chat.service';
 import { UserAuthService } from '../../../services/user-auth.service';
 import { FriendService, IUser } from '../../../services/friends.service';
 import { CallService, CallType } from '../../../services/call.service';
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { DmCallOverlayComponent } from '../../common/dm-call-overlay/dm-call-overlay.component';
 import {
   ChatComposerComponent,
@@ -119,7 +120,8 @@ export class DirectMessageComponent implements OnInit, OnDestroy {
     private chat: ChatService,
     private auth: UserAuthService,
     private friends: FriendService,
-    private call: CallService
+    private call: CallService,
+    private confirmDialog: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -225,7 +227,10 @@ export class DirectMessageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.historySub?.unsubscribe();
     this.subs.unsubscribe();
-    if (this.call.isInCall()) {
+    // A call that is only ringing belongs to the incoming-call modal, not to
+    // this page; ending it here turned "open a different DM" into "hang up on
+    // whoever is calling" and logged it as missed.
+    if (this.call.isInCall() && this.call.callState$.value !== 'incoming') {
       this.call.endCall();
     }
   }
@@ -486,13 +491,20 @@ export class DirectMessageComponent implements OnInit, OnDestroy {
 
   async onContextDelete(): Promise<void> {
     const msg = this.contextMenuMsg;
-    if (!msg?._id || !confirm('Delete this message?')) return;
+    this.closeContextMenu();
+    if (!msg?._id) return;
+    const ok = await this.confirmDialog.confirm({
+      title: 'Delete message?',
+      message: 'It will be removed for everyone in this chat.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     try {
       await firstValueFrom(this.chat.deleteMessage(msg._id));
     } catch (e) {
       this.errorMessage = (e as Error).message;
     }
-    this.closeContextMenu();
   }
 
   async onReaction(msg: IChatMessage, emoji: string): Promise<void> {

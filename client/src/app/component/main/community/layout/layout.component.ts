@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, Output } from '@angular/core';
 import { ChannelsListComponent } from '../channels-list/channels-list.component';
 import { VoiceSessionBarComponent } from '../voice-session-bar/voice-session-bar.component';
+import { VoiceroomAudioComponent } from '../voiceroom-audio/voiceroom-audio.component';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { VoiceroomService } from '../../../../services/voiceroom.service';
 import { LoadingStateComponent } from '../../../common/loading-state/loading-state.component';
@@ -22,6 +23,7 @@ import { ChannelSidebarService } from '../../../../services/shared/channel-sideb
     RouterOutlet,
     ChannelsListComponent,
     VoiceSessionBarComponent,
+    VoiceroomAudioComponent,
     LoadingStateComponent,
     ErrorAlertComponent,
   ],

@@ -10,6 +10,10 @@
   [message]="errorMessage"
 />
 
+<!-- Voice-room audio outlives the voice-room page: it plays while you read
+     other channels in this community. -->
+<app-voiceroom-audio />
+
 <div
   *ngIf="community && !isLoading && !errorMessage"
   class="flex h-full min-h-0 w-full flex-row gap-2 rounded-2xl box-border md:gap-3"

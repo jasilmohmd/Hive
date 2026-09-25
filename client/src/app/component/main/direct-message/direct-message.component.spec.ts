@@ -34,6 +34,7 @@ describe('DirectMessageComponent', () => {
       | 'sendImageMessage'
       | 'connectRealtime'
       | 'onSocketReady'
+      | 'sessionEnded$'
       | 'incomingMessage$'
       | 'chatError$'
       | 'messageEdited$'
@@ -51,6 +52,8 @@ describe('DirectMessageComponent', () => {
         .and.returnValue(Promise.resolve({} as never)),
       // CallService registers a socket listener as soon as it is constructed.
       onSocketReady: jasmine.createSpy('onSocketReady'),
+      // ...and resets on logout, as does VoiceroomService (via the voice-note recorder).
+      sessionEnded$: new Subject<void>(),
       incomingMessage$: incomingMessage$ as ChatService['incomingMessage$'],
       chatError$: chatError$ as ChatService['chatError$'],
       messageEdited$: messageEdited$ as ChatService['messageEdited$'],

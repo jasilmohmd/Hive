@@ -2,6 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Socket } from 'socket.io-client';
 import { ChatService } from './chat.service';
 
 export interface IVoiceroomPresenceUser {
@@ -21,12 +22,28 @@ export class VoiceroomPresenceService implements OnDestroy {
     Record<string, IVoiceroomPresenceUser[]>
   >({});
   private readonly watched = new Set<string>();
-  private socketBound = false;
+  /** The socket instance our handlers are attached to (a new one after re-login). */
+  private boundSocket: Socket | null = null;
 
   constructor(
     private http: HttpClient,
     private chat: ChatService
-  ) {}
+  ) {
+    // Every (re)connect: attach handlers to a new socket instance, and re-send
+    // room:watch — a reconnected socket is in no rooms server-side, so the
+    // occupancy counts froze until the page was reloaded.
+    this.chat.onSocketReady((socket) => {
+      this.bindSocket(socket);
+      for (const channelId of this.watched) {
+        socket.emit('room:watch', { channelId });
+      }
+    });
+    this.chat.sessionEnded$.subscribe(() => {
+      this.watched.clear();
+      this.boundSocket = null;
+      this.byChannel$.next({});
+    });
+  }
 
   ngOnDestroy(): void {
     for (const id of this.watched) {
@@ -78,7 +95,7 @@ export class VoiceroomPresenceService implements OnDestroy {
   async refresh(channelId: string): Promise<IVoiceroomPresenceUser[]> {
     const res = await this.fetchPresence(channelId);
     const socket = await this.chat.connectRealtime();
-    this.bindSocket();
+    this.bindSocket(socket);
     this.watched.add(channelId);
     socket.emit("room:watch", { channelId });
     return res.participants;
@@ -111,13 +128,12 @@ export class VoiceroomPresenceService implements OnDestroy {
       await this.fetchPresence(channelId);
     }
     const socket = await this.chat.connectRealtime();
-    this.bindSocket();
+    this.bindSocket(socket);
     socket.emit("room:watch", { channelId });
   }
 
-  private bindSocket(): void {
-    if (this.socketBound) return;
-    const socket = this.chat.ensureSocket();
+  private bindSocket(socket: Socket): void {
+    if (this.boundSocket === socket) return;
     socket.on(
       'room:state',
       (payload: { channelId: string; participants: IVoiceroomPresenceUser[] }) => {
@@ -125,7 +141,7 @@ export class VoiceroomPresenceService implements OnDestroy {
         this.patchChannel(payload.channelId, payload.participants ?? []);
       }
     );
-    this.socketBound = true;
+    this.boundSocket = socket;
   }
 
   private patchChannel(

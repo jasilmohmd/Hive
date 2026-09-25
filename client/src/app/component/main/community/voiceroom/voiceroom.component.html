@@ -302,7 +302,6 @@
                   </div>
                 </div>
               </ng-template>
-              <audio *ngIf="ep.audioTrack && !ep.isLocal" class="sr-only" autoplay playsinline [appLkTrack]="ep.audioTrack"></audio>
               <div class="fs-chrome absolute left-3 top-3 z-10 flex flex-wrap items-center gap-1.5"
                    [class.fs-chrome--idle]="!fsControlsVisible">
                 <span class="vr-chip">{{ ep.name }}{{ ep.isLocal ? ' (you)' : '' }}</span>
@@ -478,7 +477,6 @@
 </ng-template>
 
 <ng-template #trayTileMedia let-p>
-  <audio *ngIf="p.audioTrack && !p.isLocal" class="sr-only" autoplay playsinline [appLkTrack]="p.audioTrack"></audio>
   <div class="vr-tray-media" [class.vr-tray-media--dim]="!p.cameraTrack">
     <video
       *ngIf="p.cameraTrack"
@@ -505,7 +503,6 @@
 </ng-template>
 
 <ng-template #participantTileMedia let-p>
-  <audio *ngIf="p.audioTrack && !p.isLocal" class="sr-only" autoplay playsinline [appLkTrack]="p.audioTrack"></audio>
   <div class="vr-tile-media" [class.vr-tile-media--empty]="!p.cameraTrack">
     <video
       *ngIf="p.cameraTrack"

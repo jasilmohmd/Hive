@@ -64,7 +64,15 @@ export class CallService {
     private ringtone: CallRingtoneService,
     private http: HttpClient
   ) {
-    this.chat.onSocketReady((socket) => this.bindSocketEventsIfNeeded(socket));
+    this.chat.onSocketReady((socket) => {
+      this.bindSocketEventsIfNeeded(socket);
+      // After a reconnect the server sees a new socket; claim our live call on
+      // it, or the server ends the call once its disconnect grace runs out.
+      const state = this.callState$.value;
+      if (this.callId && (state === 'outgoing' || state === 'connecting' || state === 'active')) {
+        socket.emit('call:resume', { callId: this.callId });
+      }
+    });
     this.chat.sessionEnded$.subscribe(() => {
       this.endCallLocal();
       this.boundSocket = null;

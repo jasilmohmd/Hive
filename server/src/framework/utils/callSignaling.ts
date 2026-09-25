@@ -17,6 +17,11 @@ export interface ICallSession {
   callType: CallType;
   status: CallStatus;
   connectedAt?: number;
+  /**
+   * Per participant, the socket carrying the call (the tab that placed or
+   * answered it). Unset for a callee whose phone is only ringing.
+   */
+  socketIds?: Record<string, string>;
 }
 
 const activeCalls = new Map<string, ICallSession>();
@@ -164,19 +169,36 @@ export function registerCallSignaling(io: Server, chatUseCase: IChatUseCase): vo
 
     socket.join(userRoom(userId));
 
-    // Ending a call on *any* disconnect meant closing a second tab, or a
-    // momentary network blip, hung up a call whose media (peer-to-peer) was
-    // fine. Only end it once the user has no connection left, after a grace
-    // period for reconnects.
+    // Any disconnect used to end the user's call, so closing an unrelated
+    // second tab hung up a healthy peer-to-peer call. Now only the socket
+    // that carries the call matters, and it gets a grace period: a client
+    // that reconnects re-claims the call with call:resume.
     socket.on("disconnect", () => {
       const callId = userActiveCallId.get(userId);
       if (!callId) return;
+      const session = activeCalls.get(callId);
+      if (!session || session.status === "ended") return;
+      const owner = session.socketIds?.[userId];
+      if (owner && owner !== socket.id) return; // another tab closed — not this call's
       setTimeout(() => {
-        if (userHasSockets(io, userId)) return;
-        const session = activeCalls.get(callId);
-        if (!session || session.status === "ended") return;
-        void finishCall(io, chatUseCase, session, userId, "end");
+        const current = activeCalls.get(callId);
+        if (!current || current.status === "ended") return;
+        const nowOwner = current.socketIds?.[userId];
+        if (nowOwner && nowOwner !== socket.id) return; // resumed on a new socket
+        // A ringing callee has no owning socket: end only once every tab is gone.
+        if (!nowOwner && userHasSockets(io, userId)) return;
+        void finishCall(io, chatUseCase, current, userId, "end");
       }, DISCONNECT_GRACE_MS);
+    });
+
+    socket.on("call:resume", (data: { callId?: string }) => {
+      if (typeof data?.callId !== "string") return;
+      const session = activeCalls.get(data.callId);
+      if (!session || session.status === "ended") return;
+      if (session.callerId !== userId && session.calleeId !== userId) return;
+      // Only a participant that already held the call can move it to this socket.
+      if (!session.socketIds?.[userId]) return;
+      session.socketIds[userId] = socket.id;
     });
 
     socket.on(
@@ -232,6 +254,7 @@ export function registerCallSignaling(io: Server, chatUseCase: IChatUseCase): vo
             calleeId: peerId,
             callType: data.callType,
             status: "ringing",
+            socketIds: { [userId]: socket.id },
           };
           activeCalls.set(data.callId, session);
           userActiveCallId.set(userId, data.callId);
@@ -285,6 +308,7 @@ export function registerCallSignaling(io: Server, chatUseCase: IChatUseCase): vo
           await assertDirectChatFriends(userId, data.chatId);
           clearRingTimer(session.callId);
           session.status = "active";
+          session.socketIds = { ...session.socketIds, [userId]: socket.id };
           session.connectedAt = Date.now();
           userActiveCallId.set(userId, data.callId);
           emitToUser(io, session.callerId, "call:accepted", {

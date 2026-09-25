@@ -35,6 +35,7 @@ jobs:
         run: |
           npm run test:chat-media-url
           npm run test:chat-message-content
+          npm run test:link-preview
 
   client:
     name: Client (typecheck + test + build)

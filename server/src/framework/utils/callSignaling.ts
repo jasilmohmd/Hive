@@ -22,6 +22,39 @@ export interface ICallSession {
 const activeCalls = new Map<string, ICallSession>();
 const userActiveCallId = new Map<string, string>();
 
+/** An unanswered call gives up after this long and is logged as missed. */
+export const RING_TIMEOUT_MS = 45_000;
+/** A dropped socket gets this long to come back before its call is ended. */
+export const DISCONNECT_GRACE_MS = 8_000;
+const ringTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+/**
+ * Client-generated call ids (crypto.randomUUID) — bounded and plain, and
+ * never one already in use, so an invite can't overwrite a live session.
+ */
+export function isValidNewCallId(callId: unknown): callId is string {
+  return (
+    typeof callId === "string" &&
+    callId.length > 0 &&
+    callId.length <= 64 &&
+    /^[A-Za-z0-9_-]+$/.test(callId) &&
+    !activeCalls.has(callId)
+  );
+}
+
+function clearRingTimer(callId: string): void {
+  const t = ringTimers.get(callId);
+  if (t) {
+    clearTimeout(t);
+    ringTimers.delete(callId);
+  }
+}
+
+function userHasSockets(io: Server, userId: string): boolean {
+  const room = io.sockets.adapter.rooms.get(userRoom(userId));
+  return !!room && room.size > 0;
+}
+
 function userRoom(userId: string): string {
   return `user:${userId}`;
 }
@@ -81,6 +114,7 @@ async function persistCallLog(
 
 function endSession(io: Server, session: ICallSession, endedBy: string): void {
   session.status = "ended";
+  clearRingTimer(session.callId);
   const payload = { callId: session.callId, chatId: session.chatId, endedBy };
   emitToUser(io, session.callerId, "call:ended", payload);
   emitToUser(io, session.calleeId, "call:ended", payload);
@@ -130,20 +164,26 @@ export function registerCallSignaling(io: Server, chatUseCase: IChatUseCase): vo
 
     socket.join(userRoom(userId));
 
+    // Ending a call on *any* disconnect meant closing a second tab, or a
+    // momentary network blip, hung up a call whose media (peer-to-peer) was
+    // fine. Only end it once the user has no connection left, after a grace
+    // period for reconnects.
     socket.on("disconnect", () => {
       const callId = userActiveCallId.get(userId);
       if (!callId) return;
-      const session = activeCalls.get(callId);
-      if (!session || session.status === "ended") return;
-      void finishCall(io, chatUseCase, session, userId, "end");
+      setTimeout(() => {
+        if (userHasSockets(io, userId)) return;
+        const session = activeCalls.get(callId);
+        if (!session || session.status === "ended") return;
+        void finishCall(io, chatUseCase, session, userId, "end");
+      }, DISCONNECT_GRACE_MS);
     });
 
     socket.on(
       "call:invite",
       async (data: { callId?: string; chatId?: string; callType?: CallType }) => {
         try {
-          console.info(`[call] invite from ${userId}`, data?.callId, data?.chatId, data?.callType);
-          if (!data?.callId || !data?.chatId || !data?.callType) {
+          if (!data?.chatId || !data?.callType || !isValidNewCallId(data?.callId)) {
             socket.emit("call:error", { message: "Invalid call invite" });
             return;
           }
@@ -195,6 +235,23 @@ export function registerCallSignaling(io: Server, chatUseCase: IChatUseCase): vo
           };
           activeCalls.set(data.callId, session);
           userActiveCallId.set(userId, data.callId);
+          // The callee is busy while it rings, too: a second caller used to
+          // replace the first call on the callee's screen, leaving the first
+          // caller ringing forever. (It also means a callee who disconnects
+          // while ringing now ends the call, via the disconnect handler.)
+          userActiveCallId.set(peerId, data.callId);
+          const callId = data.callId;
+          ringTimers.set(
+            callId,
+            setTimeout(() => {
+              ringTimers.delete(callId);
+              const ringing = activeCalls.get(callId);
+              if (ringing && ringing.status === "ringing") {
+                // Ended "by" the callee without a connection: logged as missed.
+                void finishCall(io, chatUseCase, ringing, ringing.calleeId, "end");
+              }
+            }, RING_TIMEOUT_MS)
+          );
 
           emitToUser(io, peerId, "call:incoming", {
             callId: data.callId,
@@ -220,7 +277,13 @@ export function registerCallSignaling(io: Server, chatUseCase: IChatUseCase): vo
             socket.emit("call:error", { message: "Call not found" });
             return;
           }
+          // Only a ringing call can be answered, and only in its own chat.
+          if (session.status !== "ringing" || session.chatId !== data.chatId) {
+            socket.emit("call:error", { message: "This call can no longer be answered" });
+            return;
+          }
           await assertDirectChatFriends(userId, data.chatId);
+          clearRingTimer(session.callId);
           session.status = "active";
           session.connectedAt = Date.now();
           userActiveCallId.set(userId, data.callId);
@@ -242,22 +305,30 @@ export function registerCallSignaling(io: Server, chatUseCase: IChatUseCase): vo
     socket.on(
       "call:reject",
       async (data: { callId?: string; chatId?: string }) => {
-        if (!data?.callId) return;
-        const session = activeCalls.get(data.callId);
-        if (!session) return;
-        if (session.calleeId !== userId && session.callerId !== userId) return;
-        await finishCall(io, chatUseCase, session, userId, "reject");
+        try {
+          if (typeof data?.callId !== "string") return;
+          const session = activeCalls.get(data.callId);
+          if (!session) return;
+          if (session.calleeId !== userId && session.callerId !== userId) return;
+          await finishCall(io, chatUseCase, session, userId, "reject");
+        } catch (error) {
+          socket.emit("call:error", { message: error instanceof Error ? error.message : "Call failed" });
+        }
       }
     );
 
     socket.on(
       "call:end",
       async (data: { callId?: string; chatId?: string }) => {
-        if (!data?.callId) return;
-        const session = activeCalls.get(data.callId);
-        if (!session) return;
-        if (session.callerId !== userId && session.calleeId !== userId) return;
-        await finishCall(io, chatUseCase, session, userId, "end");
+        try {
+          if (typeof data?.callId !== "string") return;
+          const session = activeCalls.get(data.callId);
+          if (!session) return;
+          if (session.callerId !== userId && session.calleeId !== userId) return;
+          await finishCall(io, chatUseCase, session, userId, "end");
+        } catch (error) {
+          socket.emit("call:error", { message: error instanceof Error ? error.message : "Call failed" });
+        }
       }
     );
 

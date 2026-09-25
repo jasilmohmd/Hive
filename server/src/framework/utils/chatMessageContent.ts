@@ -295,3 +295,10 @@ export const ALLOWED_MESSAGE_TYPES = new Set([
 ]);
 
 export const EDITABLE_MESSAGE_TYPES = new Set(["text", "poll"]);
+
+/** Types only the server may create (call logs); rejected on client-facing send paths. */
+export const SERVER_ONLY_MESSAGE_TYPES = new Set(["call"]);
+
+export function isClientSendableMessageType(type: string): boolean {
+  return ALLOWED_MESSAGE_TYPES.has(type) && !SERVER_ONLY_MESSAGE_TYPES.has(type);
+}

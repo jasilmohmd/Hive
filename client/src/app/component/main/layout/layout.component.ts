@@ -65,8 +65,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    void this.chat.connectRealtime().catch((err) => {
-      console.error('Realtime connect failed:', err);
+    // socket.io keeps retrying on its own; tell the user once why live
+    // messages and calls aren't arriving yet.
+    void this.chat.connectRealtime().catch(() => {
+      this.toast.info('Live updates are unavailable right now. Retrying…');
     });
     this.loadCommunities();
     this.updatePageTitle();

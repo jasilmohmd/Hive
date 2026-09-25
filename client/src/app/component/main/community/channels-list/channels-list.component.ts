@@ -73,37 +73,53 @@ export class ChannelsListComponent implements OnInit, OnDestroy {
             );
         })
       )
-      .subscribe((channels) => {
-        if (channels) {
-          this.channels.info = channels.filter(
-            (channel) => channel.type === 'info'
-          );
-          this.channels.chatroom = channels.filter(
-            (channel) => channel.type === 'chatroom'
-          );
-          this.channels.voiceroom = channels.filter(
-            (channel) => channel.type === 'voiceroom'
-          );
-        } else {
-          this.channels = { info: [], chatroom: [], voiceroom: [] };
-        }
-
-        if (this.channels.voiceroom?.length) {
-          this.channels.voiceroom = this.channels.voiceroom.map((channel) => ({
-            ...channel,
-            isOpen: channel.isOpen ?? false,
-          }));
-        }
-        this.syncWatchedRooms(
-          (this.channels.voiceroom ?? [])
-            .map((c) => c._id)
-            .filter((id): id is string => !!id)
-        );
-
-        this.isLoading = false;
-      });
+      .subscribe((channels) => this.applyChannels(channels));
 
     this.subscriptions.add(channelSub);
+  }
+
+  /** Retry after a failed load (the list used to just render empty). */
+  reload(): void {
+    if (!this.communityId) return;
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.subscriptions.add(
+      this.channelStateService
+        .loadAccessibleChannels(this.communityId, true)
+        .subscribe((channels) => this.applyChannels(channels))
+    );
+  }
+
+  private applyChannels(channels: IChannel[] | null): void {
+    if (channels) {
+      this.channels.info = channels.filter(
+        (channel) => channel.type === 'info'
+      );
+      this.channels.chatroom = channels.filter(
+        (channel) => channel.type === 'chatroom'
+      );
+      this.channels.voiceroom = channels.filter(
+        (channel) => channel.type === 'voiceroom'
+      );
+    } else {
+      this.channels = { info: [], chatroom: [], voiceroom: [] };
+      // The state service maps a failed request to null.
+      this.errorMessage = this.errorMessage || "Couldn't load channels.";
+    }
+
+    if (this.channels.voiceroom?.length) {
+      this.channels.voiceroom = this.channels.voiceroom.map((channel) => ({
+        ...channel,
+        isOpen: channel.isOpen ?? false,
+      }));
+    }
+    this.syncWatchedRooms(
+      (this.channels.voiceroom ?? [])
+        .map((c) => c._id)
+        .filter((id): id is string => !!id)
+    );
+
+    this.isLoading = false;
   }
 
   ngOnDestroy(): void {

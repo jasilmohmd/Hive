@@ -144,6 +144,8 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
             typeof img === 'string' && img.trim() ? img.trim() : null
           );
         },
+        // Only the local tile's avatar depends on this; it falls back to initials.
+        error: () => undefined,
       })
     );
 

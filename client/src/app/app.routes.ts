@@ -36,6 +36,7 @@ export const routes: Routes = [
     canActivateChild: [AuthGuardChild],
     data: { title: "Account" },
     children: [
+      { path: "", redirectTo: "login", pathMatch: "full" },
       { path: "login", component: LoginFormComponent, data: { title: "Login" } },
       { path: "register", component: RegisterFormComponent, data: { title: "Register" } },
       { path: "email_verify", component: EmailVerifyComponent, data: { title: "Email" } },
@@ -48,6 +49,7 @@ export const routes: Routes = [
     path: "main", component: AppLayoutComponent,
     canActivateChild: [AuthGuardChild],
     children: [
+      { path: "", redirectTo: "friends_section/friends", pathMatch: "full" },
       { path: "discover", component: DiscoverComponent, data: { title: "Discover" } },
       { path: "profile", component: ProfileComponent, data: { title: "Profile" } },
       { path: "edit_profile", component: EditProfileComponent, data: { title: "Edit profile" } },
@@ -56,6 +58,7 @@ export const routes: Routes = [
         path: "friends_section", component: FriendSectionLayoutComponent,
         data: { title: "Friends" },
         children: [
+          { path: "", redirectTo: "friends", pathMatch: "full" },
           { path: "friends", component: FriendsComponent, data: { title: "Friends" } },
           { path: "online", component: OnlineComponent, data: { title: "Online" } },
           { path: "pending", component: PendingComponent, data: { title: "Pending" } },
@@ -91,6 +94,11 @@ export const routes: Routes = [
   },
   { path: "styleguide", component: StyleguideComponent, data: { title: "Styleguide" } },
 
-  { path: "",canActivateChild: [AuthGuardChild], component: LandingPageComponent, data: { title: "Hive" } }
+  // canActivate, not canActivateChild: this route has no children, so a
+  // child guard here never ran and signed-in users saw the marketing page.
+  { path: "", pathMatch: "full", canActivate: [AuthGuardChild], component: LandingPageComponent, data: { title: "Hive" } },
 
+  // Unknown URLs used to throw "Cannot match any routes" and leave a blank
+  // screen. The landing guard forwards signed-in users on into the app.
+  { path: "**", redirectTo: "" }
 ];

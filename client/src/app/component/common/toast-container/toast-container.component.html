@@ -1,5 +1,7 @@
+<!-- Phones: full-width stack sitting above the bottom nav (and the home
+     indicator), not on top of it. md+: the original bottom-right corner. -->
 <div
-  class="pointer-events-none fixed bottom-4 right-4 z-[200] flex max-w-sm flex-col gap-2"
+  class="pointer-events-none fixed left-4 right-4 z-[200] flex flex-col gap-2 bottom-[calc(var(--bottom-nav-h)+var(--safe-bottom)+0.75rem)] sm:left-auto sm:max-w-sm md:bottom-4"
   aria-live="polite"
   aria-relevant="additions"
 >
@@ -13,10 +15,10 @@
     }"
     role="status"
   >
-    <span class="flex-1">{{ t.message }}</span>
+    <span class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{{ t.message }}</span>
     <button
       type="button"
-      class="rounded text-ink-secondary hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
+      class="-my-2 -mr-3 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg text-ink-secondary hover:bg-surface-800 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
       (click)="toast.dismiss(t.id)"
       [attr.aria-label]="'Dismiss notification'"
     >

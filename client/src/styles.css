@@ -54,6 +54,13 @@
      system stack. */
   --font-display: "Baloo 2", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Layout — the phone bottom nav's height, and the home-indicator inset it
+     sits above. Anything fixed to the bottom of a phone screen (the nav, the
+     toast stack, bottom sheets) derives its offset from these two, so they
+     can never drift apart. env() is 0 on devices without an inset. */
+  --bottom-nav-h: 4rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* The pre-migration pure-grey ramp, for comparison at /styleguide */
@@ -75,6 +82,18 @@
   :focus-visible {
     @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-surface-900;
   }
+
+  /* iOS Safari zooms the page when a field under 16px takes focus, and never
+     zooms back out. Every text field in the app is 14–15px on phones, so hold
+     them at 16px wherever the primary pointer is a finger. Desktop keeps the
+     designed sizes. */
+  @media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    textarea,
+    select {
+      font-size: max(16px, 1em);
+    }
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -95,6 +114,8 @@
   .auth-shell {
     display: flex;
     min-height: calc(100vh - 6.5rem);
+    /* dvh tracks the browser toolbar on phones; 100vh above is the fallback. */
+    min-height: calc(100dvh - 6.5rem);
     flex-direction: column;
     align-items: center;
     justify-content: center;

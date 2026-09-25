@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 import { ChannelSidebarService } from '../../../services/shared/channel-sidebar.service';
 import { CommunityStateService } from '../../../services/shared/community-state.service';
 import { ToastService } from '../../../services/toast.service';
+import { BottomSheetComponent } from '../../common/bottom-sheet/bottom-sheet.component';
 
 @Component({
   selector: 'app-layout',
@@ -23,12 +24,15 @@ import { ToastService } from '../../../services/toast.service';
     RouterOutlet,
     CreateCommunityLayoutComponent,
     IncomingCallModalComponent,
+    BottomSheetComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css',
 })
 export class LayoutComponent implements OnInit, OnDestroy {
   showCommunityCreateModal = false;
+  /** Phone-only: the bottom sheet listing joined communities. */
+  showCommunitiesSheet = false;
   communities: any[] = [];
   pageTitle = 'Hive';
 
@@ -40,6 +44,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
    * Only meaningful on a community route, hence inCommunity.
    */
   channelSidebarCollapsed = false;
+  /** Whether the channel list is showing on a phone — drives the nav item's active state. */
+  channelSidebarOpenOnPhone = false;
   inCommunity = false;
 
   private subs = new Subscription();
@@ -67,11 +73,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe(() => {
         this.updatePageTitle();
         this.updateInCommunity();
+        this.showCommunitiesSheet = false;
       })
     );
     this.subs.add(
       this.channelSidebar.collapsed$.subscribe((collapsed) => {
         this.channelSidebarCollapsed = collapsed;
+        this.channelSidebarOpenOnPhone = !collapsed;
       })
     );
     this.subs.add(
@@ -124,6 +132,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
         this.toast.error(error?.message || 'Could not load your communities');
       },
     });
+  }
+
+  initials(name: string | undefined): string {
+    const parts = (name || '?').trim().split(/\s+/).filter(Boolean);
+    return ((parts[0]?.[0] ?? '?') + (parts[1]?.[0] ?? '')).toUpperCase();
   }
 
   getSafeUrl(url: string): SafeUrl {

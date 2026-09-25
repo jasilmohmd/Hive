@@ -23,8 +23,10 @@
   transform: translateY(-5px);
 }
 
+/* The page scrolls inside the community layout's pane. It used to force
+   min-height:100vh, which made the host taller than its (shorter) pane by
+   construction and pushed the lower cards out of reach. */
 :host {
   display: block;
-  min-height: 100vh;
   overflow-anchor: none;
 }

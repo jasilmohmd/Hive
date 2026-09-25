@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthGuardChild } from './auth.guard';
 import { UserAuthService } from '../services/user-auth.service';
@@ -23,7 +23,11 @@ describe('AuthGuardChild', () => {
       'isUserAuthenticated',
       'persistAccessToken',
     ]);
-    const routerSpy = jasmine.createSpyObj<Router>('Router', ['navigate']);
+    const routerSpy = jasmine.createSpyObj<Router>('Router', ['navigate', 'createUrlTree']);
+    // A tagged stand-in, so each test can assert *which* redirect it got.
+    routerSpy.createUrlTree.and.callFake(
+      (commands: readonly unknown[]) => ({ redirectTo: commands[0] }) as unknown as UrlTree
+    );
     const chatSpy = jasmine.createSpyObj<ChatService>('ChatService', ['connectRealtime']);
     chatSpy.connectRealtime.and.returnValue(Promise.resolve({} as never));
 
@@ -79,7 +83,7 @@ describe('AuthGuardChild', () => {
     });
   });
 
-  it('should block access and redirect to discover if the user is authenticated and trying to access /auth routes', (done) => {
+  it('should redirect to discover if the user is authenticated and trying to access /auth routes', (done) => {
     // Arrange
     const mockRoute = {} as ActivatedRouteSnapshot;
     const mockState = { url: '/auth/login' } as RouterStateSnapshot;
@@ -89,8 +93,8 @@ describe('AuthGuardChild', () => {
     // Act
     guard.canActivateChild(mockRoute, mockState).subscribe((result) => {
       // Assert
-      expect(router.navigate).toHaveBeenCalledWith(['/main/discover']);
-      expect(result).toBeFalse();
+      expect(result).toEqual({ redirectTo: '/main/discover' } as unknown as UrlTree);
+      expect(router.navigate).not.toHaveBeenCalled();
       done();
     });
   });
@@ -111,7 +115,7 @@ describe('AuthGuardChild', () => {
     });
   });
 
-  it('should block access and redirect to login if the user is not authenticated and trying to access other routes', (done) => {
+  it('should redirect to login if the user is not authenticated and trying to access other routes', (done) => {
     // Arrange
     const mockRoute = {} as ActivatedRouteSnapshot;
     const mockState = { url: '/home' } as RouterStateSnapshot;
@@ -121,9 +125,27 @@ describe('AuthGuardChild', () => {
     // Act
     guard.canActivateChild(mockRoute, mockState).subscribe((result) => {
       // Assert
-      expect(router.navigate).toHaveBeenCalledWith(['/auth/login']);
-      expect(result).toBeFalse();
+      expect(result).toEqual({ redirectTo: '/auth/login' } as unknown as UrlTree);
       done();
+    });
+  });
+
+  describe('landing page (canActivate)', () => {
+    it('shows the landing page to a signed-out visitor', (done) => {
+      authService.isUserAuthenticated.and.returnValue(notAuthenticated());
+      guard.canActivate().subscribe((result) => {
+        expect(result).toBeTrue();
+        done();
+      });
+    });
+
+    it('sends a signed-in visitor into the app', (done) => {
+      authService.isUserAuthenticated.and.returnValue(authenticated('jwt'));
+      guard.canActivate().subscribe((result) => {
+        expect(result).toEqual({ redirectTo: '/main/discover' } as unknown as UrlTree);
+        expect(authService.persistAccessToken).toHaveBeenCalledWith('jwt');
+        done();
+      });
     });
   });
 });

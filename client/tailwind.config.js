@@ -69,5 +69,18 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // `coarse:` — finger-driven devices, where tap targets need to be ≥40px
+    // even though the mouse-sized control is fine. `hover-none:` — surfaces
+    // that can't hover, so hover-only affordances need a visible fallback.
+    // `short:` — landscape phones: ≥768px wide so they get the md layout, but
+    // under 500px tall, so the md chrome (80px header, roomy padding) has to
+    // give the height back. Plugin variants are emitted after the core
+    // responsive ones, so `short:` wins over `md:` where both apply.
+    ({ addVariant }) => {
+      addVariant("coarse", "@media (pointer: coarse)");
+      addVariant("hover-none", "@media (hover: none)");
+      addVariant("short", "@media (max-height: 500px)");
+    },
+  ],
 };

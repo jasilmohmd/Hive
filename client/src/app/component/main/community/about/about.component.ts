@@ -339,18 +339,31 @@ export class AboutComponent {
     }
   }
 
+  /**
+   * Opens the page with the details card near the top and a strip of cover
+   * still showing above it. The page scrolls inside the community pane, not
+   * the window — so the old scrollIntoView + window.scrollBy(-80) pinned the
+   * card flush to the top and the offset never applied.
+   */
   private scrollToDetails() {
     setTimeout(() => {
-      if (this.detailsSection?.nativeElement) {
-        this.detailsSection.nativeElement.scrollIntoView({
-          behavior: 'instant',
-          block: 'start'
-        });
-
-        // Optional: Add slight offset
-        window.scrollBy(0, -80); // Adjust this value as needed
-      }
+      const el = this.detailsSection?.nativeElement as HTMLElement | undefined;
+      const scroller = el && this.scrollParent(el);
+      if (!el || !scroller) return;
+      const top =
+        el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      scroller.scrollTo({ top: Math.max(0, top - 80), behavior: 'instant' as ScrollBehavior });
     }, 50);
+  }
+
+  private scrollParent(el: HTMLElement): HTMLElement | null {
+    for (let p = el.parentElement; p; p = p.parentElement) {
+      const { overflowY } = getComputedStyle(p);
+      if ((overflowY === 'auto' || overflowY === 'scroll') && p.scrollHeight > p.clientHeight) {
+        return p;
+      }
+    }
+    return null;
   }
 
   // Method to manually scroll to cover image

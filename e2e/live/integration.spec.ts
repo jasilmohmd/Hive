@@ -16,7 +16,7 @@ test('real login, profile, friends and logout', async ({ page }) => {
   expect(profile.ok()).toBe(true);
   expect((await profile.json()).userData).not.toHaveProperty('password');
   await page.goto('/main/friends_section/friends');
-  await expect(page.getByText('Other Maker', { exact: true })).toBeVisible();
+  await expect(page.getByText('Other Maker', { exact: true }).filter({ visible: true })).toBeVisible();
   await page.goto('/main/profile');
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
   await expect(page).toHaveURL(/auth\/login/);
@@ -46,7 +46,7 @@ test('real DM sends via Socket.IO, persists, edits and deletes', async ({ page }
 test('real community roles, channel chat and voice lobby', async ({ page }) => {
   await login(page);
   await page.goto('/main/community/000000000000000000000010/about');
-  await page.getByTitle('Manage roles').click();
+  await page.getByRole('button', { name: 'Roles', exact: true }).click();
   const roles = page.getByRole('dialog', { name: 'Community roles' });
   await roles.getByRole('button', { name: 'New role', exact: true }).click();
   await roles.locator('input[type=text]').fill('E2E custom role');

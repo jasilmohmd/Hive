@@ -1,17 +1,13 @@
 <!-- about.component.html -->
-<div class="min-h-full w-full bg-surface-900 ">
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="flex rounded-2xl box-border h-full gap-3 animate-pulse">
-    <!-- Skeleton matching parent layout -->
-    <div class="w-full h-64 bg-surface-800 rounded-2xl">
-      <div class="h-48 bg-surface-700 rounded-t-2xl"></div>
-      <div class="p-6 -mt-12">
-        <div class="h-24 w-24 rounded-full bg-surface-700 border-4 border-surface-900"></div>
-        <div class="ml-32 space-y-3">
-          <div class="h-8 w-64 bg-surface-700 rounded-lg"></div>
-          <div class="h-4 w-80 bg-surface-700 rounded"></div>
-        </div>
-      </div>
+<div class="min-h-full w-full bg-surface-900">
+  <!-- Loading State: same shape as the page, and fluid — the old fixed
+       ml-32 / w-80 bars overflowed any phone. -->
+  <div *ngIf="isLoading" class="animate-pulse p-2 md:p-4" aria-hidden="true">
+    <div class="aspect-[3/1] w-full rounded-xl bg-surface-800"></div>
+    <div class="mx-2 -mt-10 rounded-xl bg-surface-800 p-4 md:mx-4 md:-mt-14 md:p-6">
+      <div class="-mt-12 h-16 w-16 rounded-full border-4 border-surface-900 bg-surface-700 md:-mt-16 md:h-24 md:w-24"></div>
+      <div class="mt-4 h-7 w-2/3 max-w-xs rounded-lg bg-surface-700"></div>
+      <div class="mt-3 h-4 w-full max-w-md rounded bg-surface-700"></div>
     </div>
   </div>
 
@@ -30,9 +26,16 @@
   </div>
 
   <!-- Community Details -->
-  <div *ngIf="community" class="w-full mx-auto animate-fade-in ">
+  <!--
+    No z-index anywhere in this header, on purpose. The cover and the card used
+    to be z-0 / z-10 and the logo z-[2]; each created a stacking context, and the
+    image cropper (fixed, z-50) opened from inside them was trapped in it — the
+    card painted over the cover's cropper, and the phone nav over the logo's
+    Done button. DOM order already paints card over cover and logo over card.
+  -->
+  <div *ngIf="community" class="w-full mx-auto animate-fade-in">
     <!-- Cover Image -->
-    <div #coverAnchor class="relative z-0 shadow-2xl">
+    <div #coverAnchor class="relative shadow-2xl">
       <ng-container *ngIf="canManageCommunity; else coverReadonly">
         <app-image-picker-menu
           variant="cover"
@@ -44,8 +47,9 @@
         />
       </ng-container>
       <ng-template #coverReadonly>
-        <div class="relative aspect-[3/1] overflow-hidden rounded-xl">
-          <img [src]="community.coverImageUrl || 'default-cover.jpg'" alt="Community cover"
+        <div class="relative aspect-[3/1] overflow-hidden rounded-xl bg-gradient-to-br from-brand-deep/60 via-surface-700 to-surface-800">
+          <!-- No cover set: the brand gradient above stands in (there is no default image file). -->
+          <img *ngIf="community.coverImageUrl" [src]="community.coverImageUrl" [alt]="community.name + ' cover image'"
             class="h-full w-full object-cover" />
           <div
             class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-surface-950/85 via-surface-950/15 to-transparent"
@@ -57,44 +61,10 @@
 
     <!-- Profile Section -->
     <div #detailsSection
-      class="relative z-10 bg-surface-800 rounded-xl shadow-xl px-4 md:px-6 pt-16 md:pt-20 pb-6 -mt-12 md:-mt-16 mx-2 md:mx-4 mb-4">
-
-      <!-- Profile-card action buttons -->
-      <div class="absolute top-4 right-4 flex items-center gap-2">
-        <!-- Manage Community Button -->
-        <button *ngIf="permissions.includes('MANAGE_COMMUNITY')" (click)="openManageCommunity()"
-          class="flex items-center gap-2 px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          <span class="hidden md:inline">Manage Community</span>
-        </button>
-
-        <!-- Roles Button -->
-        <button *ngIf="permissions.includes('MANAGE_ROLES')" (click)="showRolesModal = true"
-          class="flex items-center gap-2 px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
-          title="Manage roles">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z" />
-          </svg>
-          <span class="hidden md:inline">Roles</span>
-        </button>
-
-        <!-- Leave Community Button (not shown to the owner — the server rejects it) -->
-        <button *ngIf="!isOwner" (click)="promptLeaveCommunity()"
-          class="flex items-center gap-2 px-3 py-1.5 bg-danger/20 hover:bg-danger/30 rounded-lg text-danger-text text-sm transition-all"
-          title="Leave community">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span class="hidden md:inline">Leave</span>
-        </button>
-      </div>
+      class="relative bg-surface-800 rounded-xl shadow-xl px-4 md:px-6 pt-12 md:pt-16 pb-6 -mt-10 md:-mt-14 mx-2 md:mx-4 mb-4">
 
       <!-- Community Image -->
-      <div class="absolute -top-8 md:-top-12 left-4 md:left-6 z-[2]">
+      <div class="absolute -top-8 md:-top-12 left-4 md:left-6">
         <ng-container *ngIf="canManageCommunity; else logoReadonly">
           <div class="rounded-full border-4 border-surface-900 shadow-xl bg-surface-900 p-0">
             <app-image-picker-menu
@@ -110,70 +80,103 @@
           </div>
         </ng-container>
         <ng-template #logoReadonly>
-          <img [src]="community.imageUrl || 'default-avatar.png'" alt="Community logo"
-            class="w-16 h-16 md:w-24 md:h-24 rounded-full border-4 border-surface-900 shadow-xl object-cover transition-transform duration-300 hover:scale-105" />
+          <img *ngIf="community.imageUrl; else logoInitials" [src]="community.imageUrl" [alt]="community.name + ' logo'"
+            class="w-16 h-16 md:w-24 md:h-24 rounded-full border-4 border-surface-900 shadow-xl object-cover" />
+          <ng-template #logoInitials>
+            <span class="flex w-16 h-16 md:w-24 md:h-24 items-center justify-center rounded-full border-4 border-surface-900 bg-surface-700 text-lg font-semibold text-ink shadow-xl md:text-2xl"
+              role="img" [attr.aria-label]="community.name + ' logo'">
+              {{ (community.name || '?').slice(0, 2).toUpperCase() }}
+            </span>
+          </ng-template>
         </ng-template>
       </div>
 
       <!--
-        Header Section
-
-        No left margin below md. The card's own pt-16 already clears the 64px
-        avatar vertically (it sits at -top-8, so its bottom edge is 32px above
-        where this text starts), and the old ml-20 + pr-8 was spending 112px of
-        a ~186px column on nothing — the community name was wrapping one word
-        per line. The offset is only needed from md, where the avatar is 96px
-        and the layout is genuinely side-by-side.
+        Header. No left margin below md: the card's top padding already clears
+        the 64px logo. From md the logo is 96px and sits beside the text.
       -->
-      <div class="md:ml-32 md:pr-8">
-        <h1 class="text-lg md:text-3xl font-bold text-ink mb-1 md:mb-2">{{ community.name }}</h1>
-        <p *ngIf="community.description" class="text-ink-secondary text-sm md:text-base leading-relaxed">
+      <div class="md:ml-32">
+        <h1 class="break-words text-lg md:text-3xl font-bold text-ink mb-1 md:mb-2">{{ community.name }}</h1>
+        <p *ngIf="community.description" class="break-words text-ink-secondary text-sm md:text-base leading-relaxed">
           {{ community.description }}
         </p>
+
+        <!--
+          Actions. These used to be an icon-only cluster pinned to the card's
+          top-right corner, where on a phone it sat on top of the logo, and with
+          no text the Manage button (a "+") had no accessible name. A wrapping
+          row of labelled buttons fits every width.
+        -->
+        <div *ngIf="canManageCommunity || permissions.includes('MANAGE_ROLES') || canLeave" class="mt-3 flex flex-wrap gap-2 md:mt-4">
+          <button *ngIf="canManageCommunity" type="button" (click)="openManageCommunity()"
+            class="ab-action bg-brand/20 text-brand hover:bg-brand/30">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.3 4.3c.4-1.7 2.9-1.7 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.5a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.6-1c-1.5.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1-2.6c-1.8-.5-1.8-3 0-3.5a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1Z" />
+              <circle cx="12" cy="12" r="3" stroke-width="2" />
+            </svg>
+            Manage community
+          </button>
+
+          <button *ngIf="permissions.includes('MANAGE_ROLES')" type="button" (click)="showRolesModal = true"
+            class="ab-action bg-brand/20 text-brand hover:bg-brand/30">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z" />
+            </svg>
+            Roles
+          </button>
+
+          <!-- Not shown to the owner — the server rejects it. -->
+          <button *ngIf="canLeave" type="button" (click)="promptLeaveCommunity()"
+            class="ab-action bg-danger/15 text-danger-text hover:bg-danger/25">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Leave
+          </button>
+        </div>
       </div>
 
-      <!-- Compact Details Grid -->
-      <div class="grid md:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
+      <!-- Details grid. Two columns from lg, not md: at md the pane beside
+           the channel column is only ~424px, which made 130px cards. -->
+      <div class="grid lg:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
         <!-- Left Column -->
         <div class="space-y-3 md:space-y-4">
           <!-- Basic Info Card -->
           <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
             <h2 class="text-xs md:text-sm font-semibold text-ink-muted mb-2 md:mb-3">Community Details</h2>
-            <div class="space-y-1 md:space-y-2 text-sm md:text-base">
-              <div class="flex justify-between items-center">
-                <span class="text-ink-secondary">Type</span>
-                <span class="text-ink capitalize">{{ community.type }}</span>
+            <dl class="space-y-1 md:space-y-2 text-sm md:text-base">
+              <div class="flex justify-between gap-3">
+                <dt class="shrink-0 text-ink-secondary">Type</dt>
+                <dd class="min-w-0 truncate text-ink capitalize">{{ community.type }}</dd>
               </div>
-              <div class="flex justify-between items-center">
-                <span class="text-ink-secondary">Owner</span>
-                <span class="text-ink">{{ community.ownerId?.userName || 'Unknown' }}</span>
+              <div class="flex justify-between gap-3">
+                <dt class="shrink-0 text-ink-secondary">Owner</dt>
+                <dd class="min-w-0 truncate text-ink">{{ community.ownerId?.userName || 'Unknown' }}</dd>
               </div>
-              <div class="flex justify-between items-center">
-                <span class="text-ink-secondary">Created</span>
-                <span class="text-ink">{{ community.createdAt | date:'mediumDate' }}</span>
+              <div class="flex justify-between gap-3">
+                <dt class="shrink-0 text-ink-secondary">Created</dt>
+                <dd class="min-w-0 truncate text-ink">{{ community.createdAt | date:'mediumDate' }}</dd>
               </div>
-            </div>
+            </dl>
           </div>
 
           <!-- Members Card -->
           <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
-            <div class="flex justify-between items-center mb-2 md:mb-3">
-              <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Members</h2>
-              <div class="flex items-center gap-4">
-                <button *ngIf="canOpenMembers" (click)="manageMembers()"
-                  class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
-                  title="Manage members">
-                  Manage
-                </button>
-                <span class="text-ink-secondary text-xs md:text-sm m-3">{{ community.members.length }}</span>
-              </div>
+            <div class="ab-card-head">
+              <h2 class="ab-card-title">Members <span class="ab-count">{{ community.members.length }}</span></h2>
+              <button *ngIf="canOpenMembers" type="button" (click)="manageMembers()" class="ab-manage">Manage</button>
             </div>
             <div class="flex flex-wrap gap-1.5 md:gap-2">
-              <div *ngFor="let member of community.members.slice(0,5)"
-                class="flex items-center gap-2 py-1 bg-surface-600/30 rounded-full">
-                <div *ngIf="member.userId?.status" class="h-3 w-3 bg-success/70 rounded-full ml-2 -mr-3"></div>
-                <span class="text-ink-secondary text-sm px-3">{{ member.userId?.userName || 'Unknown' }}</span>
+              <div *ngFor="let member of community.members.slice(0,6)"
+                class="flex min-w-0 max-w-full items-center gap-2 py-1 bg-surface-600/30 rounded-full">
+                <div *ngIf="member.userId?.status" class="h-3 w-3 shrink-0 bg-success/70 rounded-full ml-2 -mr-3" aria-hidden="true"></div>
+                <span class="min-w-0 max-w-[12rem] truncate text-ink-secondary text-sm px-3">{{ member.userId?.userName || 'Unknown' }}</span>
               </div>
+              <span *ngIf="community.members.length > 6" class="py-1 px-3 text-sm text-ink-muted">
+                +{{ community.members.length - 6 }} more
+              </span>
             </div>
           </div>
         </div>
@@ -183,63 +186,50 @@
 
           <!-- Tags Card -->
           <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
-            <div class="flex justify-between items-center mb-2 md:mb-3">
-              <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Community Tags</h2>
-              <div class="flex items-center gap-4">
-                <button *ngIf="permissions.includes('MANAGE_COMMUNITY')" (click)="openTagModal()"
-                  class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
-                  title="Manage tags">
-                  Manage
-                </button>
-                <span class="text-ink-secondary text-xs md:text-sm mx-3">{{ community.tags.length }}</span>
-              </div>
+            <div class="ab-card-head">
+              <h2 class="ab-card-title">Community Tags <span class="ab-count">{{ community.tags.length }}</span></h2>
+              <button *ngIf="canManageCommunity" type="button" (click)="openTagModal()" class="ab-manage">Manage</button>
             </div>
             <div class="flex flex-wrap gap-2">
               <span *ngFor="let tag of community.tags"
-                class="px-3 py-1 bg-surface-600/30 text-ink-secondary text-sm rounded-full">
+                class="max-w-full truncate px-3 py-1 bg-surface-600/30 text-ink-secondary text-sm rounded-full">
                 {{ tag.name }}
               </span>
+              <span *ngIf="community.tags.length === 0" class="text-ink-muted text-sm">No tags yet</span>
             </div>
           </div>
 
           <!-- Channels Card -->
           <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
-            <div class="flex justify-between items-center mb-2 md:mb-3">
-              <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Channels</h2>
-              <div class="flex items-center gap-4">
-                <button *ngIf="permissions.includes('MANAGE_CHANNELS')" (click)="manageChannels()"
-                  class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
-                  title="Manage channels">
-                  Manage
-                </button>
-                <span class="text-ink-secondary text-xs md:text-sm mx-3">{{ community.channels.length }}</span>
-              </div>
+            <div class="ab-card-head">
+              <h2 class="ab-card-title">Channels <span class="ab-count">{{ community.channels.length }}</span></h2>
+              <button *ngIf="permissions.includes('MANAGE_CHANNELS')" type="button" (click)="manageChannels()" class="ab-manage">Manage</button>
             </div>
             <div class="flex flex-wrap gap-2">
-              <span *ngFor="let channel of community.channels.slice(0,4)"
-                class="px-3 py-1 bg-brand/10 text-brand text-sm rounded-full">
+              <span *ngFor="let channel of community.channels.slice(0,6)"
+                class="max-w-full truncate px-3 py-1 bg-brand/10 text-brand text-sm rounded-full">
                 #{{ channel.name }}
+              </span>
+              <span *ngIf="community.channels.length > 6" class="py-1 px-1 text-sm text-ink-muted">
+                +{{ community.channels.length - 6 }} more
               </span>
             </div>
           </div>
 
-          <!-- Join Requests Card -->
-          <div class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
-            <div class="flex justify-between items-center mb-2 md:mb-3">
-              <h2 class="text-xs md:text-sm font-semibold text-ink-muted">Join Requests</h2>
-              <div class="flex items-center gap-4">
-                <button *ngIf="permissions.includes('MANAGE_MEMBERS')" (click)="manageJoinRequests()"
-                  class="px-3 py-1.5 bg-brand/30 hover:bg-brand/40 rounded-lg text-brand text-sm transition-all"
-                  title="Manage requests">
-                  Manage
-                </button>
-                <span class="text-ink-secondary text-xs md:text-sm mx-3">{{ community.joinRequests.length }}</span>
-              </div>
+          <!-- Join Requests Card: only for people who can act on them. It used
+               to list pending requesters' names to every member. -->
+          <div *ngIf="permissions.includes('MANAGE_MEMBERS')" class="p-3 md:p-4 bg-surface-900/50 rounded-lg md:rounded-xl">
+            <div class="ab-card-head">
+              <h2 class="ab-card-title">Join Requests <span class="ab-count">{{ community.joinRequests.length }}</span></h2>
+              <button type="button" (click)="manageJoinRequests()" class="ab-manage">Manage</button>
             </div>
             <div class="flex flex-wrap gap-2">
               <span *ngFor="let request of community.joinRequests.slice(0,4)"
-                class="px-3 py-1 bg-surface-700 text-ink-secondary text-sm rounded-full">
+                class="max-w-full truncate px-3 py-1 bg-surface-700 text-ink-secondary text-sm rounded-full">
                 {{ request.userName || 'Pending user' }}
+              </span>
+              <span *ngIf="community.joinRequests.length > 4" class="py-1 px-1 text-sm text-ink-muted">
+                +{{ community.joinRequests.length - 4 }} more
               </span>
               <span *ngIf="community.joinRequests.length === 0" class="text-ink-muted text-sm">
                 No pending requests
@@ -255,7 +245,7 @@
 </div>
 
 <!-- Include the modal if showModal is true -->
-<div class="flex-1 overflow-hidden transition-all duration-300 ease-in-out">
+<div>
   <app-list-modal 
     *ngIf="showModal" 
     [title]="modalData.title || ''" 
@@ -291,15 +281,15 @@
 <div *ngIf="showMemberRoles"
   class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 p-4 animate-fade-in"
   (click)="closeMemberRoles()" role="presentation">
-  <div class="relative w-full max-w-sm rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
+  <div class="ab-dialog max-w-sm"
     role="dialog" aria-modal="true" aria-label="Member roles" (click)="$event.stopPropagation()">
-    <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-lg font-bold">Roles — {{ memberBeingEdited?.userName }}</h2>
-      <button (click)="closeMemberRoles()" class="text-ink-muted hover:text-ink" aria-label="Close">✕</button>
+    <div class="mb-4 flex items-center justify-between gap-2">
+      <h2 class="min-w-0 truncate text-lg font-bold">Roles — {{ memberBeingEdited?.userName }}</h2>
+      <button type="button" (click)="closeMemberRoles()" class="ab-close" aria-label="Close">✕</button>
     </div>
     <div class="space-y-1.5">
       <label *ngFor="let role of assignableRoles"
-        class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-surface-950/40">
+        class="flex min-h-10 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-surface-950/40">
         <input type="checkbox" [checked]="memberHasRole(role._id)"
           [disabled]="memberRoleSaving === role._id"
           (change)="toggleMemberRole(role)"
@@ -358,31 +348,35 @@
 <div *ngIf="showEditCommunity"
   class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 p-4 animate-fade-in"
   (click)="showEditCommunity = false" role="presentation">
-  <div class="relative w-full max-w-md rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
-    role="dialog" aria-modal="true" aria-label="Manage community" (click)="$event.stopPropagation()">
-    <h2 class="mb-4 text-xl font-bold">Manage community</h2>
+  <div class="ab-dialog max-w-md"
+    role="dialog" aria-modal="true" aria-labelledby="ab-manage-title" (click)="$event.stopPropagation()">
+    <div class="mb-4 flex items-center justify-between gap-2">
+      <h2 id="ab-manage-title" class="text-xl font-bold">Manage community</h2>
+      <button type="button" (click)="showEditCommunity = false" class="ab-close" aria-label="Close">✕</button>
+    </div>
 
-    <label class="mb-1 block text-sm text-ink-secondary">Name</label>
-    <input type="text" [(ngModel)]="editForm.name" maxlength="50"
+    <label for="ab-edit-name" class="mb-1 block text-sm text-ink-secondary">Name</label>
+    <input id="ab-edit-name" type="text" [(ngModel)]="editForm.name" maxlength="50"
       class="mb-4 w-full rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none" />
 
-    <label class="mb-1 block text-sm text-ink-secondary">Description</label>
-    <textarea [(ngModel)]="editForm.description" rows="3" maxlength="500"
+    <label for="ab-edit-description" class="mb-1 block text-sm text-ink-secondary">Description</label>
+    <textarea id="ab-edit-description" [(ngModel)]="editForm.description" rows="3" maxlength="500"
       class="mb-4 w-full rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none"></textarea>
 
-    <label class="mb-1 block text-sm text-ink-secondary">Type</label>
-    <select [(ngModel)]="editForm.type"
+    <label for="ab-edit-type" class="mb-1 block text-sm text-ink-secondary">Type</label>
+    <select id="ab-edit-type" [(ngModel)]="editForm.type"
       class="mb-6 w-full rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none">
       <option value="public">Public</option>
       <option value="private">Private</option>
     </select>
 
-    <div class="flex items-center justify-between">
-      <button (click)="promptDeleteCommunity()"
-        class="px-3 py-2 text-sm text-danger-text hover:bg-danger/10 rounded-md transition-colors">
+    <!-- Wraps at 360px instead of squeezing three buttons into one row. -->
+    <div class="flex flex-wrap-reverse items-center justify-between gap-2">
+      <button type="button" (click)="promptDeleteCommunity()"
+        class="min-h-10 px-3 py-2 text-sm text-danger-text hover:bg-danger/10 rounded-md transition-colors">
         Delete community
       </button>
-      <div class="flex gap-2">
+      <div class="ml-auto flex gap-2">
         <button (click)="showEditCommunity = false"
           class="px-4 py-2 text-sm rounded-md bg-surface-800 hover:bg-surface-700 transition-colors">Cancel</button>
         <button (click)="saveCommunityDetails()" [disabled]="savingCommunity"
@@ -410,22 +404,27 @@
 <div *ngIf="showTagModal"
   class="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 p-4 animate-fade-in"
   (click)="showTagModal = false" role="presentation">
-  <div class="relative w-full max-w-md rounded-lg bg-surface-900 p-6 text-ink shadow-xl ring-1 ring-surface-700"
-    role="dialog" aria-modal="true" aria-label="Manage tags" (click)="$event.stopPropagation()">
-    <h2 class="mb-4 text-xl font-bold">Community tags</h2>
+  <div class="ab-dialog max-w-md"
+    role="dialog" aria-modal="true" aria-labelledby="ab-tags-title" (click)="$event.stopPropagation()">
+    <div class="mb-4 flex items-center justify-between gap-2">
+      <h2 id="ab-tags-title" class="text-xl font-bold">Community tags</h2>
+      <button type="button" (click)="showTagModal = false" class="ab-close" aria-label="Close">✕</button>
+    </div>
 
     <div class="mb-4 flex flex-wrap gap-2">
       <span *ngFor="let tag of community?.tags"
-        class="inline-flex items-center gap-1.5 rounded-full bg-surface-700 px-3 py-1 text-sm text-ink-secondary">
-        {{ tag.name || tag }}
-        <button (click)="removeTagFromCommunity(tag)" class="text-ink-muted hover:text-danger-text" aria-label="Remove tag">×</button>
+        class="inline-flex max-w-full items-center gap-1 rounded-full bg-surface-700 py-0.5 pl-3 pr-0.5 text-sm text-ink-secondary">
+        <span class="min-w-0 truncate">{{ tag.name || tag }}</span>
+        <button type="button" (click)="removeTagFromCommunity(tag)"
+          class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted hover:bg-surface-600 hover:text-danger-text focus-visible:ring-2 focus-visible:ring-brand"
+          [attr.aria-label]="'Remove tag ' + (tag.name || tag)">×</button>
       </span>
       <span *ngIf="!community?.tags?.length" class="text-sm text-ink-muted">No tags yet</span>
     </div>
 
     <div class="flex gap-2">
-      <select [(ngModel)]="tagToAdd"
-        class="flex-1 rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none">
+      <select [(ngModel)]="tagToAdd" aria-label="Tag to add"
+        class="min-w-0 flex-1 rounded-md border border-surface-700 bg-surface-950 px-3 py-2 focus:border-brand focus:outline-none">
         <option value="">Add a tag…</option>
         <option *ngFor="let tag of availableTags" [value]="tag._id">{{ tag.name }}</option>
       </select>

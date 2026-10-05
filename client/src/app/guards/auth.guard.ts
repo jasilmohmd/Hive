@@ -1,37 +1,51 @@
 import { Injectable } from '@angular/core';
-import { CanActivateChild, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import {
+  CanActivate,
+  CanActivateChild,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+  Router,
+  UrlTree,
+} from '@angular/router';
 import { UserAuthService } from '../services/user-auth.service';
 import { ChatService } from '../services/chat.service';
-import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
+
+/** Where a signed-in user lands when they hit a page meant for signed-out users. */
+const SIGNED_IN_HOME = '/main/discover';
 
 @Injectable({
   providedIn: 'root',
 })
-export class AuthGuardChild implements CanActivateChild {
+export class AuthGuardChild implements CanActivate, CanActivateChild {
   constructor(
     private authService: UserAuthService,
     private router: Router,
     private chat: ChatService
   ) {}
 
+  /**
+   * The landing page. Public — but a signed-in visitor has no use for it, so
+   * send them into the app. (This used to be declared as canActivateChild on
+   * a route with no children, which Angular never runs.)
+   */
+  canActivate(): Observable<boolean | UrlTree> {
+    return this.session().pipe(
+      map(() => this.router.createUrlTree([SIGNED_IN_HOME])),
+      catchError(() => of(true))
+    );
+  }
+
   canActivateChild(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
-  ): Observable<boolean> {
-    return this.authService.isUserAuthenticated().pipe(
-      tap((response) => {
-        if (response?.token) {
-          this.authService.persistAccessToken(response.token);
-        }
-      }),
-      map((response) => {
-        // If user is authenticated and trying to access any route under /auth, redirect them
-        if (state.url === '' || state.url === '/' || state.url.startsWith('/auth')) {
-          // Redirect to home/dashboard or any page if already authenticated
-          this.router.navigate(['/main/discover']);
-          return false;  // Block navigation to any auth routes
+  ): Observable<boolean | UrlTree> {
+    return this.session().pipe(
+      map(() => {
+        // Signed in and heading for login/register etc.: nothing to do there.
+        if (state.url.startsWith('/auth')) {
+          return this.router.createUrlTree([SIGNED_IN_HOME]);
         }
 
         if (state.url.startsWith('/main')) {
@@ -39,15 +53,22 @@ export class AuthGuardChild implements CanActivateChild {
         }
         return true;
       }),
-      catchError((error) => {
-        // If the user is not authenticated and trying to access protected pages
+      catchError(() => {
+        // Signed out: the auth pages are the only ones open to you.
         if (state.url.startsWith('/auth')) {
-          return of(true); // Allow access to login or other auth-related pages if not authenticated
+          return of(true);
         }
+        return of(this.router.createUrlTree(['/auth/login']));
+      })
+    );
+  }
 
-        // If the user is not authenticated, redirect to login page
-        this.router.navigate(['/auth/login']);
-        return of(false);  // Block navigation to other pages
+  private session(): Observable<{ message?: string; token?: string }> {
+    return this.authService.isUserAuthenticated().pipe(
+      tap((response) => {
+        if (response?.token) {
+          this.authService.persistAccessToken(response.token);
+        }
       })
     );
   }

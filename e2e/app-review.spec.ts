@@ -24,16 +24,20 @@ for (const path of routes) {
 test('community sidebar defaults to readable mobile content and preserves its toggle', async ({ page, api }) => {
   await page.goto(`/main/community/${community._id}/about`);
   await page.waitForLoadState('networkidle');
-  const sidebar = page.getByRole('complementary', { name: 'Channels' });
+  const sidebar = page.locator('#community-channels');
   const mobile = page.viewportSize()!.width < 768;
   if (mobile) {
     await expect(sidebar).not.toBeVisible();
     const content = await page.locator('community-layout > div > div').last().boundingBox();
     expect(content!.width).toBeGreaterThan(page.viewportSize()!.width * 0.9);
-    await page.getByRole('button', { name: 'Show channels', exact: true }).click();
+    await page.getByRole('button', { name: 'Channels', exact: true }).click();
     await expect(sidebar).toBeVisible();
     await page.reload();
-    await expect(sidebar).toBeVisible();
+    await expect(sidebar).not.toBeVisible();
+    await page.getByRole('button', { name: 'Channels', exact: true }).click();
+    await page.getByRole('button', { name: 'Close channels', exact: true }).click();
+    await expect(sidebar).not.toBeVisible();
+    return;
   } else {
     await expect(sidebar).toBeVisible();
   }
@@ -72,7 +76,7 @@ test('discover last card remains reachable', async ({ page, api }) => {
 
 test('community wizard closes and validates the first step', async ({ page, api }) => {
   await page.goto('/main/discover');
-  await page.getByRole('button', { name: 'Create community', exact: true }).click();
+  await page.getByRole('button', { name: /^(Create community|Create)$/ }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Name is required', { exact: true })).toBeVisible();
   await page.getByPlaceholder('Enter community name').fill('Test community');

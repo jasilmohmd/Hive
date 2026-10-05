@@ -1,24 +1,2 @@
-/* Angular animation for error messages */
-.slideInOut {
-  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
-}
-
-.slideInOut.ng-enter {
-  opacity: 0;
-  transform: translateY(-5px);
-}
-
-.slideInOut.ng-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.slideInOut.ng-leave {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.slideInOut.ng-leave-active {
-  opacity: 0;
-  transform: translateY(-5px);
-}
+/* Intentionally empty: styling is utility classes in the template. The old
+   .slideInOut.ng-enter/-leave rules were AngularJS-style and never matched. */

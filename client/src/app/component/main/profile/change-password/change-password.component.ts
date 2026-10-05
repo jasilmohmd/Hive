@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { UserProfileService } from '../../../../services/user-profile.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
@@ -18,7 +18,7 @@ import { ToastService } from '../../../../services/toast.service';
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ButtonComponent, ErrorAlertComponent],
+  imports: [RouterLink, CommonModule, ReactiveFormsModule, ButtonComponent, ErrorAlertComponent],
   templateUrl: './change-password.component.html',
   styleUrl: './change-password.component.css',
 })
@@ -77,7 +77,7 @@ export class ChangePasswordComponent {
       .subscribe({
         next: (res) => {
           this.toast.success(res.message || 'Password changed');
-          this.router.navigate(['/main/profile'], { state: { successMessage: res.message } });
+          this.router.navigate(['/main/profile']);
         },
         error: (err: Error) => {
           this.errorMessage = err.message || 'Could not change password';

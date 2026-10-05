@@ -1,5 +1,5 @@
 // list-modal.component.ts
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { CommonTableComponent } from '../../../common/common-table/common-table.component';
@@ -108,8 +108,20 @@ export class ListModalComponent implements OnInit {
     this.action.emit({ action: action.label, item });
   }
 
+  readonly titleId = `list-modal-title-${Math.random().toString(36).slice(2, 9)}`;
+
   closeModal() {
     this.close.emit();
+  }
+
+  /** Escape backs out of the create/edit form first, then closes. */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isCreating) {
+      this.cancelCreate();
+    } else {
+      this.closeModal();
+    }
   }
 
   /** Initialize the reactive form dynamically based on createFields */

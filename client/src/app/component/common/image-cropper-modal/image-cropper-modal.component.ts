@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { ImageCroppedEvent, ImageCropperComponent, OutputFormat } from 'ngx-image-cropper';
 import { ButtonComponent } from '../../common/button/button.component';
 
@@ -16,6 +16,11 @@ export class ImageCropperModalComponent {
   @Input() format: OutputFormat = 'png';
   @Output() done = new EventEmitter<ImageCroppedEvent>();
   @Output() cancel = new EventEmitter<void>();
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.onCancel();
+  }
 
   private croppedEvent: ImageCroppedEvent | null = null;
 

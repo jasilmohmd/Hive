@@ -172,9 +172,9 @@ export class ChatComposerComponent implements OnChanges {
    * still on raw zinc/indigo/green Tailwind colours; they now sit on the token
    * ramp so the composer matches the rest of the app.
    *
-   * Sizing is mobile-first throughout: the community layout keeps its channel
-   * sidebar at every breakpoint, so on a 390px phone this bar has roughly 230px
-   * to work in. Padding, control size and the send label all step up at md.
+   * Sizing is mobile-first throughout. On phones the bar spans the screen (the
+   * channel list is a drawer there) but still wraps onto two rows below sm.
+   * Padding, text size and the send label step up at md.
    */
   get containerClasses(): string {
     return this.isDm
@@ -190,19 +190,16 @@ export class ChatComposerComponent implements OnChanges {
 
   get inputClasses(): string {
     const shared =
-      'w-full min-w-0 px-3 py-2 text-sm text-ink placeholder-ink-muted focus:outline-none disabled:opacity-50 md:w-auto md:flex-1 md:px-4 md:text-base';
+      'w-full min-w-0 px-3 py-2 text-sm text-ink placeholder-ink-muted focus:outline-none disabled:opacity-50 sm:w-auto sm:flex-1 md:px-4 md:text-base';
     return this.isDm
       ? `${shared} rounded-2xl bg-surface-950 focus:ring-2 focus:ring-brand`
       : `${shared} rounded-lg border border-surface-700 bg-surface-900 focus:border-brand`;
   }
 
-  /**
-   * 36px on phones rather than 40px — three of these plus the send button have
-   * to share one row below the input.
-   */
+  /** 40px everywhere: a finger-sized target now that the bar spans the phone. */
   get iconButtonClasses(): string {
     const shared =
-      'inline-flex h-9 w-9 items-center justify-center text-ink-secondary transition-colors hover:text-ink disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:h-10 md:w-10';
+      'inline-flex h-10 w-10 items-center justify-center text-ink-secondary transition-colors hover:text-ink disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand';
     return this.isDm
       ? `${shared} rounded-xl bg-surface-800 hover:bg-surface-700`
       : `${shared} rounded-lg bg-surface-700 hover:bg-surface-600`;
@@ -211,7 +208,7 @@ export class ChatComposerComponent implements OnChanges {
   /** Brand amber needs dark text — light-on-light fails contrast badly. */
   get sendButtonClasses(): string {
     const shared =
-      'ml-auto shrink-0 bg-brand px-3 py-2 text-sm font-medium text-surface-950 transition-colors hover:bg-brand-hover disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:ml-0 md:px-4 md:text-base';
+      'ml-auto min-h-10 shrink-0 bg-brand px-4 py-2 text-sm font-medium text-surface-950 transition-colors hover:bg-brand-hover disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:ml-0 md:text-base';
     return this.isDm ? `${shared} rounded-2xl` : `${shared} rounded-lg`;
   }
 

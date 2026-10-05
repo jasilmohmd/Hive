@@ -46,6 +46,34 @@ router-outlet {
 }
 
 /* ===========================================================================
+   Phone drawer
+
+   Below md the channel sidebar slides over the content. Visibility is part of
+   the transition so a closed drawer is hidden from focus and screen readers
+   only *after* it has slid away (and shown *before* it slides in); `inert`
+   in the template covers interaction. The width note under "Collapse" is
+   about md+ and still holds — this is a transform, not a width animation.
+   =========================================================================== */
+.cl-drawer {
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.22s ease, visibility 0s linear 0.22s;
+}
+
+.cl-drawer--open {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.22s ease, visibility 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-drawer,
+  .cl-drawer--open {
+    transition: none;
+  }
+}
+
+/* ===========================================================================
    Channel sidebar user controls.
 
    The sidebar itself is a plain flex column at every breakpoint — the widths
@@ -86,7 +114,15 @@ router-outlet {
   background: rgb(var(--surface-700));
 }
 
-@media (min-width: 768px) {
+/* Muted / deafened: the same red wash the session bar uses. */
+.cl-user-btn--off {
+  background: rgb(var(--danger) / 0.35);
+  color: rgb(var(--danger-text));
+}
+
+/* Mouse-sized from md, but only where the pointer is a mouse — a tablet in
+   landscape is md-wide and still driven by a finger. */
+@media (min-width: 768px) and (pointer: fine) {
   .cl-user-btn {
     width: 2rem;
     height: 2rem;

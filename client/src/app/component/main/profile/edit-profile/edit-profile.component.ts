@@ -1,26 +1,28 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { UserProfileService } from '../../../../services/user-profile.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonComponent } from '../../../common/button/button.component';
 import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.component';
 import { ToastService } from '../../../../services/toast.service';
+import { UserAuthService } from '../../../../services/user-auth.service';
 
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ButtonComponent, ErrorAlertComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonComponent, ErrorAlertComponent],
   templateUrl: './edit-profile.component.html',
   styleUrl: './edit-profile.component.css',
 })
-export class EditProfileComponent {
+export class EditProfileComponent implements OnInit {
   editProfileForm: FormGroup;
   errorMessage = '';
   isSubmitting = false;
 
   private toast = inject(ToastService);
+  private auth = inject(UserAuthService);
 
   constructor(
     private fb: FormBuilder,
@@ -29,6 +31,18 @@ export class EditProfileComponent {
   ) {
     this.editProfileForm = this.fb.group({
       newUserName: ['', [Validators.required, Validators.minLength(3)]],
+    });
+  }
+
+  /** Start from your current name rather than an empty box. */
+  ngOnInit(): void {
+    this.auth.getUserDetails().subscribe({
+      next: (res) => {
+        const name = res?.userData?.userName;
+        const ctrl = this.editProfileForm.get('newUserName');
+        if (name && ctrl && !ctrl.dirty) ctrl.setValue(name);
+      },
+      error: () => undefined,
     });
   }
 
@@ -46,7 +60,7 @@ export class EditProfileComponent {
       .subscribe({
         next: (res) => {
           this.toast.success(res.message || 'Profile updated');
-          this.router.navigate(['/main/profile'], { state: { successMessage: res.message } });
+          this.router.navigate(['/main/profile']);
         },
         error: (err: Error) => {
           this.errorMessage = err.message || 'Update failed';

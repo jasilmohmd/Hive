@@ -12,6 +12,7 @@ import { ImageCroppedEvent } from 'ngx-image-cropper';
 import { finalize } from 'rxjs/operators';
 import { ImageCropperModalComponent } from '../image-cropper-modal/image-cropper-modal.component';
 import { ImageService } from '../../../services/image.service';
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 
 export type ImagePickerVariant = 'avatar' | 'cover';
 
@@ -23,6 +24,7 @@ export type ImagePickerVariant = 'avatar' | 'cover';
 })
 export class ImagePickerMenuComponent {
   private imageService = inject(ImageService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   @Input() variant: ImagePickerVariant = 'avatar';
   /** Display URL (existing image). */
@@ -96,10 +98,19 @@ export class ImagePickerMenuComponent {
       });
   }
 
-  onRemove(): void {
+  /** Asks first: on touch screens the (invisible-until-hover) Remove used to fire on a stray tap. */
+  async onRemove(): Promise<void> {
     if (!this.allowRemove || this.uploading) return;
+    const ok = await this.confirmDialog.confirm({
+      title: 'Remove photo?',
+      message: 'Your profile will show your initials instead.',
+      confirmText: 'Remove',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     this.removed.emit();
   }
+
 
   private resetFileInput(): void {
     if (this.fileInput?.nativeElement) {

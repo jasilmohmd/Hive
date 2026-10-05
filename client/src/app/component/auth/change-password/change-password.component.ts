@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { UserAuthService } from '../../../services/user-auth.service';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs/operators';
@@ -11,7 +11,7 @@ import { ToastService } from '../../../services/toast.service';
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, ButtonComponent, ErrorAlertComponent],
+  imports: [ReactiveFormsModule, CommonModule, RouterLink, ButtonComponent, ErrorAlertComponent],
   templateUrl: './change-password.component.html',
   styleUrl: './change-password.component.css',
 })

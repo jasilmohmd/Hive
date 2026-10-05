@@ -99,12 +99,10 @@ export default class AuthRepository implements IAuthRepository {
     } catch (error) {
       // Type-check and handle the error
       if (error instanceof Error) {
-        console.error("Error creating user:", error.message);
         throw new Error(error.message); // Rethrow with the original message
       }
 
       // Handle unexpected errors
-      console.error("Unexpected error:", error);
       throw new Error("An unexpected error occurred while creating the user");
     }
 

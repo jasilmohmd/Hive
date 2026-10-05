@@ -5,13 +5,19 @@ import { Injectable } from '@angular/core';
 export class MediaSessionService {
   private reservation: object | null = null;
 
+  /** A connected voice room can be left by the incoming-call confirmation. */
+  voiceRoomConnected = false;
+
   acquire(): (() => void) | null {
     if (this.reservation) return null;
     const reservation = {};
     this.reservation = reservation;
     return () => {
       // A delayed cleanup from an old session must not unlock its successor.
-      if (this.reservation === reservation) this.reservation = null;
+      if (this.reservation === reservation) {
+        this.reservation = null;
+        this.voiceRoomConnected = false;
+      }
     };
   }
 }

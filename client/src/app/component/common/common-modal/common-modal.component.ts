@@ -80,6 +80,48 @@ export class CommonModalComponent implements AfterViewInit, OnDestroy {
     focusable?.focus();
   }
 
+  /**
+   * Keys pressed inside the panel stay inside it — so shortcuts on the page
+   * underneath (the chat composer's Enter, say) don't fire — with two
+   * exceptions handled here. Escape cancels: it used to be swallowed by this
+   * very stopPropagation before the document listener could see it, so the
+   * modal never closed on Escape once focus was inside. Tab wraps between the
+   * first and last controls, so focus can't wander onto the page behind.
+   */
+  onPanelKeydown(event: KeyboardEvent): void {
+    event.stopPropagation();
+    if (event.key === 'Escape') {
+      if (this.closeOnEscape) {
+        event.preventDefault();
+        this.cancel();
+      }
+      return;
+    }
+    if (event.key === 'Tab') {
+      this.trapTab(event);
+    }
+  }
+
+  private trapTab(event: KeyboardEvent): void {
+    const root = this.panel?.nativeElement;
+    if (!root) return;
+    const focusable = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   onBackdropClick(event: MouseEvent): void {
     if (!this.closeOnBackdrop) return;
     if (event.target === event.currentTarget) {

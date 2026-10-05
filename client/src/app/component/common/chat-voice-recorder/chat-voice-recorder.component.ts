@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, OnDestroy, Output } from '@angular/core';
 import { CallService } from '../../../services/call.service';
+import { VoiceroomService } from '../../../services/voiceroom.service';
 import { ChatSheetComponent } from '../chat-sheet/chat-sheet.component';
 import { ButtonComponent } from '../../common/button/button.component';
 
@@ -16,6 +17,7 @@ export class ChatVoiceRecorderComponent implements OnDestroy {
   @Output() dismiss = new EventEmitter<void>();
 
   private readonly call = inject(CallService);
+  private readonly voiceroom = inject(VoiceroomService);
 
   recording = false;
   error: string | null = null;
@@ -25,6 +27,10 @@ export class ChatVoiceRecorderComponent implements OnDestroy {
   private maxTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnDestroy(): void {
+    if (this.maxTimer) {
+      clearTimeout(this.maxTimer);
+      this.maxTimer = null;
+    }
     this.stopTracks();
   }
 
@@ -32,6 +38,11 @@ export class ChatVoiceRecorderComponent implements OnDestroy {
     this.error = null;
     if (this.call.isInCall()) {
       this.error = 'End the call before recording a voice message.';
+      return;
+    }
+    // A connected voice room already holds the mic; a second capture fights it.
+    if (this.voiceroom.isConnected) {
+      this.error = 'Leave the voice room before recording a voice message.';
       return;
     }
     this.call.releaseMediaDevices();

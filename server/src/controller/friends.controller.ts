@@ -97,7 +97,6 @@ export default class FriendController {
     try {
       const userId = req.userId!
       const pendingRequests = await this.friendUseCase.getPendingFriendRequests(userId);
-      console.log(pendingRequests);
       res.status(200).json({ pendingRequests });
     } catch (error: any) {
       next(error);
@@ -142,8 +141,6 @@ async getOnlineFriends(req: IAuthRequest, res: Response, next: NextFunction): Pr
     try {
       const userId = req.userId! // Ensure your auth middleware sets req.id
       const { friendId } = req.body;
-      console.log(friendId,userId);
-      
       await this.friendUseCase.blockUser(userId, friendId);
       res.status(200).json({ message: "User blocked successfully." });
     } catch (error: any) {

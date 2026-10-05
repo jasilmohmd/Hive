@@ -42,10 +42,18 @@ export class ChatMessageContextMenuComponent implements OnChanges {
     if (typeof window === 'undefined') return;
 
     const menuWidth = 168;
-    const menuHeight = this.isMine && this.canEdit ? 200 : this.isMine ? 168 : 132;
+    // Items are 36px, or 40px where the pointer is a finger (coarse:py-2.5).
+    const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+    const itemHeight = coarse ? 40 : 36;
+    const items = 3 + (this.isMine ? 1 : 0) + (this.isMine && this.canEdit ? 1 : 0);
+    const menuHeight = items * itemHeight + 8;
     const pad = 8;
-    const maxX = window.innerWidth - menuWidth - pad;
-    const maxY = window.innerHeight - menuHeight - pad;
+    // The visual viewport excludes an open on-screen keyboard; innerHeight
+    // doesn't, and the menu could open underneath it.
+    const viewWidth = window.visualViewport?.width ?? window.innerWidth;
+    const viewHeight = window.visualViewport?.height ?? window.innerHeight;
+    const maxX = viewWidth - menuWidth - pad;
+    const maxY = viewHeight - menuHeight - pad;
 
     this.menuLeft = Math.round(Math.min(Math.max(pad, this.anchorX), Math.max(pad, maxX)));
     this.menuTop = Math.round(Math.min(Math.max(pad, this.anchorY), Math.max(pad, maxY)));

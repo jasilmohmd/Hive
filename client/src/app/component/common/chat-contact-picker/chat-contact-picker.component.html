@@ -1,9 +1,11 @@
 <app-chat-sheet
   [theme]="theme"
-  panelClass="max-h-[50vh] overflow-y-auto p-3"
+  panelClass="max-h-[60dvh] overflow-y-auto sm:max-h-[50vh]"
+  sheetTitle="Share contact"
   (dismiss)="dismiss.emit()"
 >
-  <h3 class="mb-2 text-sm font-medium">Share contact</h3>
+  <!-- Padding lives here, not on the panel, so the sheet header spans edge to edge. -->
+  <div class="p-3">
   <p *ngIf="loading" class="text-sm text-ink-muted">Loading…</p>
   <p *ngIf="error" class="text-sm text-danger-text">{{ error }}</p>
   <!-- Previously this sheet just went blank with no friends and no error. -->
@@ -19,4 +21,5 @@
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-700 text-xs">{{ f.userName.slice(0,2).toUpperCase() }}</span>
     <span class="min-w-0 truncate">{{ f.userName }}</span>
   </button>
+  </div>
 </app-chat-sheet>

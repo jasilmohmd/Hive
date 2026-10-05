@@ -1,15 +1,119 @@
 <!--
-  The scroll container is the important part. This table carries fixed-width
-  columns (a 200px avatar column, a 120px actions column) and previously had no
-  overflow boundary at all, so in the community About modals - which on a phone
-  render inside a chat pane of roughly 200px - it pushed the page rather than
-  containing itself.
+  Two renderings of the same rows:
 
-  overflow-x-auto means the table can never break the layout again; the widths
-  themselves now only apply from md, where there is genuinely room for them.
+  - Below sm, a stacked card list. A real table on a phone could only scroll
+    sideways, which pushed the action buttons (Accept / Remove / …) off screen.
+    Each card is avatar + primary text + the remaining columns as muted lines,
+    with the actions wrapping under the text when they don't fit beside it.
+  - From sm, the table. overflow-x-auto still guards against unexpectedly wide
+    content; the fixed column widths only apply from md.
+
+  The avatar and the actions are shared templates, so the two views can't drift.
 -->
+
+<ng-template #avatarTpl let-row>
+  <ng-container *ngIf="row.profilePicture || row.imageUrl; else fallback">
+    <img
+      [src]="row.profilePicture || row.imageUrl"
+      [alt]="row.userName || row.name || row.email || 'User'"
+      class="h-10 w-10 shrink-0 rounded-full object-cover"
+      [ngClass]="{ 'ring-1 ring-white/10': appearance === 'friends' }"
+    />
+  </ng-container>
+  <ng-template #fallback>
+    <div
+      *ngIf="showFallbackInitial"
+      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-600 text-base font-medium md:text-lg"
+      [ngClass]="{ 'ring-1 ring-white/10': appearance === 'friends' }"
+      aria-hidden="true"
+    >
+      {{ initial(row) }}
+    </div>
+  </ng-template>
+</ng-template>
+
+<ng-template #badgesTpl let-badges>
+  <div class="flex flex-wrap gap-1">
+    <span *ngFor="let badge of badges"
+      class="rounded-full px-2 py-0.5 text-xs font-medium"
+      [ngClass]="badge.class || 'bg-surface-700 text-ink-secondary'">
+      {{ badge.label }}
+    </span>
+    <span *ngIf="!badges?.length" class="text-xs text-ink-muted">—</span>
+  </div>
+</ng-template>
+
+<ng-template #actionsTpl let-row>
+  <ng-container *ngFor="let act of primaryActions">
+    <button
+      *ngIf="!act.hidden || !act.hidden(row)"
+      type="button"
+      (click)="act.action(row); $event.stopPropagation()"
+      [disabled]="isDisabled(act, row)"
+      [ngClass]="[act.class || '', actionBaseClasses(act)]"
+      class="inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center whitespace-nowrap rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-60 coarse:min-h-10 coarse:min-w-10"
+      [title]="labelOf(act, row)"
+      [attr.aria-label]="act.icon ? labelOf(act, row) : null"
+    >
+      <img *ngIf="act.icon" [src]="act.icon" alt="" class="h-5 w-5" />
+      <span *ngIf="!act.icon">{{ labelOf(act, row) }}</span>
+    </button>
+  </ng-container>
+
+  <div class="dropdown-container relative shrink-0" *ngIf="secondaryActions?.length">
+    <app-common-dropdown
+      [items]="secondaryActions"
+      [isOpen]="dropdownOpen === row"
+      (isOpenChange)="dropdownOpen = $event ? row : null"
+      (itemSelected)="onSecondaryAction($event, row)"
+    >
+    </app-common-dropdown>
+  </div>
+</ng-template>
+
+<!-- ─────────────── Phones: stacked cards ─────────────── -->
+<ul class="flex flex-col gap-2 sm:hidden" [attr.aria-label]="ariaLabel">
+  <li
+    *ngFor="let row of data"
+    class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl p-2 transition-colors"
+    [ngClass]="appearance === 'friends'
+      ? 'border border-surface-800/80 bg-surface-950/30'
+      : 'bg-surface-900/50'"
+    [class.cursor-pointer]="enableRowClick"
+    [attr.tabindex]="enableRowClick ? 0 : null"
+    [attr.role]="enableRowClick ? 'button' : null"
+    (click)="onCardActivate($event, row)"
+    (keydown.enter)="onCardActivate($event, row)"
+  >
+    <div class="flex min-w-0 flex-1 basis-40 items-center gap-3">
+      <ng-container *ngIf="hasAvatarColumn">
+        <ng-container *ngTemplateOutlet="avatarTpl; context: { $implicit: row }"></ng-container>
+      </ng-container>
+      <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <ng-container *ngFor="let col of dataColumns; let first = first">
+          <ng-container [ngSwitch]="col.field">
+            <ng-container *ngSwitchCase="'roleBadges'">
+              <ng-container *ngTemplateOutlet="badgesTpl; context: { $implicit: row[col.field] }"></ng-container>
+            </ng-container>
+            <span *ngSwitchDefault
+              class="min-w-0 truncate"
+              [ngClass]="first ? 'font-medium text-ink' : 'text-xs text-ink-muted'"
+              [title]="row[col.field] ?? ''">
+              {{ row[col.field] }}
+            </span>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+    <div class="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+      <ng-container *ngTemplateOutlet="actionsTpl; context: { $implicit: row }"></ng-container>
+    </div>
+  </li>
+</ul>
+
+<!-- ─────────────── sm+: table ─────────────── -->
 <div
-  class="overflow-x-auto"
+  class="hidden overflow-x-auto sm:block"
   [ngClass]="
     appearance === 'friends'
       ? 'rounded-xl border border-surface-800/80 bg-surface-950/30'
@@ -20,6 +124,7 @@
     <table
       class="w-full"
       [class.friends-data-tight]="appearance === 'friends'"
+      [attr.aria-label]="ariaLabel"
     >
       <thead *ngIf="showColumnHeaders">
         <tr
@@ -53,7 +158,7 @@
                 ? 'px-2 py-2 text-right text-sm font-thin text-ink-secondary sm:px-4 sm:py-2.5 md:w-[120px]'
                 : 'px-2 py-2 text-right text-sm font-thin text-ink-secondary md:w-[120px] md:px-4'
             "
-          ></th>
+          ><span class="sr-only">Actions</span></th>
         </tr>
       </thead>
       <tbody>
@@ -62,7 +167,9 @@
           class="transition-colors hover:bg-surface-900/50"
           [ngClass]="appearance === 'friends' ? 'border-b border-surface-800/80' : 'border-b border-surface-700'"
           [class.cursor-pointer]="enableRowClick"
+          [attr.tabindex]="enableRowClick ? 0 : null"
           (click)="onRowActivate($event, row)"
+          (keydown.enter)="onCardActivate($event, row)"
         >
           <ng-container *ngFor="let col of columns">
             <td
@@ -74,42 +181,16 @@
             >
               <ng-container [ngSwitch]="col.field">
                 <div *ngSwitchCase="'profilePicture'" class="flex items-center">
-                  <ng-container *ngIf="row.profilePicture || row.imageUrl; else fallback">
-                    <img
-                      [src]="row.profilePicture || row.imageUrl"
-                      alt="{{ row.userName || row.name || row.email || 'User' }}"
-                      class="h-8 w-8 shrink-0 rounded-full object-cover md:h-10 md:w-10"
-                      [ngClass]="{ 'ring-1 ring-white/10': appearance === 'friends' }"
-                    />
-                  </ng-container>
-                  <ng-template #fallback>
-                    <ng-container *ngIf="showFallbackInitial">
-                      <div
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-600 text-base font-medium md:h-10 md:w-10 md:text-lg"
-                        [ngClass]="{ 'ring-1 ring-white/10': appearance === 'friends' }"
-                      >
-                        {{
-                          ((row.userName || row.name || row.email)
-                            ? (row.userName || row.name || row.email)[0]
-                            : '') | uppercase
-                        }}
-                      </div>
-                    </ng-container>
-                  </ng-template>
+                  <ng-container *ngTemplateOutlet="avatarTpl; context: { $implicit: row }"></ng-container>
                 </div>
 
-                <div *ngSwitchCase="'roleBadges'" class="flex flex-wrap gap-1">
-                  <span *ngFor="let badge of row[col.field]"
-                    class="rounded-full px-2 py-0.5 text-xs font-medium"
-                    [ngClass]="badge.class || 'bg-surface-700 text-ink-secondary'">
-                    {{ badge.label }}
-                  </span>
-                  <span *ngIf="!row[col.field]?.length" class="text-xs text-ink-muted">—</span>
-                </div>
+                <ng-container *ngSwitchCase="'roleBadges'">
+                  <ng-container *ngTemplateOutlet="badgesTpl; context: { $implicit: row[col.field] }"></ng-container>
+                </ng-container>
 
                 <!-- max-w gives `truncate` something to truncate against: in a
                      table-layout:auto cell it would otherwise just widen. -->
-                <div *ngSwitchDefault class="max-w-[10rem] truncate md:max-w-none">
+                <div *ngSwitchDefault class="max-w-[12rem] truncate md:max-w-[20rem]" [title]="row[col.field] ?? ''">
                   {{ row[col.field] }}
                 </div>
               </ng-container>
@@ -124,29 +205,7 @@
             "
           >
             <div class="flex flex-nowrap items-center justify-end gap-1 md:gap-2">
-              <ng-container *ngFor="let act of primaryActions">
-                <button
-                  *ngIf="!act.hidden || !act.hidden(row)"
-                  type="button"
-                  (click)="act.action(row); $event.stopPropagation()"
-                  [ngClass]="act.class"
-                  class="shrink-0 whitespace-nowrap rounded-md bg-surface-600 p-1.5 transition-colors"
-                  [title]="act.label"
-                >
-                  <img *ngIf="act.icon" [src]="act.icon" alt="icon" class="h-5 w-5" />
-                  <span *ngIf="!act.icon">{{ act.label }}</span>
-                </button>
-              </ng-container>
-
-              <div class="dropdown-container relative shrink-0" *ngIf="secondaryActions?.length">
-                <app-common-dropdown
-                  [items]="secondaryActions"
-                  [isOpen]="dropdownOpen === row"
-                  (isOpenChange)="dropdownOpen = $event ? row : null"
-                  (itemSelected)="onSecondaryAction($event, row)"
-                >
-                </app-common-dropdown>
-              </div>
+              <ng-container *ngTemplateOutlet="actionsTpl; context: { $implicit: row }"></ng-container>
             </div>
           </td>
         </tr>
@@ -154,3 +213,5 @@
     </table>
   </div>
 </div>
+
+<p *ngIf="emptyText && !data?.length" class="py-6 text-center text-sm text-ink-muted">{{ emptyText }}</p>

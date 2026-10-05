@@ -10,19 +10,19 @@
     [style.top.px]="menuTop"
     (click)="$event.stopPropagation()"
   >
-    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-surface-850" (click)="reply.emit()">
+    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-surface-850 coarse:py-2.5" (click)="reply.emit()">
       Reply
     </button>
-    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-surface-850" (click)="react.emit()">
+    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-surface-850 coarse:py-2.5" (click)="react.emit()">
       React
     </button>
-    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-surface-850" (click)="forward.emit()">
+    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-surface-850 coarse:py-2.5" (click)="forward.emit()">
       Forward
     </button>
     <button
       *ngIf="isMine && canEdit"
       type="button"
-      class="block w-full px-4 py-2 text-left text-sm hover:bg-surface-850"
+      class="block w-full px-4 py-2 text-left text-sm hover:bg-surface-850 coarse:py-2.5"
       (click)="edit.emit()"
     >
       Edit
@@ -30,7 +30,7 @@
     <button
       *ngIf="isMine"
       type="button"
-      class="block w-full px-4 py-2 text-left text-sm text-danger-text hover:bg-surface-850"
+      class="block w-full px-4 py-2 text-left text-sm text-danger-text hover:bg-surface-850 coarse:py-2.5"
       (click)="delete.emit()"
     >
       Delete

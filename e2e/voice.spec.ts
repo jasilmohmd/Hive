@@ -37,14 +37,23 @@ test('incoming direct call is declined while voice-room setup owns the microphon
 test('incoming calls still work after logout and login in the same tab', async ({ page, api }) => {
   let sendIncoming!: () => void;
   let connections = 0;
+  let readyConnections = 0;
   await page.routeWebSocket('**/socket.io/**', ws => {
     connections++;
     ws.send('0' + JSON.stringify({ sid: `session-${connections}`, upgrades: [], pingInterval: 25000, pingTimeout: 20000 }));
     sendIncoming = () => ws.send('42' + JSON.stringify(['call:incoming', { callId: 'relogin-call', chatId: 'fixture-chat', callerId: friend._id, callType: 'audio' }]));
-    ws.onMessage(data => { if (String(data).startsWith('40')) ws.send('40' + JSON.stringify({ sid: `session-${connections}` })); });
+    ws.onMessage(data => {
+      if (String(data).startsWith('40')) {
+        ws.send('40' + JSON.stringify({ sid: `session-${connections}` }));
+        // A pong confirms the browser processed the handshake before events.
+        ws.send('2');
+      }
+      if (String(data) === '3') readyConnections++;
+    });
   });
   await page.goto('/main/profile');
   await expect.poll(() => connections).toBe(1);
+  await expect.poll(() => readyConnections).toBe(1);
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
   await expect(page).toHaveURL(/auth\/login/);
   await page.getByLabel('Email', { exact: true }).fill('maker@example.test');
@@ -52,6 +61,7 @@ test('incoming calls still work after logout and login in the same tab', async (
   await page.getByRole('button', { name: 'Log in', exact: true }).click();
   await expect(page).toHaveURL(/main\/discover/);
   await expect.poll(() => connections).toBe(2);
+  await expect.poll(() => readyConnections).toBe(2);
   await page.waitForLoadState('networkidle');
   sendIncoming();
   await expect(page.getByRole('alertdialog')).toBeVisible();

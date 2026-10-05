@@ -22,6 +22,8 @@ import {
 
 import { BehaviorSubject, Subject, firstValueFrom } from 'rxjs';
 
+import { Socket } from 'socket.io-client';
+
 import { environment } from '../../environments/environment';
 
 import { ChatService } from './chat.service';
@@ -79,7 +81,11 @@ export class VoiceroomService implements OnDestroy {
 
   private presenceJoinedChannelId: string | null = null;
 
-  private readonly presenceBoundSockets = new WeakSet<object>();
+  /** The socket instance our room:* handlers are attached to (a new one after re-login). */
+  private boundSocket: Socket | null = null;
+
+  /** Mic state to restore when deafen is turned back off. */
+  private mutedBeforeDeafen = false;
 
   private readonly presenceByUserId = new Map<string, IVoiceroomPresenceUser>();
 
@@ -101,7 +107,31 @@ export class VoiceroomService implements OnDestroy {
 
   readonly activeChannelName$ = new BehaviorSubject<string | null>(null);
 
-  localMuted = false;
+  /** Community the active room belongs to — the session bar links back to it after you switch communities. */
+  readonly activeCommunityId$ = new BehaviorSubject<string | null>(null);
+
+  /**
+   * Streams, so every control showing mute/deafen (the room dock, the sidebar
+   * session bar, the sidebar user panel) stays in sync. The session bar used
+   * to read the plain field once and showed a stale icon after muting from
+   * the dock.
+   */
+  readonly localMuted$ = new BehaviorSubject(false);
+
+  /** Deafened: remote audio is silenced locally (and the mic muted, as in most voice apps). */
+  readonly deafened$ = new BehaviorSubject(false);
+
+  get localMuted(): boolean {
+    return this.localMuted$.value;
+  }
+
+  set localMuted(value: boolean) {
+    if (value !== this.localMuted$.value) this.localMuted$.next(value);
+  }
+
+  get deafened(): boolean {
+    return this.deafened$.value;
+  }
 
   localCamOn = false;
 
@@ -118,7 +148,22 @@ export class VoiceroomService implements OnDestroy {
     private chat: ChatService,
     private mediaSession: MediaSessionService
 
-  ) {}
+  ) {
+    // A reconnected socket is a new socket server-side, in no rooms: re-announce
+    // the room we're in so others keep seeing us, and re-attach handlers when
+    // it's a new instance (logout → login in the same tab).
+    this.chat.onSocketReady((socket) => {
+      this.bindSocket(socket);
+      if (this.presenceJoinedChannelId && this.isConnected) {
+        socket.emit('room:join', { channelId: this.presenceJoinedChannelId, muted: this.localMuted });
+        this.emitMediaPresence();
+      }
+    });
+    this.chat.sessionEnded$.subscribe(() => {
+      this.boundSocket = null;
+      void this.leaveActiveCall();
+    });
+  }
 
   get isConnected(): boolean {
     return this.connected$.value;
@@ -144,6 +189,7 @@ export class VoiceroomService implements OnDestroy {
     this.channelId = null;
     this.presenceJoinedChannelId = null;
     this.activeChannelName$.next(null);
+    this.activeCommunityId$.next(null);
   }
 
   async leaveActiveCall(): Promise<void> {
@@ -181,14 +227,14 @@ export class VoiceroomService implements OnDestroy {
 
 
 
-  async join(channelId: string, channelName?: string): Promise<void> {
+  async join(channelId: string, channelName?: string, communityId?: string): Promise<void> {
     if (this.joining) throw new Error('A voice room connection is already in progress.');
     this.joining = true;
     try {
       await this.leave();
       this.releaseSession = this.mediaSession.acquire();
       if (!this.releaseSession) throw new Error('End the direct call before joining a voice room.');
-      await this.joinRoom(channelId, channelName);
+      await this.joinRoom(channelId, channelName, communityId);
     } catch (error) {
       await this.leave();
       throw error;
@@ -197,9 +243,10 @@ export class VoiceroomService implements OnDestroy {
     }
   }
 
-  private async joinRoom(channelId: string, channelName?: string): Promise<void> {
+  private async joinRoom(channelId: string, channelName?: string, communityId?: string): Promise<void> {
     this.channelId = channelId;
     this.activeChannelName$.next(channelName?.trim() || null);
+    this.activeCommunityId$.next(communityId || null);
 
 
 
@@ -284,10 +331,22 @@ export class VoiceroomService implements OnDestroy {
 
 
 
-    await room.connect(url, tokenRes.token);
+    try {
+      await room.connect(url, tokenRes.token);
+      await room.localParticipant.setMicrophoneEnabled(true);
+    } catch (err) {
+      // Without this, a mic failure (NotReadableError when another app holds
+      // it) left the LiveKit room connected: everyone else saw a ghost
+      // participant while this client showed "not connected".
+      await room.disconnect().catch(() => undefined);
+      if (this.room === room) this.room = null;
+      this.channelId = null;
+      this.activeChannelName$.next(null);
+      this.activeCommunityId$.next(null);
+      throw err;
+    }
 
-    await room.localParticipant.setMicrophoneEnabled(true);
-
+    this.mediaSession.voiceRoomConnected = true;
     this.connected$.next(true);
 
     await this.tryStartAudio(room);
@@ -347,24 +406,50 @@ export class VoiceroomService implements OnDestroy {
     this.participants$.next([]);
 
     this.localMuted = false;
+    this.deafened$.next(false);
+    this.mutedBeforeDeafen = false;
     this.localCamOn = false;
     this.localScreenOn = false;
     this.channelId = null;
     this.activeChannelName$.next(null);
+    this.activeCommunityId$.next(null);
   }
 
   async toggleMute(): Promise<void> {
-
     if (!this.room) return;
+    // Unmuting while deafened undeafens too — talking into a room you can't
+    // hear is never what anyone wants.
+    if (this.deafened && this.localMuted) {
+      this.deafened$.next(false);
+    }
+    await this.setMuted(!this.localMuted);
+  }
 
-    this.localMuted = !this.localMuted;
+  /**
+   * Silence every remote participant for this client only, and mute the mic
+   * with it. Turning it off restores the mic to whatever it was before.
+   * The actual audio muting happens where the <audio> elements live
+   * (VoiceroomAudioComponent), which reads deafened$.
+   */
+  async toggleDeafen(): Promise<void> {
+    if (!this.room) return;
+    const next = !this.deafened;
+    if (next) {
+      this.mutedBeforeDeafen = this.localMuted;
+      this.deafened$.next(true);
+      if (!this.localMuted) await this.setMuted(true);
+    } else {
+      this.deafened$.next(false);
+      if (!this.mutedBeforeDeafen && this.localMuted) await this.setMuted(false);
+    }
+  }
 
-    await this.room.localParticipant.setMicrophoneEnabled(!this.localMuted);
-
+  private async setMuted(muted: boolean): Promise<void> {
+    if (!this.room) return;
+    this.localMuted = muted;
+    await this.room.localParticipant.setMicrophoneEnabled(!muted);
     this.emitMutePresence();
-
     this.refreshParticipants();
-
   }
 
 
@@ -430,10 +515,18 @@ export class VoiceroomService implements OnDestroy {
 
 
   private async bindPresence(channelId: string): Promise<void> {
-
     const socket = await this.chat.connectRealtime();
+    this.bindSocket(socket);
+    socket.emit('room:join', {
+      channelId,
+      muted: this.localMuted,
+    });
+    this.presenceJoinedChannelId = channelId;
+  }
 
-    if (!this.presenceBoundSockets.has(socket)) {
+  private bindSocket(socket: Socket): void {
+
+    if (this.boundSocket !== socket) {
 
       socket.on(
 
@@ -463,19 +556,9 @@ export class VoiceroomService implements OnDestroy {
 
       });
 
-      this.presenceBoundSockets.add(socket);
+      this.boundSocket = socket;
 
     }
-
-    socket.emit('room:join', {
-
-      channelId,
-
-      muted: this.localMuted,
-
-    });
-
-    this.presenceJoinedChannelId = channelId;
 
   }
 

@@ -2,12 +2,17 @@
 
   <p *ngIf="attachError" class="mb-2 text-sm text-danger-text">{{ attachError }}</p>
   <div *ngIf="replyPreview" class="mb-2 flex items-center justify-between rounded-lg border border-brand/40 bg-brand/10 px-3 py-2 text-xs">
-    <span class="truncate text-ink-secondary">Replying: {{ replyPreview }}</span>
-    <button type="button" class="shrink-0 text-ink-secondary hover:text-ink" (click)="cancelReply.emit()">×</button>
+    <span class="min-w-0 truncate text-ink-secondary">Replying: {{ replyPreview }}</span>
+    <button
+      type="button"
+      class="-my-2 -mr-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base text-ink-secondary hover:bg-brand/10 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
+      aria-label="Cancel reply"
+      (click)="cancelReply.emit()"
+    >×</button>
   </div>
   <div *ngIf="pendingFile" [class]="pendingFileChipClasses">
 
-    <span class="truncate pr-3">
+    <span class="min-w-0 truncate pr-3">
 
       <span class="text-ink-secondary">{{ pendingKindLabel() }} · </span>{{ pendingFile.name }}
 
@@ -15,17 +20,17 @@
 
     </span>
 
-    <button type="button" (click)="removePending()" class="text-danger-text hover:text-danger-text">Remove</button>
+    <button type="button" (click)="removePending()" class="-my-1.5 shrink-0 rounded-lg px-2 py-1.5 text-danger-text hover:bg-danger/15 focus-visible:ring-2 focus-visible:ring-brand">Remove</button>
 
   </div>
 
   <!--
-    Wraps below md: the input claims the whole first line (w-full), which pushes
-    the icon group and send button onto a second row. Three 36px icon buttons
-    plus a send button will not share one row with a usable text field inside
-    the ~230px this bar gets on a phone. From md up it is a single row again.
+    Wraps below sm: the input claims the whole first line (w-full), which pushes
+    the icon group and send button onto a second row — three 40px icon buttons
+    and Send would leave a phone's text field ~120px wide. From sm up it is a
+    single row.
   -->
-  <div class="flex flex-wrap items-center gap-2 md:flex-nowrap">
+  <div class="flex flex-wrap items-center gap-2 sm:flex-nowrap">
 
     <input
 
@@ -34,6 +39,8 @@
       [(ngModel)]="draft"
 
       (keydown.enter)="send()"
+      enterkeyhint="send"
+      aria-label="Message"
 
       [disabled]="disabled || busy || isUploading"
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 
 async function completeWizard(page: import('@playwright/test').Page) {
   await page.goto('/main/discover');
-  await page.getByRole('button', { name: 'Create community', exact: true }).click();
+  await page.getByRole('button', { name: /^(Create community|Create)$/ }).click();
   await page.getByPlaceholder('Enter community name').fill('New maker group');
   await page.getByRole('button', { name: 'Continue' }).click();
   for (let i = 0; i < 2; i++) {
@@ -51,7 +51,7 @@ test('profile load failure has a visible error instead of an unhandled exception
 test('community load failure displays an actionable message', async ({ page, api }) => {
   await page.route(`**/community/${community._id}`, route => route.fulfill({ status: 404, json: { message: 'Community not found' } }));
   await page.goto(`/main/community/${community._id}/about`);
-  await expect(page.getByText('Community could not be loaded. It may have been deleted or you may not have access.')).toBeVisible();
+  await expect(page.getByText('It may have been deleted, or you may not have access to it. Check your connection and try again.')).toBeVisible();
 });
 
 test('routed wizard can be dismissed', async ({ page, api }) => {
@@ -62,7 +62,7 @@ test('routed wizard can be dismissed', async ({ page, api }) => {
 
 test('wizard Escape dismissal and step-one description validation', async ({ page, api }) => {
   await page.goto('/main/discover');
-  await page.getByRole('button', { name: 'Create community', exact: true }).click();
+  await page.getByRole('button', { name: /^(Create community|Create)$/ }).click();
   await page.getByPlaceholder('Enter community name').fill('Maker group');
   await page.getByPlaceholder('Describe your community...').fill('x'.repeat(501));
   await page.getByRole('button', { name: 'Continue' }).click();

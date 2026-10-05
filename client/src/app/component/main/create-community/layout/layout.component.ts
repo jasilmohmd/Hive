@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, HostListener, Output } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CommunityStateService } from '../../../../services/shared/community-state.service';
+import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommunityCreateStepOneComponent } from '../step-one/step-one.component';
 import { CommunityCreateStepTwoComponent } from '../step-two/step-two.component';
@@ -10,6 +9,9 @@ import { ImageService } from '../../../../services/image.service';
 import { firstValueFrom } from 'rxjs';
 import { CommunityService } from '../../../../services/community.service';
 import { LoadingStateComponent } from '../../../common/loading-state/loading-state.component';
+import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.component';
+import { CommunityStateService } from '../../../../services/shared/community-state.service';
+import { ToastService } from '../../../../services/toast.service';
 
 @Component({
   selector: 'create-community-layout',
@@ -21,6 +23,7 @@ import { LoadingStateComponent } from '../../../common/loading-state/loading-sta
     CommunityCreateStepTwoComponent,
     CommunityCreateStepThreeComponent,
     LoadingStateComponent,
+    ErrorAlertComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
@@ -30,13 +33,19 @@ export class CreateCommunityLayoutComponent {
   currentStep = 1;
   isSubmitting = false;
   uploadProgress: 'uploading' | 'creating' | 'success' | 'error' | null = null;
-  errorMessage = '';
+  submitError: string | null = null;
 
 
   @Output() close = new EventEmitter<void>();
 
-  constructor( private fb: FormBuilder, private imageService: ImageService, private communityService:CommunityService,
-    private communityState: CommunityStateService, private router: Router, private route: ActivatedRoute ) {
+  constructor(
+    private fb: FormBuilder,
+    private imageService: ImageService,
+    private communityService: CommunityService,
+    private communityState: CommunityStateService,
+    private toast: ToastService,
+    private router: Router
+  ) {
 
     this.communityForm = this.fb.group({
       // Step 1: Basic Info
@@ -57,7 +66,7 @@ export class CreateCommunityLayoutComponent {
     if (this.communityForm.valid) {
       try {
         this.isSubmitting = true;
-        this.errorMessage = '';
+        this.submitError = null;
         this.uploadProgress = 'uploading';
 
         const formValue = { ...this.communityForm.value };
@@ -73,20 +82,21 @@ export class CreateCommunityLayoutComponent {
         const { name, type, description, tags } = formValue;
         const data = { name, type, description, imageUrl, coverImageUrl, tags };
 
-        await this.createCommunity(data);
-        this.communityState.notifyMembershipChanged();
-        
+        const communityId = await this.createCommunity(data);
+
         this.uploadProgress = 'success';
-
-        
-
-        this.isSubmitting = false;
-        this.onCancel();
+        this.toast.success(`${name} is ready`);
+        // The icon rail / Communities sheet only reloads on this signal; a new
+        // community used to be missing from them until a full page reload.
+        this.communityState.notifyMembershipChanged();
+        this.dismiss(communityId ? ['/main/community', communityId] : null);
       } catch (error) {
+        // Stop the full-screen overlay and let the user fix things and retry.
+        // isSubmitting was never reset before, so a failure left the overlay
+        // up for good ("An error occurred") with Cancel disabled behind it.
         this.uploadProgress = 'error';
-        this.errorMessage = error instanceof Error ? error.message : 'Could not create community. Please try again.';
-      } finally {
         this.isSubmitting = false;
+        this.submitError = (error as Error)?.message || 'Could not create the community. Please try again.';
       }
     } else {
       this.communityForm.markAllAsTouched();
@@ -95,27 +105,16 @@ export class CreateCommunityLayoutComponent {
 
   async uploadImage(file: any, isPublic: boolean): Promise<string> {
     try {
-      const response = await firstValueFrom(this.imageService.uploadImage(file, isPublic));
-      return response;
+      return await firstValueFrom(this.imageService.uploadImage(file, isPublic));
     } catch (error: any) {
-      console.error('Error uploading image:', error);
-      throw new Error(error.message);
+      throw new Error(error?.message || 'Image upload failed');
     }
   }
 
-  private async createCommunity(data: any): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.communityService.createCommunity(data).subscribe({
-        next: (res) => {
-          console.log('Community created:', res);
-          resolve();
-        },
-        error: (err) => {
-          console.error('Creation failed:', err);
-          reject(err);
-        }
-      });
-    });
+  /** Resolves with the new community's id (the API answers `{ community }`). */
+  private async createCommunity(data: any): Promise<string | null> {
+    const res: any = await firstValueFrom(this.communityService.createCommunity(data));
+    return res?.community?._id ?? res?._id ?? null;
   }
 
   get overlayMessage(): string {
@@ -164,19 +163,28 @@ export class CreateCommunityLayoutComponent {
     }
   }
 
-  // method to close the modal if using a modal service
+  onCancel(): void {
+    if (!this.isSubmitting) {
+      this.dismiss(null);
+    }
+  }
+
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    // Let an open cropper handle its own close control.
     if (!document.querySelector('app-image-cropper-modal')) this.onCancel();
   }
 
-  onCancel(): void {
-    if (!this.isSubmitting) {
+  /**
+   * Opened as a modal from the nav, the host listens to (close). Reached by
+   * URL (/main/community/create) nothing does, so the close button did
+   * nothing there — go somewhere instead.
+   */
+  private dismiss(navigateTo: unknown[] | null): void {
+    if (this.close.observed) {
       this.close.emit();
-      if (this.route.snapshot.routeConfig?.path === 'community/create') {
-        void this.router.navigate(['/main/discover']);
-      }
+      if (navigateTo) void this.router.navigate(navigateTo);
+    } else {
+      void this.router.navigate(navigateTo ?? ['/main/discover']);
     }
   }
 }

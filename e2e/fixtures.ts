@@ -53,6 +53,11 @@ export async function mockApi(page: Page, authenticated = true) {
 }
 
 export const test = base.extend<{ api: string[] }>({
+  page: async ({ page }, use) => {
+    // Keep fixture checks independent of third-party font delivery.
+    await page.route('https://fonts.googleapis.com/**', route => route.fulfill({ contentType: 'text/css', body: '' }));
+    await use(page);
+  },
   api: async ({ page }, use) => { const unexpected = await mockApi(page); await use(unexpected); expect(unexpected, 'Every API fixture must be explicit').toEqual([]); },
 });
 export { expect };

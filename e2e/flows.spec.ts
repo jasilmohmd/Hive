@@ -67,9 +67,9 @@ test('profile edits and password mismatch validation', async ({ page, api }) => 
 test('friend search and request send', async ({ page, api }) => {
   await page.route('**/friends/request', async route => { expect(route.request().postDataJSON()).toEqual({ receiverId: friend._id }); await route.fulfill({ json: { success: true } }); });
   await page.goto('/main/friends_section/addfriend');
-  await page.getByRole('textbox', { name: 'Search by username' }).fill('Other');
+  await page.getByRole('searchbox', { name: 'Search by username' }).fill('Other');
   await page.getByRole('button', { name: 'Send Request' }).click();
-  await expect(page.getByText('Friend request sent!')).toBeVisible();
+  await expect(page.getByText('Friend request sent', { exact: true })).toBeVisible();
 });
 
 test('pending request acceptance updates the list', async ({ page, api }) => {
@@ -90,7 +90,7 @@ test('blocked user error is visible', async ({ page, api }) => {
 test('confirmation dialog dismisses with Escape while focused inside it', async ({ page, api }) => {
   await page.goto('/main/friends_section/blocked');
   await page.getByRole('button', { name: 'Unblock', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Confirmation' });
+  const dialog = page.getByRole('dialog', { name: 'Unblock user?' });
   await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).focus();
   await page.keyboard.press('Escape');
@@ -118,13 +118,13 @@ test('friend search ignores responses for a previous username', async ({ page, a
     } else await route.fulfill({ json: { users: [{ ...friend, userName: 'Current result' }] } });
   });
   await page.goto('/main/friends_section/addfriend');
-  await page.getByRole('textbox', { name: 'Search by username' }).fill('old');
+  await page.getByRole('searchbox', { name: 'Search by username' }).fill('old');
   await oldStarted;
-  await page.getByRole('textbox', { name: 'Search by username' }).fill('current');
-  await expect(page.getByText('Current result', { exact: true })).toBeVisible();
+  await page.getByRole('searchbox', { name: 'Search by username' }).fill('current');
+  await expect(page.getByText('Current result', { exact: true }).filter({ visible: true })).toBeVisible();
   await oldFinished;
-  await expect(page.getByText('Old result', { exact: true })).not.toBeVisible();
-  await expect(page.getByText('Current result', { exact: true })).toBeVisible();
+  await expect(page.getByText('Old result', { exact: true }).filter({ visible: true })).toHaveCount(0);
+  await expect(page.getByText('Current result', { exact: true }).filter({ visible: true })).toBeVisible();
 });
 
 test('DM attachment and poll panels open and dismiss', async ({ page, api }) => {
@@ -138,7 +138,7 @@ test('DM attachment and poll panels open and dismiss', async ({ page, api }) => 
   await expect(page.getByText('Create poll', { exact: true })).not.toBeVisible();
 });
 
-for (const [route, expected] of [['/main', '/main/discover'], ['/main/friends_section', '/main/friends_section/friends']]) {
+for (const [route, expected] of [['/main', '/main/friends_section/friends'], ['/main/friends_section', '/main/friends_section/friends']]) {
   test(`default route redirects: ${route}`, async ({ page, api }) => {
     await page.goto(route);
     await expect(page).toHaveURL('http://localhost:4200' + expected);

@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 import { ChannelSidebarService } from '../../../services/shared/channel-sidebar.service';
 import { CommunityStateService } from '../../../services/shared/community-state.service';
 import { ToastService } from '../../../services/toast.service';
+import { BottomSheetComponent } from '../../common/bottom-sheet/bottom-sheet.component';
 
 @Component({
   selector: 'app-layout',
@@ -23,12 +24,15 @@ import { ToastService } from '../../../services/toast.service';
     RouterOutlet,
     CreateCommunityLayoutComponent,
     IncomingCallModalComponent,
+    BottomSheetComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css',
 })
 export class LayoutComponent implements OnInit, OnDestroy {
   showCommunityCreateModal = false;
+  /** Phone-only: the bottom sheet listing joined communities. */
+  showCommunitiesSheet = false;
   communities: any[] = [];
   pageTitle = 'Hive';
 
@@ -40,7 +44,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
    * Only meaningful on a community route, hence inCommunity.
    */
   channelSidebarCollapsed = false;
+  /** Whether the channel list is showing on a phone — drives the nav item's active state. */
+  channelSidebarOpenOnPhone = false;
   inCommunity = false;
+  /** Friends and DMs are both "Home" in the phone nav. */
+  inHome = false;
 
   private subs = new Subscription();
 
@@ -57,8 +65,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    void this.chat.connectRealtime().catch((err) => {
-      console.error('Realtime connect failed:', err);
+    // socket.io keeps retrying on its own; tell the user once why live
+    // messages and calls aren't arriving yet.
+    void this.chat.connectRealtime().catch(() => {
+      this.toast.info('Live updates are unavailable right now. Retrying…');
     });
     this.loadCommunities();
     this.updatePageTitle();
@@ -67,11 +77,17 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe(() => {
         this.updatePageTitle();
         this.updateInCommunity();
+        this.showCommunitiesSheet = false;
       })
     );
     this.subs.add(
       this.channelSidebar.collapsed$.subscribe((collapsed) => {
         this.channelSidebarCollapsed = collapsed;
+      })
+    );
+    this.subs.add(
+      this.channelSidebar.mobileOpen$.subscribe((open) => {
+        this.channelSidebarOpenOnPhone = open;
       })
     );
     this.subs.add(
@@ -89,6 +105,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
    */
   private updateInCommunity(): void {
     this.inCommunity = /\/main\/community\/(?!create)[^/]+/.test(this.router.url);
+    this.inHome = /^\/main\/(friends_section|direct_message)/.test(this.router.url);
   }
 
   ngOnDestroy(): void {
@@ -124,6 +141,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
         this.toast.error(error?.message || 'Could not load your communities');
       },
     });
+  }
+
+  initials(name: string | undefined): string {
+    const parts = (name || '?').trim().split(/\s+/).filter(Boolean);
+    return ((parts[0]?.[0] ?? '?') + (parts[1]?.[0] ?? '')).toUpperCase();
   }
 
   getSafeUrl(url: string): SafeUrl {

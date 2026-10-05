@@ -1,3 +1,8 @@
+<div *ngIf="errorMessage" class="mb-2 flex items-center justify-between gap-2 rounded-xl bg-surface-900 p-3 text-sm text-danger-text" role="alert">
+  <span class="min-w-0">{{ errorMessage }}</span>
+  <button type="button" class="shrink-0 rounded-lg px-2 py-1 text-ink-secondary underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-brand" (click)="reload()">Retry</button>
+</div>
+
 <!-- General Section -->
 <div class="rounded-xl bg-surface-900 w-full mb-2 p-1.5">
   <div class="text-ink-secondary font-medium px-2 py-1 text-sm">General</div>

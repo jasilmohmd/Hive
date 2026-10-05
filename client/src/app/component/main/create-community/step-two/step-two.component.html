@@ -3,8 +3,9 @@
   <div>
     <label class="block text-ink text-sm font-medium mb-3">Community Image</label>
     <div class="relative group">
-      <div class="border-2 border-dashed border-surface-600 rounded-lg p-4 transition-colors hover:border-surface-600"
-        (click)="imageFileInput.click()">
+      <div class="cursor-pointer border-2 border-dashed border-surface-600 rounded-lg p-4 transition-colors hover:border-surface-500 focus-visible:border-brand focus-visible:outline-none"
+        role="button" tabindex="0" aria-label="Upload community image"
+        (click)="imageFileInput.click()" (keydown.enter)="imageFileInput.click()" (keydown.space)="$event.preventDefault(); imageFileInput.click()">
         <div class="flex flex-col items-center justify-center text-center" *ngIf="!imagePreview">
           <svg class="w-8 h-8 text-ink-secondary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -16,7 +17,7 @@
         <div class="relative" *ngIf="imagePreview">
           <img [src]="imagePreview" alt="Preview" class="max-w-full h-32 object-cover rounded-lg">
           <button type="button" aria-label="Remove image" (click)="removeImage('image', $event)"
-            class="absolute -top-2 -right-2 bg-danger text-ink rounded-full p-1 hover:bg-danger-hover transition-colors">
+            class="absolute -top-3 -right-3 inline-flex h-9 w-9 items-center justify-center bg-danger text-ink rounded-full hover:bg-danger-hover transition-colors focus-visible:ring-2 focus-visible:ring-brand">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -40,8 +41,9 @@
   <div>
     <label class="block text-ink text-sm font-medium mb-3">Cover Image</label>
     <div class="relative group">
-      <div class="border-2 border-dashed border-surface-600 rounded-lg p-4 transition-colors hover:border-surface-600"
-        (click)="coverFileInput.click()">
+      <div class="cursor-pointer border-2 border-dashed border-surface-600 rounded-lg p-4 transition-colors hover:border-surface-500 focus-visible:border-brand focus-visible:outline-none"
+        role="button" tabindex="0" aria-label="Upload cover image"
+        (click)="coverFileInput.click()" (keydown.enter)="coverFileInput.click()" (keydown.space)="$event.preventDefault(); coverFileInput.click()">
         <div class="flex flex-col items-center justify-center text-center" *ngIf="!coverPreview">
           <svg class="w-8 h-8 text-ink-secondary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -53,7 +55,7 @@
         <div class="relative" *ngIf="coverPreview">
           <img [src]="coverPreview" alt="Cover Preview" class="max-w-full h-32 object-cover rounded-lg">
           <button type="button" aria-label="Remove cover image" (click)="removeImage('coverImage', $event); $event.stopPropagation()"
-            class="absolute -top-2 -right-2 bg-danger text-ink rounded-full p-1 hover:bg-danger-hover transition-colors">
+            class="absolute -top-3 -right-3 inline-flex h-9 w-9 items-center justify-center bg-danger text-ink rounded-full hover:bg-danger-hover transition-colors focus-visible:ring-2 focus-visible:ring-brand">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>

@@ -43,3 +43,23 @@ Reports are generated locally under `playwright-report/` and screenshots/traces 
 ## Limits and remaining checks
 
 This is broad regression coverage, not a guarantee that every possible app state is bug-free. Fixture-based email/reset/upload checks do not verify real providers. LiveKit media, TURN/two-device WebRTC, real email delivery, Cloudinary upload delivery and GIPHY need separately configured test services/devices; no such credentials were used. No Firefox, WebKit, or physical-phone testing was performed. Existing deliberate design/tooling backlog items in HANDOFF (#10 and #14) remain outside these fixes.
+
+## PR #27 merge validation — 2026-10-06
+
+Merged main `278e80d` into `review/playwright-app-audit`, combining the responsive UI, accessible dialogs, socket/presence lifecycle and multi-tab call fixes with the audit regressions. Main's phone channel drawer replaces the audit's collapsed-column workaround: it starts closed and does not persist its open state. Desktop collapse preferences still persist. Default `/main` navigation retains main's Friends destination; signed-in public/auth navigation still opens Discover.
+
+Media reservation remains synchronous during setup, while an incoming DM call may ring in a connected voice room so the existing confirmation can leave that room before accepting. Added a unit regression for this handoff. Friend search now cancels immediately during the debounce window and keeps main's request feedback. Updated browser locators for responsive cards, searchboxes, current error/dialog wording and the phone Create button. Socket fixtures wait for a handshake heartbeat before testing re-login calls. Fixture font CSS is intercepted so third-party font delivery cannot fail UI regressions.
+
+Validation in the managed Linux environment:
+
+- Client and server production builds passed (`npm run build:client`, `npm run build:server`).
+- App, spec and server TypeScript checks passed (`tsc --noEmit` with each project config).
+- `npm run test:client`: 118 Jasmine tests passed using installed system Chromium via `CHROME_BIN` and an uncommitted no-sandbox wrapper.
+- All three server self-tests passed: `test:chat-media-url`, `test:chat-message-content`, `test:link-preview`.
+- The focused friend-search and re-login Playwright checks passed on desktop and mobile (4 tests).
+- `npm run test:e2e -- --config=.hive-runtime/playwright.config.ts`: all 94 desktop/mobile fixture tests passed (3.8 minutes), with no skips or retries. The root `test:e2e:all` command was attempted first; because bundled-browser installation and live API startup were blocked, the suites were subsequently invoked separately with environment-only browser configs.
+- Isolated live suite attempted with `npm run test:e2e:live -- --config=.hive-runtime/playwright.live.config.ts`: API startup blocked by HTTP 403 downloading MongoDB 8.2.6 from `fastdl.mongodb.org`. No live integration tests ran.
+- Playwright's bundled Chromium download was also blocked (HTTP 403 from `cdn.playwright.dev`). Fixture checks instead use system Chromium 151 through an uncommitted config. This does not verify the exact bundled browser revision used by CI.
+- Project-local Playwright CLI executed navigation, mobile resize, screenshot and close. Its unmocked login smoke saw environment errors for external-font certificate trust and the unavailable local API; deterministic fixture checks intercept those dependencies. Representative desktop/mobile route screenshots were visually inspected.
+
+`.hive-runtime`, work logs/caches and generated browser artifacts are locally excluded, never committed. Real email, Cloudinary, GIPHY, LiveKit/TURN/two-device media, physical-device and Firefox/WebKit checks remain unverified; no configured test services were available. GitHub Actions was not run locally.

@@ -90,7 +90,6 @@ export class RoleRepository implements IRoleRepository {
     // Fetch the community document
     const community = await CommunityModel.findById(communityId);
     if (!community) {
-      console.log("Community not found");
       return [];
     }
 

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IRole } from '../../../../models/role';
 import { RoleService } from '../../../../services/role.service';
@@ -61,6 +61,13 @@ export class RolesModalComponent implements OnInit {
     this.form = { name: role.name, permissions: new Set(role.permissions as Permission[]) };
     this.editingId = role._id ?? null;
     this.mode = 'edit';
+  }
+
+  /** Escape backs out of the role form first, then closes. */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.mode === 'list') this.close.emit();
+    else this.cancelForm();
   }
 
   cancelForm(): void {

@@ -32,9 +32,8 @@ export class RoleStateService {
         });
         this.permissionsSubject.next(Array.from(permissionSet));
       }),
-      catchError(error => {
+      catchError(() => {
         this.clear();
-        console.error("Failed to load user roles", error);
         return of([]);
       })
     );

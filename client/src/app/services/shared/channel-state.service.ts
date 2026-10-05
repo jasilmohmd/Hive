@@ -35,10 +35,8 @@ export class ChannelStateService {
           this.currentCommunityId = id;
         }
       }),
-      catchError(error => {
-        console.error('Failed to load channels', error);
-        return of(null);
-      })
+      // Null means "couldn't load"; the channel list shows its own error.
+      catchError(() => of(null))
     );
   }
 

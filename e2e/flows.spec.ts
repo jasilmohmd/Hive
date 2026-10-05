@@ -77,8 +77,11 @@ test('pending request acceptance updates the list', async ({ page, api }) => {
   await page.route('**/friends/pending_requests', route => route.fulfill({ json: { pendingRequests: accepted ? [] : [{ sender: friend }] } }));
   await page.route('**/friends/accept_request', async route => { accepted = true; await route.fulfill({ json: { success: true } }); });
   await page.goto('/main/friends_section/pending');
+  await expect(page.getByText(friend.userName, { exact: true }).filter({ visible: true })).toBeVisible();
   await page.getByRole('button', { name: 'Accept', exact: true }).click();
-  await expect(page.getByText(friend.userName, { exact: true })).not.toBeVisible();
+  await expect.poll(() => accepted).toBe(true);
+  await expect(page.getByText(friend.userName, { exact: true })).toHaveCount(0);
+  await expect(page.getByText('No pending requests', { exact: true })).toBeVisible();
 });
 
 test('blocked user error is visible', async ({ page, api }) => {

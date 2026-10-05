@@ -31,6 +31,7 @@ export class CommunityStateService {
     return this.communityService.getCommunityById(id).pipe(
       tap(community => this.communitySubject.next(community)),
       catchError(error => {
+        this.clear();
         console.error('Failed to load community', error);
         return of(null);
       })

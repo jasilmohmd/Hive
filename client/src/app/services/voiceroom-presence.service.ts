@@ -21,7 +21,7 @@ export class VoiceroomPresenceService implements OnDestroy {
     Record<string, IVoiceroomPresenceUser[]>
   >({});
   private readonly watched = new Set<string>();
-  private socketBound = false;
+  private readonly boundSockets = new WeakSet<object>();
 
   constructor(
     private http: HttpClient,
@@ -116,8 +116,8 @@ export class VoiceroomPresenceService implements OnDestroy {
   }
 
   private bindSocket(): void {
-    if (this.socketBound) return;
     const socket = this.chat.ensureSocket();
+    if (this.boundSockets.has(socket)) return;
     socket.on(
       'room:state',
       (payload: { channelId: string; participants: IVoiceroomPresenceUser[] }) => {
@@ -125,7 +125,7 @@ export class VoiceroomPresenceService implements OnDestroy {
         this.patchChannel(payload.channelId, payload.participants ?? []);
       }
     );
-    this.socketBound = true;
+    this.boundSockets.add(socket);
   }
 
   private patchChannel(

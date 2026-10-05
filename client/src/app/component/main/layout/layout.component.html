@@ -156,7 +156,7 @@
          to. Deliberately still a block box: every routed page shares this
          wrapper, and turning it into a flex row would shrink the ones that
          don't set a host width. -->
-    <div class="relative flex-1 rounded-2xl box-border overflow-hidden min-h-0">
+    <div class="relative flex-1 rounded-2xl box-border overflow-y-auto overflow-x-hidden min-h-0">
       <router-outlet></router-outlet>
     </div>
   </div>

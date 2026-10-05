@@ -7,11 +7,12 @@ import { TableAction, TableColumn } from '../../../../interface/table.interface'
 import { CommonTableComponent } from '../../../common/common-table/common-table.component';
 import { CommonModalComponent } from '../../../common/common-modal/common-modal.component';
 import { EmptyStateComponent } from '../../../common/empty-state/empty-state.component';
+import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.component';
 
 @Component({
   selector: 'app-blocked',
   standalone: true,
-  imports: [CommonModule, FormsModule, CommonTableComponent, CommonModalComponent, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, CommonTableComponent, CommonModalComponent, EmptyStateComponent, ErrorAlertComponent],
   templateUrl: './blocked.component.html',
   styleUrl: './blocked.component.css'
 })

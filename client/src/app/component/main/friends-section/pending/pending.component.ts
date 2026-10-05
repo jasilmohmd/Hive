@@ -5,11 +5,12 @@ import { TableAction, TableColumn } from '../../../../interface/table.interface'
 import { CommonTableComponent } from '../../../common/common-table/common-table.component';
 import { EmptyStateComponent } from '../../../common/empty-state/empty-state.component';
 import { FormsModule } from '@angular/forms';
+import { ErrorAlertComponent } from '../../../common/error-alert/error-alert.component';
 
 @Component({
   selector: 'app-pending',
   standalone: true,
-  imports: [CommonModule, CommonTableComponent, FormsModule, EmptyStateComponent],
+  imports: [CommonModule, CommonTableComponent, FormsModule, EmptyStateComponent, ErrorAlertComponent],
   templateUrl: './pending.component.html',
   styleUrl: './pending.component.css'
 })

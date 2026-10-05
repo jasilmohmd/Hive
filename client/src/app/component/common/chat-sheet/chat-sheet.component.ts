@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 
 /**
  * Shared chrome for the chat composer's popup panels: a dismiss-on-tap backdrop
@@ -26,6 +26,10 @@ export class ChatSheetComponent {
   @Input() sheetTitle: string | null = null;
 
   @Output() dismiss = new EventEmitter<void>();
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.dismiss.emit();
+  }
 
   get themeClasses(): string {
     return this.theme === 'channel'

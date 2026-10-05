@@ -4,7 +4,7 @@ Community and collaboration platform: **Angular 18** SPA (`client/`) and **Expre
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 22 recommended (browser testing requires Node.js 20.19+)
 - MongoDB reachable at the URI you configure
 
 ## Setup
@@ -18,6 +18,10 @@ Community and collaboration platform: **Angular 18** SPA (`client/`) and **Expre
    ```bash
    npm run install:all
    ```
+
+## Required tests after every feature or fix
+
+Run `npm ci` at the root as well as installing client/server dependencies, then `npx playwright install chromium`. After each implementation, run `npm run test:e2e:all` (desktop/mobile UI and isolated live API) and affected unit/typecheck/build checks. `npm run test:client` runs Angular tests using Playwright's Chromium. See [AGENTS.md](AGENTS.md) for the mandatory rule and [browser-testing setup](e2e/README.md) for commands, isolation and coverage limits.
 
 ## Run locally
 

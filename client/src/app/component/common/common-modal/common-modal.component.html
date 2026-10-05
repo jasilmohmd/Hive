@@ -11,7 +11,7 @@
     [attr.aria-labelledby]="title ? titleId : null"
     [attr.aria-describedby]="message ? messageId : null"
     (click)="$event.stopPropagation()"
-    (keydown)="$event.stopPropagation()"
+    (keydown.escape)="closeOnEscape && cancel(); $event.stopPropagation()"
   >
     <h2 *ngIf="title" [id]="titleId" class="mb-4 text-xl font-bold">{{ title }}</h2>
     <p *ngIf="message" [id]="messageId" class="mb-6 text-ink-secondary">{{ message }}</p>

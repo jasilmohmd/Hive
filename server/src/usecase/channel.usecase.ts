@@ -10,6 +10,7 @@ import { IChatRepository } from '../interfaces/repository/IChat.repository.inter
 import { ICommunityRepository } from '../interfaces/repository/ICommunity.repository.interface';
 import { userHasChannelAccess } from '../framework/utils/channelAccess.util';
 import { PERMISSIONS } from '../constants/permissions';
+import { ZodError } from 'zod';
 
 export class ChannelUseCase implements IChannelUsecase{
   constructor(
@@ -60,7 +61,7 @@ export class ChannelUseCase implements IChannelUsecase{
       }
       return createdChannel;
     } catch (error: any) {
-      if (error instanceof CustomError) throw error;
+      if (error instanceof CustomError || error instanceof ZodError) throw error;
       throw new Error(`Error creating channel: ${error.message}`);
     }
   }
@@ -204,7 +205,7 @@ export class ChannelUseCase implements IChannelUsecase{
       }
       return updatedChannel;
     } catch (error: any) {
-      if (error instanceof CustomError) throw error;
+      if (error instanceof CustomError || error instanceof ZodError) throw error;
       throw new Error(`Error updating channel: ${error.message}`);
     }
   }

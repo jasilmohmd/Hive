@@ -49,9 +49,12 @@ export class ChannelSidebarService {
 
   private static readStored(): boolean {
     try {
-      return localStorage.getItem(ChannelSidebarService.STORAGE_KEY) === '1';
+      const stored = localStorage.getItem(ChannelSidebarService.STORAGE_KEY);
+      if (stored !== null) return stored === '1';
     } catch {
-      return false;
+      // Fall back to the viewport default when storage is unavailable.
     }
+    // Keep community content readable on first visit to a phone-sized screen.
+    return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
   }
 }

@@ -39,7 +39,7 @@ class CommunityController implements ICommunityController {
         return;
       }
 
-      const { name, description, type, tags, imageUrl, coverImageUrl } = req.body.data;
+      const { name, description, type, tags, imageUrl, coverImageUrl } = req.body?.data ?? {};
 
       const community = await this.communityUsecase.createCommunity({
         name,

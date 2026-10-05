@@ -11,6 +11,7 @@ import { PERMISSIONS } from '../constants/permissions';
 import IRBACService from '../interfaces/utils/IRBAC.service';
 import { ITag } from '../entity/Tag.entity';
 import { ICategory } from '../entity/CommunityCategory.entity';
+import { ZodError } from 'zod';
 
 
 
@@ -82,7 +83,7 @@ export class CommunityUseCase {
 
       return createdCommunity;
     } catch (error: any) {
-      if (error instanceof CustomError) throw error;
+      if (error instanceof CustomError || error instanceof ZodError) throw error;
       throw new Error(`Failed to create community: ${error.message}`);
     }
   }
@@ -158,7 +159,7 @@ export class CommunityUseCase {
       if (!updatedCommunity) throw new Error("Update failed");
       return updatedCommunity;
     } catch (error: any) {
-      if (error instanceof CustomError) throw error;
+      if (error instanceof CustomError || error instanceof ZodError) throw error;
       throw new Error(`Error updating community: ${error.message}`);
     }
   }

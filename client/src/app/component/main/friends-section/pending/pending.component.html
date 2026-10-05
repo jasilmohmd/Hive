@@ -12,6 +12,7 @@
   </div>
 </div>
 
+<app-error-alert *ngIf="errorMessage" [message]="errorMessage" variant="banner" title="Pending requests" />
 <div class="flex min-h-0 flex-1 flex-col">
   <ng-container *ngIf="hasSearched && filteredRequests.length === 0; else pendingTable">
     <div class="flex min-h-0 flex-1 items-center justify-center p-6">

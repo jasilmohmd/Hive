@@ -20,6 +20,7 @@ export class RoleStateService {
    * Load user roles for the given community and update the internal state.
    */
   loadUserRoles(communityId: string): Observable<IRole[]> {
+    this.clear();
     return this.roleService.getUserRoles(communityId).pipe(
       tap(roles => {
         // Emit a new copy to force change detection if needed
@@ -32,6 +33,7 @@ export class RoleStateService {
         this.permissionsSubject.next(Array.from(permissionSet));
       }),
       catchError(error => {
+        this.clear();
         console.error("Failed to load user roles", error);
         return of([]);
       })

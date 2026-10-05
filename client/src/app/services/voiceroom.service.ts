@@ -25,6 +25,7 @@ import { BehaviorSubject, Subject, firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 import { ChatService } from './chat.service';
+import { MediaSessionService } from './media-session.service';
 
 import { IVoiceroomPresenceUser } from './voiceroom-presence.service';
 
@@ -71,12 +72,14 @@ export interface IVoiceroomParticipantView {
 export class VoiceroomService implements OnDestroy {
 
   private room: Room | null = null;
+  private releaseSession: (() => void) | null = null;
+  private joining = false;
 
   private channelId: string | null = null;
 
   private presenceJoinedChannelId: string | null = null;
 
-  private presenceBound = false;
+  private readonly presenceBoundSockets = new WeakSet<object>();
 
   private readonly presenceByUserId = new Map<string, IVoiceroomPresenceUser>();
 
@@ -112,7 +115,8 @@ export class VoiceroomService implements OnDestroy {
 
     private http: HttpClient,
 
-    private chat: ChatService
+    private chat: ChatService,
+    private mediaSession: MediaSessionService
 
   ) {}
 
@@ -178,7 +182,22 @@ export class VoiceroomService implements OnDestroy {
 
 
   async join(channelId: string, channelName?: string): Promise<void> {
-    await this.leave();
+    if (this.joining) throw new Error('A voice room connection is already in progress.');
+    this.joining = true;
+    try {
+      await this.leave();
+      this.releaseSession = this.mediaSession.acquire();
+      if (!this.releaseSession) throw new Error('End the direct call before joining a voice room.');
+      await this.joinRoom(channelId, channelName);
+    } catch (error) {
+      await this.leave();
+      throw error;
+    } finally {
+      this.joining = false;
+    }
+  }
+
+  private async joinRoom(channelId: string, channelName?: string): Promise<void> {
     this.channelId = channelId;
     this.activeChannelName$.next(channelName?.trim() || null);
 
@@ -251,6 +270,9 @@ export class VoiceroomService implements OnDestroy {
     });
 
     room.on(RoomEvent.Disconnected, () => {
+      if (this.room !== room) return;
+      this.releaseSession?.();
+      this.releaseSession = null;
 
       this.connected$.next(false);
 
@@ -317,6 +339,8 @@ export class VoiceroomService implements OnDestroy {
       this.room = null;
 
     }
+    this.releaseSession?.();
+    this.releaseSession = null;
 
     this.connected$.next(false);
 
@@ -409,7 +433,7 @@ export class VoiceroomService implements OnDestroy {
 
     const socket = await this.chat.connectRealtime();
 
-    if (!this.presenceBound) {
+    if (!this.presenceBoundSockets.has(socket)) {
 
       socket.on(
 
@@ -439,7 +463,7 @@ export class VoiceroomService implements OnDestroy {
 
       });
 
-      this.presenceBound = true;
+      this.presenceBoundSockets.add(socket);
 
     }
 
@@ -632,4 +656,3 @@ export class VoiceroomService implements OnDestroy {
   }
 
 }
-

@@ -3,9 +3,10 @@
   <app-error-alert [message]="errorMessage" variant="banner" [title]="'Could not save'" *ngIf="errorMessage" />
   <form [formGroup]="editProfileForm" (ngSubmit)="updateProfile()" class="mt-4">
     <div class="mb-4">
-      <label class="block text-ink-secondary mb-1">Username</label>
+      <label for="profile-username" class="block text-ink-secondary mb-1">Username</label>
       <input
         type="text"
+        id="profile-username"
         formControlName="newUserName"
         class="w-full px-4 py-2 rounded bg-surface-950 text-ink border border-surface-700 focus:outline-none focus:border-success focus-visible:ring-2 focus-visible:ring-brand"
       />

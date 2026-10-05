@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import { ChatService } from './chat.service';
 import { CallRingtoneService } from './call-ringtone.service';
 import { P2pTransport } from './call/p2p-transport';
+import { MediaSessionService } from './media-session.service';
 
 export type CallType = 'audio' | 'video';
 export type CallState =
@@ -39,7 +40,8 @@ export class CallService {
   private peerId: string | null = null;
   private role: 'caller' | 'callee' | null = null;
   private callType: CallType = 'audio';
-  private socketListenersBound = false;
+  private readonly boundSockets = new WeakSet<Socket>();
+  private releaseSession: (() => void) | null = null;
   private unavailableDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly incomingCall$ = new Subject<IIncomingCall>();
@@ -54,7 +56,8 @@ export class CallService {
   constructor(
     private chat: ChatService,
     private ringtone: CallRingtoneService,
-    private http: HttpClient
+    private http: HttpClient,
+    private mediaSession: MediaSessionService
   ) {
     this.chat.onSocketReady((socket) => this.bindSocketEventsIfNeeded(socket));
     this.callState$.subscribe((state) => {
@@ -75,9 +78,9 @@ export class CallService {
   }
 
   private bindSocketEventsIfNeeded(socket: Socket): void {
-    if (this.socketListenersBound) return;
+    if (this.boundSockets.has(socket)) return;
     this.bindSocketEvents(socket);
-    this.socketListenersBound = true;
+    this.boundSockets.add(socket);
   }
 
   get activeCallId(): string | null {
@@ -106,6 +109,16 @@ export class CallService {
   }
 
   async startCall(chatId: string, peerId: string, callType: CallType): Promise<void> {
+    if (this.isInCall()) {
+      this.callError$.next('Already in a call');
+      return;
+    }
+    const release = this.mediaSession.acquire();
+    if (!release) {
+      this.callError$.next('Leave the voice room or end the current call before starting another call.');
+      return;
+    }
+    this.releaseSession = release;
     try {
       await this.connect();
       if (this.isInCall()) {
@@ -139,6 +152,13 @@ export class CallService {
     await this.connect();
     const call = incoming ?? this.getPendingIncoming();
     if (!call) return;
+    if (!this.releaseSession) {
+      this.releaseSession = this.mediaSession.acquire();
+      if (!this.releaseSession) {
+        this.callError$.next('Leave the voice room before accepting a direct call.');
+        return;
+      }
+    }
 
     this.callId = call.callId;
     this.chatId = call.chatId;
@@ -209,7 +229,13 @@ export class CallService {
 
   private bindSocketEvents(socket: Socket): void {
     socket.on('call:incoming', (payload: IIncomingCall) => {
-      if (this.isInCall() && this.callState$.value !== 'incoming') return;
+      if (this.isInCall()) return;
+      const release = this.mediaSession.acquire();
+      if (!release) {
+        socket.emit('call:reject', { callId: payload.callId, chatId: payload.chatId });
+        return;
+      }
+      this.releaseSession = release;
       this.callId = payload.callId;
       this.chatId = payload.chatId;
       this.peerId = payload.callerId;
@@ -368,6 +394,8 @@ export class CallService {
     this.clearUnavailableDismissTimer();
     this.ringtone.stop();
     this.transport.releaseLocalMedia();
+    this.releaseSession?.();
+    this.releaseSession = null;
     this.callState$.next('unavailable');
     this.unavailableDismissTimer = setTimeout(() => {
       if (this.callState$.value === 'unavailable') {
@@ -387,6 +415,8 @@ export class CallService {
     this.clearUnavailableDismissTimer();
     this.ringtone.stop();
     this.transport.releaseLocalMedia();
+    this.releaseSession?.();
+    this.releaseSession = null;
     this.callId = null;
     this.chatId = null;
     this.peerId = null;

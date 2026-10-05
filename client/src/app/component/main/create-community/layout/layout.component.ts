@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Output } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CommunityStateService } from '../../../../services/shared/community-state.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommunityCreateStepOneComponent } from '../step-one/step-one.component';
 import { CommunityCreateStepTwoComponent } from '../step-two/step-two.component';
@@ -28,11 +30,13 @@ export class CreateCommunityLayoutComponent {
   currentStep = 1;
   isSubmitting = false;
   uploadProgress: 'uploading' | 'creating' | 'success' | 'error' | null = null;
+  errorMessage = '';
 
 
   @Output() close = new EventEmitter<void>();
 
-  constructor( private fb: FormBuilder, private imageService: ImageService, private communityService:CommunityService ) {
+  constructor( private fb: FormBuilder, private imageService: ImageService, private communityService:CommunityService,
+    private communityState: CommunityStateService, private router: Router, private route: ActivatedRoute ) {
 
     this.communityForm = this.fb.group({
       // Step 1: Basic Info
@@ -49,9 +53,11 @@ export class CreateCommunityLayoutComponent {
   }
 
   async onSubmit(): Promise<void> {
+    if (this.isSubmitting) return;
     if (this.communityForm.valid) {
       try {
         this.isSubmitting = true;
+        this.errorMessage = '';
         this.uploadProgress = 'uploading';
 
         const formValue = { ...this.communityForm.value };
@@ -67,20 +73,21 @@ export class CreateCommunityLayoutComponent {
         const { name, type, description, tags } = formValue;
         const data = { name, type, description, imageUrl, coverImageUrl, tags };
 
-        const community = await this.createCommunity(data);
+        await this.createCommunity(data);
+        this.communityState.notifyMembershipChanged();
         
         this.uploadProgress = 'success';
 
         
 
-        setTimeout(() => this.close.emit(), 500);
+        this.isSubmitting = false;
+        this.onCancel();
       } catch (error) {
-        console.error('Submission failed:', error);
         this.uploadProgress = 'error';
-      } 
-      // finally {
-      //   this.isSubmitting = false;
-      // }
+        this.errorMessage = error instanceof Error ? error.message : 'Could not create community. Please try again.';
+      } finally {
+        this.isSubmitting = false;
+      }
     } else {
       this.communityForm.markAllAsTouched();
     }
@@ -144,8 +151,9 @@ export class CreateCommunityLayoutComponent {
       case 1:
         this.communityForm.get('name')?.markAsTouched();
         this.communityForm.get('type')?.markAsTouched();
-        return this.communityForm.get('name')!.valid && 
-               this.communityForm.get('type')!.valid;
+        this.communityForm.get('description')?.markAsTouched();
+        return this.communityForm.get('name')!.valid &&
+               this.communityForm.get('type')!.valid && this.communityForm.get('description')!.valid;
       case 2:
         this.communityForm.get('image')?.markAsTouched();
         this.communityForm.get('coverImage')?.markAsTouched();
@@ -157,9 +165,18 @@ export class CreateCommunityLayoutComponent {
   }
 
   // method to close the modal if using a modal service
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    // Let an open cropper handle its own close control.
+    if (!document.querySelector('app-image-cropper-modal')) this.onCancel();
+  }
+
   onCancel(): void {
     if (!this.isSubmitting) {
       this.close.emit();
+      if (this.route.snapshot.routeConfig?.path === 'community/create') {
+        void this.router.navigate(['/main/discover']);
+      }
     }
   }
 }

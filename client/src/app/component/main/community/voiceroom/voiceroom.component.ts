@@ -147,7 +147,7 @@ export class VoiceroomComponent implements OnInit, OnDestroy {
       this.route.paramMap.subscribe((params) => {
         const nextId = params.get('channelId');
         this.communityId =
-          this.route.parent?.parent?.snapshot.paramMap.get('id') ?? null;
+          this.route.parent?.snapshot.paramMap.get('id') ?? null;
         void this.switchChannel(nextId);
       })
     );

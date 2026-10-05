@@ -34,7 +34,7 @@ export class OtpComponent implements OnInit, OnDestroy {
     private router: Router
   ) {
     this.otpForm = this.fb.group({
-      otp: ['', [Validators.required, Validators.minLength(6)]],
+      otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
     });
   }
 

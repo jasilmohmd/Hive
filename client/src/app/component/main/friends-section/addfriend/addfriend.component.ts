@@ -8,7 +8,7 @@ import { EmptyStateComponent } from '../../../common/empty-state/empty-state.com
 import { LoadingStateComponent } from '../../../common/loading-state/loading-state.component';
 import { TableAction, TableColumn } from '../../../../interface/table.interface';
 import { ToastService } from '../../../../services/toast.service';
-import { Subject, catchError, debounceTime, finalize, map, of, switchMap } from 'rxjs';
+import { Subject, catchError, timer, finalize, map, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-addfriend',
@@ -56,13 +56,13 @@ export class AddfriendComponent implements OnInit {
     // a newer one; the old distinctUntilChanged also left the spinner running
     // forever when the same term was typed again.
     this.searchTerms.pipe(
-      debounceTime(300),
       map((term) => term.trim()),
       switchMap((term) => {
         if (!term) {
           return of({ term, users: [] as any[] });
         }
-        return this.friendService.searchUserByUsername(term).pipe(
+        return timer(300).pipe(
+          switchMap(() => this.friendService.searchUserByUsername(term)),
           map((users) => ({ term, users })),
           catchError(() => {
             this.toast.error('Could not search right now. Please try again.');

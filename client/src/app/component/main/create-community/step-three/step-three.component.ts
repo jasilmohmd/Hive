@@ -16,6 +16,7 @@ export class CommunityCreateStepThreeComponent implements OnInit {
   @Input() formGroup!: FormGroup;
   @Output() back = new EventEmitter<void>();
   @Output() next = new EventEmitter<void>();
+  @Output() submit = new EventEmitter<void>();
 
   // Dummy available tags – replace with actual data or fetch from a service
   availableTags: any[] = [];
@@ -115,7 +116,7 @@ export class CommunityCreateStepThreeComponent implements OnInit {
       this.showTagError = true;
       return;
     }
-    this.next.emit();
+    this.submit.emit();
   }
 
 }

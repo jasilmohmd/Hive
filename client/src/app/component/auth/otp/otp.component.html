@@ -23,7 +23,7 @@
           class="auth-error"
         >
           <span *ngIf="otpForm.get('otp')?.errors?.['required']">Enter the code we sent you</span>
-          <span *ngIf="otpForm.get('otp')?.errors?.['minlength']">The code is 6 digits</span>
+          <span *ngIf="otpForm.get('otp')?.errors?.['pattern']">The code must be 6 digits</span>
         </p>
       </div>
 

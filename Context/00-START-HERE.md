@@ -8,6 +8,8 @@ Generated 2026-09-08 at commit `597fb1b` (branch `main`) by a Claude review sess
 
 ## Files in this folder
 
+Latest browser audit: [09-playwright-review.md](09-playwright-review.md), 2026-10-06. Read [../AGENTS.md](../AGENTS.md) for mandatory tests after every feature/fix; historical status below predates this audit.
+
 | File | What it covers |
 |---|---|
 | `01-backend-frontend-gap-analysis.md` | Every backend route, domain by domain, marked used / unused / partially-used by the Angular client. |

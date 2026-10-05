@@ -62,6 +62,7 @@ export class CreateCommunityLayoutComponent {
   }
 
   async onSubmit(): Promise<void> {
+    if (this.isSubmitting) return;
     if (this.communityForm.valid) {
       try {
         this.isSubmitting = true;
@@ -149,8 +150,9 @@ export class CreateCommunityLayoutComponent {
       case 1:
         this.communityForm.get('name')?.markAsTouched();
         this.communityForm.get('type')?.markAsTouched();
-        return this.communityForm.get('name')!.valid && 
-               this.communityForm.get('type')!.valid;
+        this.communityForm.get('description')?.markAsTouched();
+        return this.communityForm.get('name')!.valid &&
+               this.communityForm.get('type')!.valid && this.communityForm.get('description')!.valid;
       case 2:
         this.communityForm.get('image')?.markAsTouched();
         this.communityForm.get('coverImage')?.markAsTouched();
@@ -169,7 +171,7 @@ export class CreateCommunityLayoutComponent {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    this.onCancel();
+    if (!document.querySelector('app-image-cropper-modal')) this.onCancel();
   }
 
   /**

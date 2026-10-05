@@ -17,7 +17,7 @@
         <label for="password" class="auth-label">Password</label>
         <input formControlName="password" type="password" id="password" class="auth-input" autocomplete="new-password" />
         <p *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="auth-error">
-          Password must be at least 6 characters
+          Password must be at least 8 characters
         </p>
       </div>
 

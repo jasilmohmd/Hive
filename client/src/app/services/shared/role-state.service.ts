@@ -20,6 +20,7 @@ export class RoleStateService {
    * Load user roles for the given community and update the internal state.
    */
   loadUserRoles(communityId: string): Observable<IRole[]> {
+    this.clear();
     return this.roleService.getUserRoles(communityId).pipe(
       tap(roles => {
         // Emit a new copy to force change detection if needed
@@ -31,9 +32,10 @@ export class RoleStateService {
         });
         this.permissionsSubject.next(Array.from(permissionSet));
       }),
-      // No roles = no permissions: every gated control stays hidden, which is
-      // the safe failure. The server enforces permissions regardless.
-      catchError(() => of([]))
+      catchError(() => {
+        this.clear();
+        return of([]);
+      })
     );
   }
 

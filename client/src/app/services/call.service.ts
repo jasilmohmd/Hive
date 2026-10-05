@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import { ChatService } from './chat.service';
 import { CallRingtoneService } from './call-ringtone.service';
 import { P2pTransport } from './call/p2p-transport';
+import { MediaSessionService } from './media-session.service';
 
 export type CallType = 'audio' | 'video';
 export type CallState =
@@ -48,6 +49,7 @@ export class CallService {
   private acceptedHere = false;
   /** The socket instance our call:* handlers are attached to (a new one after re-login). */
   private boundSocket: Socket | null = null;
+  private releaseSession: (() => void) | null = null;
   private unavailableDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly incomingCall$ = new Subject<IIncomingCall>();
@@ -62,7 +64,8 @@ export class CallService {
   constructor(
     private chat: ChatService,
     private ringtone: CallRingtoneService,
-    private http: HttpClient
+    private http: HttpClient,
+    private mediaSession: MediaSessionService
   ) {
     this.chat.onSocketReady((socket) => {
       this.bindSocketEventsIfNeeded(socket);
@@ -126,6 +129,16 @@ export class CallService {
   }
 
   async startCall(chatId: string, peerId: string, callType: CallType): Promise<void> {
+    if (this.isInCall()) {
+      this.callError$.next('Already in a call');
+      return;
+    }
+    const release = this.mediaSession.acquire();
+    if (!release) {
+      this.callError$.next('Leave the voice room or end the current call before starting another call.');
+      return;
+    }
+    this.releaseSession = release;
     try {
       await this.connect();
       if (this.isInCall()) {
@@ -159,6 +172,13 @@ export class CallService {
     await this.connect();
     const call = incoming ?? this.getPendingIncoming();
     if (!call) return;
+    if (!this.releaseSession) {
+      this.releaseSession = this.mediaSession.acquire();
+      if (!this.releaseSession) {
+        this.callError$.next('Leave the voice room before accepting a direct call.');
+        return;
+      }
+    }
 
     this.callId = call.callId;
     this.chatId = call.chatId;
@@ -245,6 +265,14 @@ export class CallService {
         return;
       }
       this.acceptedHere = false;
+      if (!this.releaseSession) {
+        const release = this.mediaSession.acquire();
+        if (!release && !this.mediaSession.voiceRoomConnected) {
+          socket.emit('call:reject', { callId: payload.callId, chatId: payload.chatId });
+          return;
+        }
+        this.releaseSession = release;
+      }
       this.callId = payload.callId;
       this.chatId = payload.chatId;
       this.peerId = payload.callerId;
@@ -409,6 +437,8 @@ export class CallService {
     this.clearUnavailableDismissTimer();
     this.ringtone.stop();
     this.transport.releaseLocalMedia();
+    this.releaseSession?.();
+    this.releaseSession = null;
     this.callState$.next('unavailable');
     this.unavailableDismissTimer = setTimeout(() => {
       if (this.callState$.value === 'unavailable') {
@@ -428,6 +458,8 @@ export class CallService {
     this.clearUnavailableDismissTimer();
     this.ringtone.stop();
     this.transport.releaseLocalMedia();
+    this.releaseSession?.();
+    this.releaseSession = null;
     this.callId = null;
     this.chatId = null;
     this.peerId = null;

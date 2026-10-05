@@ -76,7 +76,7 @@
 
       <!-- ───────────────────────── Lobby ───────────────────────── -->
       <section
-        *ngIf="!loading && !errorMessage && !connected"
+        *ngIf="!loading && channel && !connected"
         class="flex min-h-0 w-full flex-1 flex-col items-center overflow-y-auto p-4 scrollbar-themed"
       >
         <!-- my-auto, not justify-center: centred when it fits, scrollable from
@@ -84,7 +84,7 @@
         <div class="vr-lobby-card my-auto">
           <div class="flex flex-col items-center gap-1 text-center">
             <span class="vr-eyebrow">Voice room</span>
-            <h2 class="vr-lobby-title">{{ channel?.name ?? 'Voice room' }}</h2>
+            <h2 class="vr-lobby-title">{{ channel.name }}</h2>
             <p class="text-sm text-ink-muted">
               {{ lobbyPresence.length }} of {{ maxParticipants }} seats taken
             </p>

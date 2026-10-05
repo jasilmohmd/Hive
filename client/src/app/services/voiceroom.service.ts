@@ -27,6 +27,7 @@ import { Socket } from 'socket.io-client';
 import { environment } from '../../environments/environment';
 
 import { ChatService } from './chat.service';
+import { MediaSessionService } from './media-session.service';
 
 import { IVoiceroomPresenceUser } from './voiceroom-presence.service';
 
@@ -73,6 +74,8 @@ export interface IVoiceroomParticipantView {
 export class VoiceroomService implements OnDestroy {
 
   private room: Room | null = null;
+  private releaseSession: (() => void) | null = null;
+  private joining = false;
 
   private channelId: string | null = null;
 
@@ -142,7 +145,8 @@ export class VoiceroomService implements OnDestroy {
 
     private http: HttpClient,
 
-    private chat: ChatService
+    private chat: ChatService,
+    private mediaSession: MediaSessionService
 
   ) {
     // A reconnected socket is a new socket server-side, in no rooms: re-announce
@@ -224,7 +228,22 @@ export class VoiceroomService implements OnDestroy {
 
 
   async join(channelId: string, channelName?: string, communityId?: string): Promise<void> {
-    await this.leave();
+    if (this.joining) throw new Error('A voice room connection is already in progress.');
+    this.joining = true;
+    try {
+      await this.leave();
+      this.releaseSession = this.mediaSession.acquire();
+      if (!this.releaseSession) throw new Error('End the direct call before joining a voice room.');
+      await this.joinRoom(channelId, channelName, communityId);
+    } catch (error) {
+      await this.leave();
+      throw error;
+    } finally {
+      this.joining = false;
+    }
+  }
+
+  private async joinRoom(channelId: string, channelName?: string, communityId?: string): Promise<void> {
     this.channelId = channelId;
     this.activeChannelName$.next(channelName?.trim() || null);
     this.activeCommunityId$.next(communityId || null);
@@ -298,6 +317,9 @@ export class VoiceroomService implements OnDestroy {
     });
 
     room.on(RoomEvent.Disconnected, () => {
+      if (this.room !== room) return;
+      this.releaseSession?.();
+      this.releaseSession = null;
 
       this.connected$.next(false);
 
@@ -324,6 +346,7 @@ export class VoiceroomService implements OnDestroy {
       throw err;
     }
 
+    this.mediaSession.voiceRoomConnected = true;
     this.connected$.next(true);
 
     await this.tryStartAudio(room);
@@ -375,6 +398,8 @@ export class VoiceroomService implements OnDestroy {
       this.room = null;
 
     }
+    this.releaseSession?.();
+    this.releaseSession = null;
 
     this.connected$.next(false);
 
@@ -714,4 +739,3 @@ export class VoiceroomService implements OnDestroy {
   }
 
 }
-

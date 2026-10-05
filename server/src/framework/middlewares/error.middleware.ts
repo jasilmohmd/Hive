@@ -6,6 +6,7 @@ import JWTTokenError from "../../errors/jwtTokenError.error";
 import { ErrorType } from "../../constants/auth/errorType";
 import ErrorMessage from "../../constants/auth/errorMessage";
 import { CustomError } from "../../errors/customError.error";
+import { ZodError } from "zod";
 
 const isProd = process.env.NODE_ENV === "production";
 const authCookieSameSite = (process.env.COOKIE_SAME_SITE?.trim().toLowerCase() ||
@@ -23,6 +24,12 @@ export default function errorHandlerMiddleware(err: any, req: Request, res: Resp
                         errorCode: err.details.errorCode,
                         errorField: err.details.errorField,
                         message: err.message
+                });
+        } else if (err instanceof ZodError) {
+                const issue = err.issues[0];
+                res.status(StatusCodes.BadRequest).json({
+                        message: issue?.message || "Invalid request data",
+                        errorField: issue?.path.join(".") || "validation"
                 });
         } else if (err instanceof CustomError) {
                 res.status(err.statusCode).json({

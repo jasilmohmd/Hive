@@ -148,6 +148,9 @@ export class ComunityLayoutComponent implements OnInit, OnDestroy {
       this.routeParamSubscriptions = new Subscription();
 
       this.communityId = params['id'];
+      this.isLoading = true;
+      this.errorMessage = null;
+      this.community = null;
       if (!this.communityId) {
         this.errorMessage = 'Community ID not found';
         this.isLoading = false;

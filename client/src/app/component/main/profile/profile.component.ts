@@ -41,7 +41,7 @@ export class ProfileComponent implements OnInit {
       next: (res) => {
         if (res?.userData) {
           this.userData = res.userData;
-        }
+        } else this.errorMessage = 'Could not load your profile';
       },
       error: (error: Error) => {
         this.errorMessage = error?.message || 'Could not load your profile';

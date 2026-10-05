@@ -120,6 +120,8 @@ client/src/app/
 
 ## Commands
 
+Mandatory after every feature/fix: from the root, `npm run test:e2e:all` (desktop/mobile UI and isolated API) and affected unit/typecheck/build checks. `npm run test:client` uses Playwright's installed Chromium. Setup/limits: [e2e/README.md](e2e/README.md); latest audit: [Context/09-playwright-review.md](Context/09-playwright-review.md). Historical counts below are not current verification totals.
+
 ```bash
 # server
 cd server && npm run dev                    # nodemon, transpile-only
@@ -159,7 +161,7 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 | ~~6b~~ | ~~`server/src/repositories/community.repository.ts`~~ | **FIXED** (PR #8 `aef7301`) — User schema `toJSON` transform strips `password` from every serialised response. |
 | ~~8~~ | ~~`server/src/usecase/channel.usecase.ts`~~ | **FIXED** (PR #17) — the `getAccessibleChannels` return-type key is `voiceroom` (the real runtime key), was `voice`, in the server usecase/interfaces and `client/channel.service.ts`. |
 | 8 | `server/src/usecase/channel.usecase.ts:~84` | `getAccessibleChannels` return type says key `voice`; runtime key is `voiceroom`. |
-| ~~9~~ | ~~client `call.service` / `voiceroom.service`~~ | **FIXED** (2026-09-25 pass) — accepting a DM call awaits the voice-room leave before taking the mic (the modal says it will), joining a room during a live call asks first, leaving a DM mid-call asks first, voice notes refuse while a room holds the mic. |
+| ~~9~~ | ~~client `call.service` / `voiceroom.service`~~ | **FIXED** (2026-09-25 pass) — accepting a DM call awaits the voice-room leave before taking the mic (the modal says it will), joining a room during a live call asks first, leaving a DM mid-call asks first, voice notes refuse while a room holds the mic. Shared synchronous media reservation also prevents competing setup. |
 | 10 | `client/.../chat-forward-picker` | Unlike its 7 siblings it has no full-viewport dismiss backdrop (left deliberately — different design, not a mechanical fix). |
 | ~~11~~ | ~~`render.yaml`~~ | **FIXED** (PR #24) — `TURN_URL`/`TURN_USERNAME`/`TURN_CREDENTIAL` declared (`sync: false`); `GIPHY_API_KEY` added to `.env.example`. Set real TURN values in the Render dashboard to actually get a relay. |
 | ~~12~~ | ~~`server/src/framework/config/app.ts`~~ | **FIXED** (PR #24) — `CORS_ORIGIN` is now a comma-separated allow-list; optional `CORS_ORIGIN_SUFFIXES` matches host suffixes (e.g. `.pages.dev`) so preview deploys pass. Same check on Express + Socket.IO. |
@@ -168,4 +170,4 @@ Infra/UI: 131 stale `.js` deleted; CI added (typecheck + build + tests); mobile 
 
 Ops reminders: `EMAIL_USER`/`EMAIL_PASS` must be set in the Render dashboard (declared but `sync: false`), and `CORS_ORIGIN` must include the live Pages origin (comma-separate multiple; set `CORS_ORIGIN_SUFFIXES` for preview-deploy subdomains).
 
-Still open after the 2026-09-25 pass: #10 (deliberate) and #14 (deliberate). Everything else in this table is fixed.
+Still open after the 2026-10-06 browser review: #10 (deliberate), #14 (deliberate). Everything else in this table is fixed.

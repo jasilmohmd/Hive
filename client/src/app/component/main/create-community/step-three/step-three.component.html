@@ -1,4 +1,4 @@
-<form [formGroup]="formGroup" class="flex flex-col h-full">
+<form [formGroup]="formGroup" (ngSubmit)="submitForm()" class="flex flex-col h-full">
   <!-- Tags Section -->
   <div class="flex-1">
     <label class="block text-ink text-sm font-medium mb-3">Add Relevant Tags</label>
@@ -35,11 +35,9 @@
 
         <!-- Tags Grid -->
         <div class="flex flex-wrap gap-2 m-3">
-          <div *ngFor="let tag of filteredTags" (click)="toggleTag(tag)"
-            (keydown.enter)="$event.preventDefault(); toggleTag(tag)"
-            (keydown.space)="$event.preventDefault(); toggleTag(tag)"
+          <button type="button" *ngFor="let tag of filteredTags" (click)="toggleTag(tag)"
             class="relative inline-flex items-center transition-colors focus-visible:ring-2 focus-visible:ring-brand"
-            [class]="getTagClasses(tag)" role="button" tabindex="0" [attr.aria-pressed]="isTagSelected(tag)">
+            [class]="getTagClasses(tag)" [attr.aria-pressed]="isTagSelected(tag)">
             <div class="flex items-center gap-2 px-4 py-2">
               <!-- Tag Name -->
               <span class="text-ink font-medium break-words">{{ tag.name }}</span>
@@ -53,7 +51,7 @@
                 </svg>
               </div>
             </div>
-          </div>
+          </button>
         </div>
       </div>
     </div>
